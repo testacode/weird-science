@@ -1,5 +1,4 @@
 import { h } from './dom'
-import { guardarNivel, leerNivel, alCambiarNivel, type Nivel } from './nivel'
 
 export interface Opcion<T extends string> {
   valor: T
@@ -25,19 +24,6 @@ export function segmentado<T extends string>(
 
 export function grupo(titulo: string, contenido: HTMLElement): HTMLElement {
   return h('div', { class: 'grupo' }, h('span', { class: 'etiqueta' }, titulo), contenido)
-}
-
-export function selectorNivel(): HTMLElement {
-  const s = segmentado<Nivel>(
-    [
-      { valor: 'primaria', texto: 'Primaria' },
-      { valor: 'secundaria', texto: 'Secundaria' },
-    ],
-    leerNivel(),
-    guardarNivel,
-  )
-  alCambiarNivel(s.set)
-  return grupo('Nivel', s.el)
 }
 
 /** Tarjeta de métrica con valor actualizable. */

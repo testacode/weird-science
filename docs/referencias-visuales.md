@@ -6,7 +6,7 @@ Inspiración principal: https://sael.net/, analizado el 2026-09-30. Se toma la r
 
 - Un solo objeto protagonista, presentado como maqueta sobre una mesada, a pantalla completa y sin scroll.
 - Arriba a la izquierda: título, frase gancho, 3 métricas en vivo y una tarjeta que narra lo que pasa "ahora" con los números del momento.
-- Arriba a la derecha: consola de controles (play, velocidad, opciones, "romper el sistema", nivel).
+- Arriba a la derecha: consola de controles (play, velocidad, opciones, "romper el sistema").
 - Botón "?": modal "¿Cómo funciona?" con controles y "Qué es real y qué no".
 - El color tiene significado, y el mismo color se usa en la escena, el texto y los controles.
 - Render: vidrio (`MeshPhysicalMaterial` con transmission), bloom, tone mapping ACES, luces de acento y viñeta.

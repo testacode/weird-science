@@ -1,6 +1,6 @@
 # Weird Science
 
-Laboratorios 3D interactivos de ciencias naturales para primaria y secundaria. Cada lab es un modelo que funciona de verdad: tocás, rompés y mirás qué pasa. Los temas siguen los Núcleos de Aprendizaje Prioritarios (NAP) de Argentina.
+Laboratorios 3D interactivos de ciencias naturales. Cada lab es un modelo que funciona de verdad: tocás, rompés y mirás qué pasa. Los temas siguen los Núcleos de Aprendizaje Prioritarios (NAP) de Argentina.
 
 **Sitio:** https://weird-science.vercel.app
 
@@ -24,7 +24,7 @@ Stack: Vite + TypeScript + Three.js, sin framework. Cada lab es una página en `
 
 - `model.ts`: simulación pura y testeada (sin Three.js).
 - `escena.ts`: la maqueta 3D.
-- `contenido.ts`: textos por nivel (primaria / secundaria).
+- `contenido.ts`: textos del lab (relato en vivo y ayuda).
 - `main.ts`: une modelo, escena y la interfaz de `src/ui/`.
 
 ## Licencia

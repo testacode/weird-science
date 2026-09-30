@@ -7,7 +7,6 @@ body { background: radial-gradient(circle at 25% 0%, rgba(198, 243, 94, 0.08), t
 .cabecera { display: grid; gap: 14px; margin-bottom: 40px; }
 .cabecera .gancho { max-width: 560px; font-size: 16px; }
 .cabecera .titulo span { font-size: 56px; }
-.selector { width: 260px; }
 
 .eje { margin-top: 36px; }
 .eje h2 { font-size: 15px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--apagado); }

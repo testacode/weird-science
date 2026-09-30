@@ -124,13 +124,18 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
     bolitas.instanceMatrix.needsUpdate = true
   }
 
-  // Etiquetas HTML ancladas a cada órgano.
-  const pildoras = TRAMOS.map((t, i) => {
+  // Etiquetas HTML ancladas a cada órgano: primero los tramos del tubo, después los anexos.
+  const etiquetas = [
+    ...TRAMOS.map((t, i) => ({ texto: nombres[i], ancla: t.ancla })),
+    { texto: 'Hígado', ancla: new THREE.Vector3(-2.35, 2.55, 0) },
+    { texto: 'Vesícula · tocala', ancla: new THREE.Vector3(-1.75, 1.45, 0.3) },
+  ]
+  const pildoras = etiquetas.map(({ texto, ancla }) => {
     const el = document.createElement('div')
     el.className = 'pildora'
-    el.textContent = nombres[i]
+    el.textContent = texto
     contenedor.append(el)
-    return { el, ancla: t.ancla }
+    return { el, ancla }
   })
   const proyectado = new THREE.Vector3()
   function ubicarPildoras(activo: number) {

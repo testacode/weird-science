@@ -62,7 +62,7 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
   background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55));
 }
 .hud { position: absolute; z-index: 2; }
-.hud-izq { top: 20px; left: 20px; width: min(340px, calc(100vw - 40px)); display: grid; gap: 10px; }
+.hud-izq { top: 20px; left: 20px; width: min(380px, calc(100vw - 40px)); display: grid; gap: 10px; }
 .hud-der { top: 20px; right: 20px; width: 330px; padding: 14px; display: grid; gap: 14px; }
 
 .titulo { margin: 0; line-height: 1.05; }
@@ -70,9 +70,9 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 .titulo span { display: block; font-size: 36px; font-weight: 700; color: var(--marca); text-transform: uppercase; }
 .gancho { margin: 0; font-size: 14px; color: var(--texto); opacity: 0.88; }
 
-.metricas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.metrica { padding: 9px 11px; }
-.metrica b { display: block; margin-top: 6px; font: 600 17px/1 var(--mono); }
+.metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.metrica { padding: 9px 10px; }
+.metrica b { display: block; margin-top: 6px; font: 600 16px/1 var(--mono); white-space: nowrap; }
 .metrica b small { font-size: 10px; color: var(--apagado); margin-left: 2px; }
 
 .ahora { padding: 12px 14px; font-size: 13.5px; }
