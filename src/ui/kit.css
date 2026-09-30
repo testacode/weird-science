@@ -1,0 +1,122 @@
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
+:root {
+  --bg: #07100f;
+  --panel: linear-gradient(160deg, rgba(18, 32, 30, 0.88), rgba(8, 16, 16, 0.84));
+  --borde: rgba(190, 255, 220, 0.1);
+  --texto: #ecf5f0;
+  --apagado: #93a8a0;
+  --marca: #c6f35e;
+  --ambar: #ffc857;
+  --magenta: #ff5fa2;
+  --cielo: #5ec8ff;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radio: 14px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--texto);
+  font: 15px/1.5 var(--sans);
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+
+.c-ambar { color: var(--ambar); }
+.c-magenta { color: var(--magenta); }
+.c-cielo { color: var(--cielo); }
+.c-marca { color: var(--marca); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.etiqueta {
+  font: 600 10px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--apagado);
+}
+
+/* --- Layout de lab --- */
+.lab { position: fixed; inset: 0; overflow: hidden; }
+.lab canvas { display: block; }
+.lab::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55));
+}
+.hud { position: absolute; z-index: 2; }
+.hud-izq { top: 20px; left: 20px; width: min(340px, calc(100vw - 40px)); display: grid; gap: 10px; }
+.hud-der { top: 20px; right: 20px; width: 330px; padding: 14px; display: grid; gap: 14px; }
+
+.titulo { margin: 0; line-height: 1.05; }
+.titulo small { display: block; font-size: 17px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.titulo span { display: block; font-size: 36px; font-weight: 700; color: var(--marca); text-transform: uppercase; }
+.gancho { margin: 0; font-size: 14px; color: var(--texto); opacity: 0.88; }
+
+.metricas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.metrica { padding: 9px 11px; }
+.metrica b { display: block; margin-top: 6px; font: 600 17px/1 var(--mono); }
+.metrica b small { font-size: 10px; color: var(--apagado); margin-left: 2px; }
+
+.ahora { padding: 12px 14px; font-size: 13.5px; }
+.ahora strong { color: var(--texto); }
+
+.grupo { display: grid; gap: 7px; }
+.segmentado { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(0, 0, 0, 0.3); }
+.segmentado button {
+  flex: 1; padding: 6px 8px; border: 0; border-radius: 8px; background: transparent;
+  font-size: 13px; color: var(--apagado); transition: background 0.15s, color 0.15s;
+}
+.segmentado button:hover { color: var(--texto); }
+.segmentado button[aria-pressed='true'] { background: var(--texto); color: #0b1413; font-weight: 600; }
+
+.fila { display: flex; gap: 8px; }
+.boton {
+  padding: 8px 12px; border: 1px solid var(--borde); border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04); transition: background 0.15s;
+}
+.boton:hover { background: rgba(255, 255, 255, 0.1); }
+.boton-marca { background: var(--marca); color: #0b1413; border-color: transparent; font-weight: 600; }
+.boton-marca:hover { background: #d8ff7c; }
+
+.interruptor { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13.5px; }
+.interruptor button { min-width: 64px; }
+
+.pildora {
+  position: absolute; z-index: 1; transform: translate(-50%, -50%);
+  padding: 3px 9px; border-radius: 99px; pointer-events: none; white-space: nowrap;
+  font: 600 10.5px/1.4 var(--mono); letter-spacing: 0.04em;
+  background: rgba(7, 16, 15, 0.78); border: 1px solid var(--borde); color: var(--apagado);
+  transition: color 0.2s, border-color 0.2s;
+}
+.pildora.activa { color: var(--marca); border-color: var(--marca); }
+
+/* --- Modal --- */
+.modal { border: 0; padding: 0; background: transparent; color: var(--texto); max-width: min(620px, 92vw); }
+.modal::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(3px); }
+.modal .panel { padding: 22px 26px; max-height: 80vh; overflow: auto; }
+.modal h2 { margin-top: 0; }
+.modal h3 { margin-bottom: 4px; color: var(--marca); font-size: 15px; }
+.modal p, .modal li { color: #cfdcd6; font-size: 14px; }
+
+@media (max-width: 900px) {
+  .hud-der { top: auto; bottom: 16px; right: 16px; left: 16px; width: auto; }
+  .titulo span { font-size: 28px; }
+}
