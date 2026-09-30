@@ -3,6 +3,7 @@
 ## Hecho
 - Base del sitio: portada con catálogo por eje NAP y selector de nivel (se guarda en localStorage).
 - Kit de interfaz compartido (`src/ui/`) y escenario 3D compartido (`src/escena/`: bloom + tone mapping).
+- Repo público (github.com/testacode/weird-science) y deploy en Vercel (https://weird-science.vercel.app): cada push a `main` publica.
 - Lab piloto: sistema digestivo, con modelo testeado, 3 comidas, bilis y ácido gástrico rompibles, click en la vesícula y textos por nivel.
 
 ## Backlog
@@ -14,4 +15,3 @@
 - Labs siguientes: fotosíntesis, estados de la materia, circuito eléctrico, fases de la Luna.
 - Recorridos transversales (energía, ciclos, sistemas) además de los ejes NAP.
 - Revisión de accesibilidad (contraste, teclado, `prefers-reduced-motion`).
-- Deploy estático (Cloudflare Pages o Vercel) y repo público en GitHub.

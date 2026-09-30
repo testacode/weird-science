@@ -2,6 +2,8 @@
 
 Laboratorios 3D interactivos de ciencias naturales para primaria y secundaria. Cada lab es un modelo que funciona de verdad: tocás, rompés y mirás qué pasa. Los temas siguen los Núcleos de Aprendizaje Prioritarios (NAP) de Argentina.
 
+**Sitio:** https://weird-science.vercel.app
+
 ## Labs
 
 | Lab | Eje NAP | Estado |
