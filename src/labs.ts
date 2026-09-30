@@ -7,6 +7,16 @@ export const EJES = {
 } as const
 export type Eje = keyof typeof EJES
 
+/** Recorridos transversales, además de los ejes NAP. */
+export const TEMAS = {
+  energia: 'Energía',
+  ciclos: 'Ciclos',
+  sistemas: 'Sistemas',
+  materia: 'Materia y partículas',
+  fuerzas: 'Fuerzas y campos',
+} as const
+export type Tema = keyof typeof TEMAS
+
 export interface Lab {
   slug: string
   titulo: string
@@ -14,13 +24,15 @@ export interface Lab {
   eje: Eje
   /** Dónde aparece en los NAP, para docentes. */
   nap: string
+  temas: Tema[]
+  /** Orden dentro del eje. */
+  orden: number
   listo: boolean
 }
 
-export const LABS: Lab[] = [
-  { slug: 'digestivo', titulo: 'Sistema digestivo', bajada: 'De la boca a la sangre', eje: 'vivos', nap: 'Primaria 5° · funciones de nutrición', listo: true },
-  { slug: 'fotosintesis', titulo: 'Fotosíntesis', bajada: 'Luz, agua y aire hechos planta', eje: 'vivos', nap: 'Primaria 6° · modelos de nutrición', listo: false },
-  { slug: 'particulas', titulo: 'Estados de la materia', bajada: 'Partículas que se calientan', eje: 'materiales', nap: 'Primaria 6° · modelo corpuscular', listo: false },
-  { slug: 'circuito', titulo: 'Circuito eléctrico', bajada: 'Pila, cable y lamparita', eje: 'fisica', nap: 'Primaria 6° · corriente eléctrica', listo: false },
-  { slug: 'luna', titulo: 'Fases de la Luna', bajada: 'Por qué la Luna cambia de forma', eje: 'tierra', nap: 'Primaria 6° · Sistema Solar', listo: false },
-]
+// Cada lab describe su propia tarjeta en src/labs/<slug>/meta.ts.
+const metas = import.meta.glob<{ meta: Lab }>('./labs/*/meta.ts', { eager: true })
+
+export const LABS: Lab[] = Object.values(metas)
+  .map((m) => m.meta)
+  .sort((a, b) => a.orden - b.orden)
