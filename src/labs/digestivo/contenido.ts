@@ -1,5 +1,6 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
 
+import { av } from '../../ui/avanzado'
 import type { Config, Estado, Segmento } from './model'
 
 export interface Comida {
@@ -15,24 +16,25 @@ export const COMIDAS: Comida[] = [
   { id: 'papas', nombre: 'Papas fritas', gramos: { carbos: 40, proteinas: 4, grasas: 17 } },
 ]
 
-export const GANCHO =
-  'Un tubo de vidrio de casi 9 m. Cada tramo tiene su pH y sus enzimas: hidrolizan <span class="c-ambar">carbohidratos</span>, <span class="c-magenta">proteínas</span> y <span class="c-cielo">grasas</span> hasta moléculas que el intestino delgado puede absorber.'
+export const GANCHO = `Un tubo de vidrio de casi 9 m. Cada tramo trabaja a su manera${av(', con su pH y sus enzimas')}: rompe los <span class="c-ambar">carbohidratos</span>, las <span class="c-magenta">proteínas</span> y las <span class="c-cielo">grasas</span> hasta moléculas que el intestino delgado puede absorber.`
 
 type Relato = (s: Segmento, e: Estado, c: Config, ph: number) => string
 
+const titulo = (nombre: string, ph: number) => `<strong>${nombre}${av(` · pH ${ph.toFixed(1)}`)}.</strong>`
+
 export const RELATO: Record<Segmento['id'], Relato> = {
   boca: (_s, _e, _c, ph) =>
-    `<strong>Boca · pH ${ph.toFixed(1)}.</strong> La amilasa salival empieza a hidrolizar el <span class="c-ambar">almidón</span> en maltosa.`,
-  esofago: () => '<strong>Esófago.</strong> Peristaltismo: ondas de contracción que llevan el bolo al estómago en unos segundos.',
+    `${titulo('Boca', ph)} La saliva${av(' (con amilasa)')} empieza a romper el <span class="c-ambar">almidón</span>${av(' en maltosa')}.`,
+  esofago: () => `<strong>Esófago.</strong> Ondas de contracción${av(' (peristaltismo)')} llevan la comida al estómago en unos segundos.`,
   estomago: (_s, _e, c, ph) =>
     c.acidoGastrico
-      ? `<strong>Estómago · pH ${ph.toFixed(1)}.</strong> El HCl activa la pepsina, que corta las <span class="c-magenta">proteínas</span> en péptidos. La amilasa se desactiva.`
-      : `<strong>Estómago · pH ${ph.toFixed(1)}.</strong> Con antiácido la pepsina casi no actúa. La tripsina del páncreas tendrá que hacer todo el trabajo con las <span class="c-magenta">proteínas</span>.`,
+      ? `${titulo('Estómago', ph)} El ácido${av(' clorhídrico (HCl) activa la pepsina, que')} corta las <span class="c-magenta">proteínas</span> en trozos más chicos${av(' (péptidos)')}.${av(' La amilasa se desactiva.')}`
+      : `${titulo('Estómago', ph)} Con antiácido casi no se cortan las <span class="c-magenta">proteínas</span>${av(' (la pepsina casi no actúa)')}. El páncreas${av(', con su tripsina,')} tendrá que hacer todo el trabajo.`,
   delgado: (_s, _e, c, ph) =>
     c.bilis
-      ? `<strong>Intestino delgado · pH ${ph.toFixed(1)}.</strong> La bilis emulsiona las <span class="c-cielo">grasas</span> y la lipasa pancreática las rompe. Las vellosidades absorben monosacáridos, aminoácidos y ácidos grasos.`
-      : `<strong>Intestino delgado · pH ${ph.toFixed(1)}.</strong> Sin bilis no hay emulsión: la lipasa solo ataca la superficie de gotas grandes y buena parte de las <span class="c-cielo">grasas</span> se pierde (esteatorrea).`,
-  grueso: () => '<strong>Intestino grueso.</strong> Absorbe agua y sales, y la microbiota fermenta la fibra. Lo no absorbido se elimina.',
+      ? `${titulo('Intestino delgado', ph)} La bilis deshace las <span class="c-cielo">grasas</span> en gotitas${av(' (emulsión)')} y las enzimas del páncreas${av(' (lipasa)')} las cortan. Las vellosidades pasan a la sangre los nutrientes ya cortados${av(': monosacáridos, aminoácidos y ácidos grasos')}.`
+      : `${titulo('Intestino delgado', ph)} Sin bilis las <span class="c-cielo">grasas</span> quedan en gotas grandes${av(' (no hay emulsión)')} y las enzimas casi no las alcanzan${av(': la lipasa solo ataca la superficie')}. Buena parte de la grasa se pierde${av(' (esteatorrea)')}.`,
+  grueso: () => `<strong>Intestino grueso.</strong> Absorbe agua y sales${av(', y la microbiota fermenta la fibra')}. Lo que no se absorbió se elimina.`,
 }
 
 export function relatoFinal(kcal: number, kcalTotal: number, grasasPerdidas: number): string {
@@ -42,19 +44,23 @@ export function relatoFinal(kcal: number, kcalTotal: number, grasasPerdidas: num
 
 export const COMO_FUNCIONA = `
   <h2>¿Cómo funciona?</h2>
-  <p>Comer no alcanza: el cuerpo tiene que romper la comida en moléculas tan chicas que puedan pasar a la sangre. Cada tramo del tubo es un reactor con su pH y sus enzimas. En cada paso de 0,01 h, una fracción de cada nutriente intacto se hidroliza (cinética de primer orden) y, en el intestino delgado, una fracción de lo digerido se absorbe.</p>
+  <p>Comer no alcanza: el cuerpo tiene que romper la comida en moléculas tan chicas que puedan pasar a la sangre. Cada tramo del tubo trabaja distinto${av(', como un reactor con su pH y sus enzimas')}.${av(' En cada paso de 0,01 h, una fracción de cada nutriente intacto se hidroliza (cinética de primer orden) y, en el intestino delgado, una fracción de lo digerido se absorbe.')}</p>
   <h3>Qué mirar</h3>
   <ul>
     <li>Las bolitas <span class="c-ambar">amarillas</span> son carbohidratos (pan, papa), las <span class="c-magenta">rosas</span> proteínas (carne, huevo) y las <span class="c-cielo">celestes</span> grasas (aceite, manteca).</li>
     <li>Cuando una bolita se achica, se digirió. Cuando vuela hacia el hígado, se absorbió y pasó a la sangre.</li>
+    <li>El gráfico muestra cuántos gramos de cada nutriente pasaron a la sangre, hora a hora del tránsito.</li>
   </ul>
   <h3>Controles</h3>
   <ul>
     <li><b>Comida:</b> cambia los gramos de cada macronutriente.</li>
-    <li><b>Bilis:</b> sin emulsión, la lipasa trabaja al 20%. También podés tocar la vesícula (la bolita verde bajo el hígado).</li>
-    <li><b>Ácido gástrico:</b> con antiácido el estómago sube a pH 5 y la pepsina se apaga.</li>
+    <li><b>Bilis:</b> sin bilis las grasas se aprovechan mucho menos${av(' (sin emulsión, la lipasa trabaja al 20%)')}. También podés tocar la vesícula (la bolita verde bajo el hígado).</li>
+    <li><b>Ácido gástrico:</b> con antiácido el estómago pierde acidez y casi no corta proteínas${av(' (sube a pH 5 y la pepsina se apaga)')}.</li>
     <li><b>Velocidad:</b> el reloj se acelera distinto en cada órgano para que todos se vean; el valor ×N indica cuánto.</li>
+    <li><b>Info avanzada:</b> muestra u oculta los nombres de enzimas, el pH y los detalles del modelo.</li>
   </ul>
+  <h3>Predecí antes de correr</h3>
+  <p>Cuando rompés la bilis o el ácido, el lab te pregunta qué va a pasar antes de empezar. Elegí, dejá correr el tránsito y al final se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>
-  <p><b>Real:</b> pH por tramo, qué enzima actúa dónde, tiempos de tránsito típicos (estómago ~3 h, delgado ~4 h, grueso 12-36 h), 4/4/9 kcal por gramo.</p>
+  <p><b>Real:</b> ${av('el pH por tramo, qué enzima actúa dónde, ')}los tiempos de tránsito típicos (estómago ~3 h, delgado ~4 h, grueso 12-36 h) y las kcal por gramo (4/4/9).</p>
   <p><b>Simplificado:</b> las tasas son aproximadas, no hay fibra ni agua, un solo bolo en vez de flujo continuo, y el páncreas no se muestra aparte. Modelo educativo: verificá los datos con tu docente o manual.</p>`

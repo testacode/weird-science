@@ -63,14 +63,15 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 }
 .hud { position: absolute; z-index: 2; }
 .hud-izq { top: 20px; left: 20px; width: min(380px, calc(100vw - 40px)); display: grid; gap: 10px; }
-.hud-der { top: 20px; right: 20px; width: 330px; padding: 14px; display: grid; gap: 14px; }
+.hud-der { top: 20px; right: 20px; width: 330px; display: grid; gap: 10px; }
+.consola { padding: 14px; display: grid; gap: 14px; }
 
 .titulo { margin: 0; line-height: 1.05; }
 .titulo small { display: block; font-size: 17px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 .titulo span { display: block; font-size: 36px; font-weight: 700; color: var(--marca); text-transform: uppercase; }
 .gancho { margin: 0; font-size: 14px; color: var(--texto); opacity: 0.88; }
 
-.metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.metricas { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
 .metrica { padding: 9px 10px; }
 .metrica b { display: block; margin-top: 6px; font: 600 16px/1 var(--mono); white-space: nowrap; }
 .metrica b small { font-size: 10px; color: var(--apagado); margin-left: 2px; }
@@ -107,6 +108,31 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
   transition: color 0.2s, border-color 0.2s;
 }
 .pildora.activa { color: var(--marca); border-color: var(--marca); }
+
+/* --- Info avanzada: con el filtro en No, todo lo marcado se oculta --- */
+body.sin-avanzado .avanzado { display: none; }
+
+/* --- Predecí antes de correr --- */
+.prediccion { padding: 12px 14px; display: grid; gap: 8px; }
+.prediccion[hidden] { display: none; }
+.prediccion .pregunta { margin: 0; font-size: 14px; font-weight: 600; }
+.prediccion .opciones { display: grid; gap: 6px; }
+.prediccion .boton { text-align: left; font-size: 13.5px; }
+.prediccion .boton:disabled { cursor: default; opacity: 0.6; }
+.prediccion .boton.elegida { opacity: 1; border-color: var(--texto); }
+.prediccion .boton.correcta { opacity: 1; border-color: var(--marca); background: rgba(198, 243, 94, 0.14); }
+.prediccion.error .boton.elegida:not(.correcta) { border-color: var(--magenta); }
+.prediccion .resultado p { margin: 0; font-size: 13px; color: #cfdcd6; }
+.prediccion .resultado .veredicto { margin-bottom: 4px; font: 600 13px/1.3 var(--mono); color: var(--apagado); }
+.prediccion.acierto .veredicto { color: var(--marca); }
+.prediccion.error .veredicto { color: var(--magenta); }
+.prediccion .resultado .nota { color: var(--apagado); }
+
+/* --- Gráfico --- */
+.grafico { padding: 10px 12px 6px; display: grid; gap: 6px; }
+.grafico .leyenda { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 600 11px/1.3 var(--mono); }
+.grafico .leyenda small { margin-left: 2px; color: var(--apagado); }
+.grafico-lienzo { display: block; width: 100%; }
 
 /* --- Modal --- */
 .modal { border: 0; padding: 0; background: transparent; color: var(--texto); max-width: min(620px, 92vw); }
