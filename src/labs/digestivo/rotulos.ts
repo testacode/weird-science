@@ -1,5 +1,6 @@
 // Rótulos HTML que siguen a la escena: etiquetas de órganos y píldoras de enzima activa.
 import * as THREE from 'three'
+import { crearPildoras } from '../../escena/pildoras'
 import { h } from '../../ui/dom'
 import { enzimasActivas } from './enzimas'
 import type { Config } from './model'
@@ -12,30 +13,26 @@ export interface Etiqueta {
 }
 
 const CLASE_MACRO = { carbos: 'c-ambar', proteinas: 'c-magenta', grasas: 'c-cielo' }
+/** Separación vertical (px) entre las píldoras de enzima de bocados distintos. */
+const SEPARACION_ENZIMAS = 58
 
 export function crearRotulos(contenedor: HTMLElement, camera: THREE.Camera, etiquetas: Etiqueta[], bocados: number) {
-  const proyectado = new THREE.Vector3()
-  const base = new THREE.Vector3()
-  function proyectar(p: THREE.Vector3) {
-    proyectado.copy(p).project(camera)
-    return { x: (proyectado.x * 0.5 + 0.5) * contenedor.clientWidth, y: (-proyectado.y * 0.5 + 0.5) * contenedor.clientHeight }
-  }
+  const pildoras = crearPildoras(contenedor, camera)
+  const rotulos = etiquetas.map((e) => ({ ...e, p: pildoras.crear(e.texto) }))
 
-  const pildoras = etiquetas.map((e) => ({ ...e, el: h('div', { class: 'pildora' }, e.texto) }))
-  contenedor.append(...pildoras.map((p) => p.el))
-
-  // Una píldora de enzima por bocado, marcada como info avanzada.
-  const enzimas = Array.from({ length: bocados }, () => ({ el: h('div', { class: 'pildora enzima avanzado', hidden: true }), clave: '' }))
-  contenedor.append(...enzimas.map((e) => e.el))
+  // Una píldora de enzima por bocado, marcada como info avanzada, al costado del bocado.
+  const enzimas = Array.from({ length: bocados }, (_, i) => {
+    const p = pildoras.crear('', { clase: 'enzima avanzado', multilinea: true, origen: 'izquierda', dx: 22, dy: -i * SEPARACION_ENZIMAS })
+    p.el.hidden = true
+    return { p, clave: '' }
+  })
 
   return {
     /** `activas`: índices de etiquetas que se resaltan. */
     etiquetas(activas: Set<number>, f: number) {
-      pildoras.forEach(({ el, ancla, desp }, i) => {
-        const { x, y } = proyectar(base.copy(ancla).addScaledVector(desp, f))
-        el.style.left = `${x}px`
-        el.style.top = `${y}px`
-        el.classList.toggle('activa', activas.has(i))
+      rotulos.forEach(({ p, ancla, desp }, i) => {
+        p.ancla.copy(ancla).addScaledVector(desp, f)
+        p.el.classList.toggle('activa', activas.has(i))
       })
     },
     /** `bolos[i]`: dónde está el bocado i y en qué tramo, o `null` si no corresponde mostrarlo. */
@@ -43,19 +40,19 @@ export function crearRotulos(contenedor: HTMLElement, camera: THREE.Camera, etiq
       enzimas.forEach((slot, i) => {
         const bolo = bolos[i]
         const lista = bolo ? enzimasActivas(bolo.segmento, config) : []
-        slot.el.hidden = !bolo || lista.length === 0
-        if (slot.el.hidden || !bolo) return
+        slot.p.el.hidden = !bolo || lista.length === 0
+        if (slot.p.el.hidden || !bolo) return
         const clave = lista.map((e) => `${e.nombre}${e.frenada}`).join('|')
         if (clave !== slot.clave) {
           slot.clave = clave
-          slot.el.replaceChildren(
+          slot.p.el.replaceChildren(
             ...lista.map((e) => h('span', { class: CLASE_MACRO[e.macro] }, e.frenada ? `${e.nombre} (frenada)` : e.nombre)),
           )
         }
-        const { x, y } = proyectar(bolo.punto)
-        slot.el.style.left = `${x}px`
-        slot.el.style.top = `${y - i * 58}px`
+        slot.p.ancla.copy(bolo.punto)
       })
     },
+    /** Proyecta todos los rótulos: va después de `etiquetas` y `enzimas`. */
+    ubicar: pildoras.ubicar,
   }
 }

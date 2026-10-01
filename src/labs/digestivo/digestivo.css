@@ -1,11 +1,7 @@
 /* Estilos propios del lab digestivo (lo que el kit no cubre). */
 
-/* Píldora de enzima activa: sigue al bocado y sale del modelo. */
-.pildora.enzima {
-  display: flex; flex-direction: column; gap: 1px; border-radius: 12px; transform: translate(22px, -50%);
-  color: var(--texto); border-color: var(--marca); font-size: 11px;
-}
-.pildora.enzima[hidden] { display: none; }
+/* Píldora de enzima activa (multilínea del kit): sigue al bocado, al costado del tubo. */
+.pildora.enzima { color: var(--texto); border-color: var(--marca); font-size: 11px; }
 .pildora.enzima::before {
   content: ''; position: absolute; left: -14px; top: 50%; width: 12px; height: 1px; background: var(--marca); opacity: 0.6;
 }
@@ -37,11 +33,3 @@
   font: 600 10.5px/1.4 var(--mono); color: var(--marca);
 }
 .zoom .rotulo span { color: var(--apagado); }
-
-/* Atajos en el modal */
-.atajos { list-style: none; padding: 0; display: grid; gap: 4px; }
-.atajos li { display: flex; align-items: center; gap: 10px; }
-.atajos kbd {
-  min-width: 74px; padding: 2px 8px; border-radius: 6px; text-align: center;
-  font: 600 12px/1.6 var(--mono); color: var(--marca); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--borde);
-}

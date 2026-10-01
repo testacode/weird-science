@@ -1,6 +1,7 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
 
 import { av } from '../../ui/avanzado'
+import { listaAtajos } from '../../ui/teclado'
 import type { Config, Estado, Segmento } from './model'
 import { ATAJOS } from './teclado'
 
@@ -43,7 +44,6 @@ export function relatoFinal(kcal: number, kcalTotal: number, grasasPerdidas: num
   return `<strong>Fin del tránsito.</strong> Absorbidas <span class="c-marca">${kcal.toFixed(0)} kcal</span> de ${kcalTotal.toFixed(0)} ingeridas.${perdida} El resto se elimina con las heces.`
 }
 
-const FILAS_ATAJOS = ATAJOS.map((a) => `<li><kbd>${a.tecla}</kbd> ${a.texto}</li>`).join('')
 
 export const COMO_FUNCIONA = `
   <h2>¿Cómo funciona?</h2>
@@ -70,7 +70,7 @@ export const COMO_FUNCIONA = `
     <li><b>Info avanzada:</b> muestra u oculta los nombres de enzimas, el pH y los detalles del modelo.</li>
   </ul>
   <h3>Atajos de teclado</h3>
-  <ul class="atajos">${FILAS_ATAJOS}</ul>
+  ${listaAtajos(Object.values(ATAJOS))}
   <h3>Predecí antes de correr</h3>
   <p>Cuando rompés la bilis o el ácido, el lab te pregunta qué va a pasar antes de empezar. Elegí, dejá correr el tránsito y al final se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>

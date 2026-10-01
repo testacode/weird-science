@@ -1,5 +1,6 @@
 import '../../ui/kit.css'
 import './digestivo.css'
+import { hud as columnaHud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { agregado, avanzar, nuevoFlujo, ritmoReloj, todosTerminaron, type Bocados } from './bocados'
 import { COMIDAS, type Comida } from './contenido'
@@ -9,7 +10,6 @@ import { crearHud } from './hud'
 import { SEGMENTOS, phSegmento, type Config } from './model'
 import { leyendaPh } from './ph'
 import { preguntaPara, referencia, type Pregunta, type Respuesta } from './prediccion'
-import { h } from '../../ui/dom'
 import { instalarTeclado } from './teclado'
 
 const lab = document.querySelector<HTMLElement>('#lab')!
@@ -37,7 +37,7 @@ const controles = crearControles({ comida, config, velocidad, vista, bocados }, 
   bocados: cambiarBocados,
   comida: cambiarComida,
 })
-lab.append(h('div', { class: 'hud hud-der' }, controles.el, pred.el), controles.ayuda.el)
+lab.append(columnaHud('der', controles.el, pred.el), controles.ayuda.el)
 hud.reiniciarCurva(comida, bocados)
 
 // --- Predecí antes de correr: al romper algo, la simulación espera la predicción ---
@@ -109,8 +109,7 @@ instalarTeclado({
   bilis: () => cambiarConfig('bilis', !config.bilis),
   acido: () => cambiarConfig('acidoGastrico', !config.acidoGastrico),
   vista: () => cambiarVista(vista === 'normal' ? 'explotada' : 'normal'),
-  ayuda: () => (controles.ayuda.el.open ? controles.ayuda.el.close() : controles.abrirAyuda()),
-  modalAbierto: () => controles.ayuda.el.open,
+  ayuda: () => (controles.ayuda.abierto ? controles.ayuda.cerrar() : controles.abrirAyuda()),
 })
 
 let anterior = performance.now()

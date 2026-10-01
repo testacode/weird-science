@@ -1,6 +1,7 @@
 // HUD izquierdo: título, métricas, relato en vivo, gráfico y leyenda de pH.
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
+import { hud } from '../../ui/hud'
 import { metrica } from '../../ui/componentes'
 import { GANCHO, RELATO, relatoFinal, type Comida } from './contenido'
 import { HORAS_TOTALES, KCAL_POR_GRAMO, MACROS, SEGMENTOS, kcalAbsorbidas, phSegmento, type Config, type Estado } from './model'
@@ -32,7 +33,7 @@ export function crearHud(lab: HTMLElement, extra: HTMLElement[] = []) {
     { titulo: 'Gramos absorbidos', unidadX: ' h', unidadY: 'g' },
   )
   lab.append(
-    h('div', { class: 'hud hud-izq' },
+    hud('izq',
       h('a', { href: '../../', class: 'etiqueta' }, '← Weird Science'),
       h('h1', { class: 'titulo' }, h('small', {}, 'Lab del sistema digestivo'), h('span', {}, 'De la boca a la sangre')),
       gancho,

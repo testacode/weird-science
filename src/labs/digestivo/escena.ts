@@ -180,6 +180,7 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
         }),
         config,
       )
+      rotulos.ubicar()
       const actividad = {} as Record<Macro, number>
       for (const m of MACROS) {
         // Solo lo digerido de los bocados que están en el delgado: es lo que pasa por las vellosidades.
