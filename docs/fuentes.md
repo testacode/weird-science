@@ -138,5 +138,18 @@ Conversión: J/(mol·K) ÷ masa molar = J/(g·K). Etanol 46,07 g/mol; acetona 58
   "Hill equation (biochemistry)", Wikipedia — https://en.wikipedia.org/wiki/Hill_equation_(biochemistry)
 - CO₂ exhalado ≈ 4 %: el aire exhalado tiene 4–5 % de CO₂. OK.
   "Breathing", Wikipedia — https://en.wikipedia.org/wiki/Breathing
-- P50 = 26,8 mmHg y O₂ exhalado ≈ 16 %: las búsquedas dicen 26,5–27 mmHg y 16 %, pero no encontré una página que lo muestre en el navegador. Sin verificar.
-- Presión con la altura (atmósfera estándar) y 21 % de O₂ en el aire: sin verificar en esta pasada.
+- O₂ del aire 20,93 % (`FIO2`) y CO₂ 0,04 % (`FICO2`): Wikipedia da 20,946 % de O₂ y 0,0412–0,0424 % de CO₂. OK.
+  "Atmosphere of Earth", Wikipedia — https://en.wikipedia.org/wiki/Atmosphere_of_Earth
+- Presión con la altura, Pb = 760 · (1 − 2,25577·10⁻⁵ · h)^5,25588: exponente 5,25588 de la capa 0 de la atmósfera estándar; 2,25577·10⁻⁵ = 0,0065 K/m ÷ 288,15 K. OK.
+  "Barometric formula", Wikipedia — https://en.wikipedia.org/wiki/Barometric_formula
+- O₂ exhalado ≈ 16 %: derivado de datos verificados. Con cociente respiratorio 0,8, si el CO₂ sube 4 puntos (4–5 % exhalado, verificado) el O₂ baja 4 / 0,8 = 5 puntos: 21 − 5 = 16 %. OK.
+- P50 = 26,8 mmHg: sin fuente verificada en navegador tras 5 intentos (las búsquedas dicen 26,5–27). Declarado en el lab como "valor de libro".
+
+## Datos pendientes, segunda pasada
+
+- Digestivo, pan 50 / 9 / 3 g (carbohidratos / proteínas / grasas): USDA "Bread, white, commercially prepared" da 49,4 / 8,85 / 3,33 g cada 100 g. OK (porción de 100 g).
+  USDA FoodData Central #174924 — https://fdc.nal.usda.gov/food-details/174924/nutrients
+- Digestivo, papas fritas 40 / 4 / 17 g: USDA "McDONALD'S, french fries" da 42,6 / 3,41 / 15,5 g cada 100 g. OK (porción de 100 g).
+  USDA FoodData Central #170721 — https://fdc.nal.usda.gov/food-details/170721/nutrients
+- Digestivo, milanesa 15 / 30 / 18 g: no está en USDA (2 búsquedas). Declarada en el lab como porción aproximada.
+- Fotosíntesis, absorción de Elodea: sin valor medido. Declarada en el lab como estimación a partir de otras hojas.
