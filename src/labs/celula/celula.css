@@ -1,0 +1,5 @@
+/* Estilos propios del lab de la célula (lo que el kit no cubre). */
+.leyenda-particulas { display: flex; justify-content: space-between; padding: 8px 14px; font: 600 11px/1.3 var(--mono); }
+.boton-atajos { width: 100%; font-size: 13px; color: var(--apagado); }
+.boton-atajos:hover { color: var(--texto); }
+.interruptor[hidden] { display: none; }
