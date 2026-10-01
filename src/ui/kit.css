@@ -64,6 +64,17 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 .hud { position: absolute; z-index: 2; }
 .hud-izq { top: 20px; left: 20px; width: min(380px, calc(100vw - 40px)); display: grid; gap: 10px; }
 .hud-der { top: 20px; right: 20px; width: 330px; display: grid; gap: 10px; }
+/* Si la columna no entra en la ventana, hace scroll. `hud()` marca `.mas-abajo` y aparece la pista al pie. */
+.hud-izq, .hud-der {
+  max-height: calc(100vh - 40px); overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: rgba(190, 255, 220, 0.22) transparent;
+}
+.hud.mas-abajo::after {
+  content: 'más ↓'; position: sticky; bottom: 0; z-index: 1; height: 38px; margin-top: -48px;
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px; pointer-events: none;
+  font: 600 10px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--marca);
+  background: linear-gradient(to bottom, transparent, rgba(7, 16, 15, 0.92) 70%);
+}
 .consola { padding: 14px; display: grid; gap: 14px; }
 
 .titulo { margin: 0; line-height: 1.05; }
@@ -72,8 +83,10 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 .gancho { margin: 0; font-size: 14px; color: var(--texto); opacity: 0.88; }
 
 .metricas { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
-.metrica { padding: 9px 10px; }
-.metrica b { display: block; margin-top: 6px; font: 600 16px/1 var(--mono); white-space: nowrap; }
+.metrica { padding: 9px 10px; min-width: 0; }
+.metrica .etiqueta { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metrica b { display: block; margin-top: 6px; font: 600 16px/1 var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metrica b.dos-lineas { white-space: normal; line-height: 1.15; }
 .metrica b small { font-size: 10px; color: var(--apagado); margin-left: 2px; }
 
 .ahora { padding: 12px 14px; font-size: 13.5px; }
@@ -108,6 +121,32 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
   transition: color 0.2s, border-color 0.2s;
 }
 .pildora.activa { color: var(--marca); border-color: var(--marca); }
+.pildora.multilinea { display: flex; flex-direction: column; gap: 1px; border-radius: 12px; }
+.pildora[hidden] { display: none; }
+
+/* --- Deslizador --- */
+.deslizador { display: grid; gap: 4px; }
+.deslizador .cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.deslizador .cabeza b { font: 600 12px/1 var(--mono); }
+.deslizador .cabeza small { color: var(--apagado); font: 400 11px/1 var(--mono); margin-left: 6px; }
+
+/* Pista con progreso (`--p`, lo pone el deslizador) y perilla del color `--acento`. */
+input[type='range'] {
+  width: 100%; height: 20px; margin: 0; background: transparent; appearance: none; cursor: pointer;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, var(--acento, var(--marca)) var(--p, 0%), rgba(255, 255, 255, 0.15) var(--p, 0%));
+}
+input[type='range']::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
+input[type='range']::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--acento, var(--marca)); }
+input[type='range']::-webkit-slider-thumb {
+  appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
+  background: var(--texto); border: 3px solid var(--acento, var(--marca));
+}
+input[type='range']::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--texto); border: 3px solid var(--acento, var(--marca)); }
+input[type='range']:focus-visible { outline: 2px solid var(--marca); outline-offset: 4px; border-radius: 4px; }
+input[type='range']:disabled { opacity: 0.4; cursor: default; }
 
 /* --- Info avanzada: con el filtro en No, todo lo marcado se oculta --- */
 body.sin-avanzado .avanzado { display: none; }
@@ -141,6 +180,15 @@ body.sin-avanzado .avanzado { display: none; }
 .modal h2 { margin-top: 0; }
 .modal h3 { margin-bottom: 4px; color: var(--marca); font-size: 15px; }
 .modal p, .modal li { color: #cfdcd6; font-size: 14px; }
+
+/* --- Atajos de teclado --- */
+kbd {
+  display: inline-block; padding: 2px 8px; border-radius: 6px; text-align: center;
+  font: 600 12px/1.6 var(--mono); color: var(--marca); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--borde);
+}
+.atajos { list-style: none; padding: 0; display: grid; gap: 4px; }
+.atajos li { display: flex; align-items: center; gap: 10px; }
+.atajos kbd { min-width: 74px; }
 
 @media (max-width: 900px) {
   .hud-der { top: auto; bottom: 16px; right: 16px; left: 16px; width: auto; }

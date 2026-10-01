@@ -7,7 +7,14 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 export const FONDO = 0x07100f
 
-export function crearEscenario(contenedor: HTMLElement) {
+export interface OpcionesEscenario {
+  /** Intensidad del bloom (0 lo apaga). Bajarla si el brillo lava los colores. */
+  bloom?: number
+  /** Distancias (desde la cámara) donde empieza y termina la niebla. Alejarlas si la cámara queda lejos de la maqueta. */
+  niebla?: { cerca: number; lejos: number }
+}
+
+export function crearEscenario(contenedor: HTMLElement, { bloom: fuerzaBloom = 0.35, niebla = { cerca: 16, lejos: 34 } }: OpcionesEscenario = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -15,13 +22,13 @@ export function crearEscenario(contenedor: HTMLElement) {
 
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(FONDO)
-  scene.fog = new THREE.Fog(FONDO, 16, 34)
+  scene.fog = new THREE.Fog(FONDO, niebla.cerca, niebla.lejos)
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100)
 
   // OutputPass va último: aplica tone mapping y espacio de color.
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.4, 0.85)
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), fuerzaBloom, 0.4, 0.85)
   composer.addPass(bloom)
   composer.addPass(new OutputPass())
 

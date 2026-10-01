@@ -26,28 +26,51 @@ export function grupo(titulo: string, contenido: HTMLElement): HTMLElement {
   return h('div', { class: 'grupo' }, h('span', { class: 'etiqueta' }, titulo), contenido)
 }
 
-/** Tarjeta de métrica con valor actualizable. */
+/** Tamaño mínimo (px) al que se achica el valor de una métrica antes de pasar a dos líneas. */
+const MIN_VALOR = 12
+
+/** Achica el valor si no entra en la tarjeta ("Gibosa creciente"); si ni así entra, lo parte en dos líneas. */
+function ajustar(valor: HTMLElement) {
+  valor.style.fontSize = ''
+  valor.classList.remove('dos-lineas')
+  if (valor.scrollWidth <= valor.clientWidth) return
+  const base = parseFloat(getComputedStyle(valor).fontSize)
+  valor.style.fontSize = `${Math.max(MIN_VALOR, Math.floor((base * valor.clientWidth) / valor.scrollWidth))}px`
+  if (valor.scrollWidth > valor.clientWidth) valor.classList.add('dos-lineas')
+}
+
+/** Tarjeta de métrica con valor actualizable. Un valor largo se achica para no desbordar. */
 export function metrica(nombre: string): { el: HTMLElement; set: (valor: string, unidad?: string) => void } {
   const valor = h('b')
   const el = h('div', { class: 'panel metrica' }, h('span', { class: 'etiqueta' }, nombre), valor)
+  // La fuente es monoespaciada: si el largo del texto no cambió, el ancho tampoco (no hace falta medir).
+  let largo = -1
   return {
     el,
     set: (v, unidad = '') => {
       valor.innerHTML = unidad ? `${v}<small>${unidad}</small>` : v
+      const nuevo = valor.textContent?.length ?? 0
+      if (nuevo === largo || !valor.clientWidth) return
+      largo = nuevo
+      ajustar(valor)
     },
   }
 }
 
 /** Modal nativo (<dialog>) con contenido HTML reemplazable. */
-export function modal(): { el: HTMLDialogElement; abrir: (html: string) => void } {
+export function modal() {
   const cuerpo = h('div', { class: 'panel' })
   const el = h('dialog', { class: 'modal', onclick: (e: Event) => e.target === el && el.close() }, cuerpo)
   return {
     el,
-    abrir: (html) => {
+    abrir(html: string) {
       cuerpo.innerHTML = `${html}<p><button class="boton" type="button">Cerrar</button></p>`
       cuerpo.querySelector('button:last-of-type')?.addEventListener('click', () => el.close())
       el.showModal()
+    },
+    cerrar: () => el.close(),
+    get abierto() {
+      return el.open
     },
   }
 }
