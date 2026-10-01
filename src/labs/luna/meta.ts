@@ -8,5 +8,5 @@ export const meta: Lab = {
   nap: 'Primaria 6° · Sistema Solar',
   temas: ['ciclos', 'fuerzas'],
   orden: 1,
-  listo: false,
+  listo: true,
 }
