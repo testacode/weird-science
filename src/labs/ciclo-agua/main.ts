@@ -11,8 +11,7 @@ import { COMO_FUNCIONA, GANCHO, RESERVORIO_TEXTO, num, relato } from './contenid
 import { crearEscena } from './escena'
 import {
   CONFIG_INICIAL, LIMITES, RESERVORIOS, TOTAL, efectiva, estadoEnMarcha, estadoInicial, flujos, paso, saturacion, tBaja,
-  total, type Config, type Estado, type Reservorio,
-} from './model'
+  total, type Config, type Estado, type Reservorio, DT_MONTANA } from './model'
 import { AGUA, VENTANA_H, preguntaRota, type Pregunta, type Respuesta } from './prediccion'
 
 /** Horas del terrario por cada segundo real, según la velocidad elegida. */
@@ -62,23 +61,31 @@ const curva = grafico([
   { id: 'evap', nombre: 'Evaporación', color: 'var(--nube)' },
   { id: 'lluvia', nombre: 'Lluvia', color: 'cielo' },
   { id: 'escurre', nombre: 'Escorrentía', color: 'var(--rio)' },
-], { titulo: 'Cuánta agua se mueve', unidadX: ' d', unidadY: 'mm/h', yMax: 2.5, xMax: VENTANA_GRAFICO_D })
-let origenGrafico = 0
+], { titulo: 'Cuánta agua se mueve · últimos 5 días', unidadX: ' d', unidadY: 'mm/h', yMax: 2.5, xMax: VENTANA_GRAFICO_D })
+// Ventana que se desliza: siempre los últimos días, en vez de vaciarse y arrancar de cero.
+let historial: { h: number; v: Record<string, number> }[] = []
 let ultimoPunto = 0
+function redibujarCurva() {
+  const desde = historial[0]?.h ?? 0
+  curva.limpiar()
+  for (const p of historial) curva.agregar((p.h - desde) / 24, p.v)
+}
 function reiniciarCurva() {
-  origenGrafico = estado.horas
+  historial = []
   ultimoPunto = estado.horas
   curva.limpiar()
   muestrear()
 }
 function muestrear() {
-  if (estado.horas - origenGrafico > VENTANA_GRAFICO_D * 24) {
-    origenGrafico = estado.horas
-    curva.limpiar()
-  }
   const f = flujos(estado, config)
-  curva.agregar((estado.horas - origenGrafico) / 24, { evap: f.evap + f.trans, lluvia: f.prec, escurre: f.escorr })
+  const punto = { h: estado.horas, v: { evap: f.evap + f.trans, lluvia: f.prec, escurre: f.escorr } }
+  historial.push(punto)
   ultimoPunto = estado.horas
+  const limite = estado.horas - VENTANA_GRAFICO_D * 24
+  if (historial[0].h < limite) {
+    historial = historial.filter((p) => p.h >= limite)
+    redibujarCurva()
+  } else curva.agregar((punto.h - historial[0].h) / 24, punto.v)
 }
 
 lab.append(
@@ -148,7 +155,11 @@ function aplicar(parcial: Partial<Config>) {
   const despues = preguntaRota(config)
   sincronizar()
   if (despues && despues.id !== antes) return empezar()
-  if (pregunta) cancelarPregunta()
+  if (pregunta) {
+    const esperaba = pred.pendiente
+    cancelarPregunta()
+    if (esperaba) seguir(true)
+  }
   muestrear()
 }
 
@@ -168,7 +179,7 @@ const sol = deslizador({
 })
 const aire = deslizador({
   titulo: 'Temp. en altura', clase: 'aire', color: 'var(--nube)', ...rango('tAlta'), paso: 1, valor: config.tAlta,
-  formato: (v) => `${num(v, 0)} °C`, nota: (v) => (v >= tBaja(efectiva(config).sol) ? 'sin nubes' : av(`satura ${num(saturacion(v), 1)} g/m³`)),
+  formato: (v) => `${num(v, 0)} °C`, nota: (v) => (v - (config.montana ? DT_MONTANA : 0) >= tBaja(efectiva(config).sol) ? 'sin nubes' : av(`satura ${num(saturacion(v), 1)} g/m³`)),
   alCambiar: (v) => aplicar({ tAlta: v }),
 })
 const plantas = deslizador({

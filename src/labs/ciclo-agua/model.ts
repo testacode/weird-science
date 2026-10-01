@@ -46,7 +46,7 @@ const K_RIO = 0.2
 const K_SUBTERRANEA = 0.03
 const T_BASE = 15
 const T_SOL = 15
-const DT_MONTANA = 6
+export const DT_MONTANA = 6
 const PASO_MAX = 0.25
 
 export type Reservorio = 'mar' | 'vapor' | 'nubes' | 'suelo' | 'rio'

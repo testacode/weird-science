@@ -81,7 +81,13 @@ export const TALA: Pregunta = {
     const correcta: Respuesta = Math.abs(cambio) < TOLERANCIA ? 'igual' : cambio > 0 ? 'mas' : 'menos'
     return {
       correcta,
-      explicacion: `Sin plantas escurrieron <b>${num(sin.escorrentia, 0)} mm</b> al río; con plantas, ${num(con.escorrentia, 0)} mm. La tierra desnuda se infiltra menos${av(' (sin raíces ni hojas que frenen el agua, y sin transpiración que la devuelva al aire)')}.`,
+      explicacion: `Sin plantas escurrieron <b>${num(sin.escorrentia, 0)} mm</b> al río; con plantas, ${num(con.escorrentia, 0)} mm. ${
+        correcta === 'mas'
+          ? `La tierra desnuda se infiltra menos${av(' (sin raíces ni hojas que frenen el agua, y sin transpiración que la devuelva al aire)')}.`
+          : correcta === 'igual'
+            ? 'Casi no cambia: con estos controles no hay plantas que talar o casi no llueve, así que la tala no tiene efecto.'
+            : 'Escurrió menos: con menos plantas también hay menos transpiración y menos lluvia en el terrario.'
+      }`,
     }
   },
 }
