@@ -12,9 +12,10 @@ export const MUESTREO_PANTALLA_S = 0.3
 
 function estadoDe(ent: Entorno, l: Lectura): string {
   if (l.rota) return 'Estalló'
-  const vegetal = ent.celula === 'vegetal'
-  if (l.forma === 'hincha') return vegetal && conPared(ent) ? 'Turgente' : 'Hinchada'
-  if (l.forma === 'achica') return vegetal ? (conPared(ent) ? 'Plasmolizada' : 'Achicada') : 'Crenado'
+  // Con pared, la presión de turgencia es lo que distingue "turgente" de "normal" aunque el volumen casi no cambie.
+  if (conPared(ent) && l.presion > 0.05) return 'Turgente'
+  if (l.forma === 'hincha') return 'Hinchada'
+  if (l.forma === 'achica') return ent.celula === 'globulo' ? 'Crenado' : conPared(ent) ? 'Plasmolizada' : 'Achicada'
   return 'Normal'
 }
 

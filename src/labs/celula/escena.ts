@@ -91,6 +91,9 @@ export function crearEscena(contenedor: HTMLElement) {
 
   let celula = CELULAS.globulo
   let rojo = 0
+  // La malla del glóbulo se rehace solo si cambió el volumen o la rotura.
+  let ultimo = { v: NaN, rota: false }
+  const colorRojo = new THREE.Color(0xd9363e)
   const cuerpoActual = (ent: Entorno) => (ent.celula === 'globulo' ? globulo.cuerpo : vegetal.cuerpo)
 
   return {
@@ -100,13 +103,16 @@ export function crearEscena(contenedor: HTMLElement) {
       globulo.grupo.visible = ent.celula === 'globulo'
       vegetal.grupo.visible = ent.celula === 'vegetal'
       globulo.actualizar(1, false)
+      ultimo = { v: 1, rota: false }
       vegetal.actualizar(1, ent.pared, false)
       rojo = 0
       particulas.reiniciar(cuerpoActual(ent), AGUA_DENTRO)
     },
     dibujar(ent: Entorno, l: Lectura, dt: number) {
-      if (ent.celula === 'globulo') globulo.actualizar(l.v, l.rota)
-      else vegetal.actualizar(l.v, ent.pared, l.rota)
+      if (ent.celula === 'globulo') {
+        if (l.v !== ultimo.v || l.rota !== ultimo.rota) globulo.actualizar(l.v, l.rota)
+        ultimo = { v: l.v, rota: l.rota }
+      } else vegetal.actualizar(l.v, ent.pared, l.rota)
       particulas.actualizar(dt, {
         cuerpo: l.rota ? null : cuerpoActual(ent),
         aguaDentro: AGUA_DENTRO * l.agua,
@@ -116,7 +122,7 @@ export function crearEscena(contenedor: HTMLElement) {
       })
       // La hemoglobina que se escapa tiñe el líquido.
       rojo += ((l.rota && ent.celula === 'globulo' ? 1 : 0) - rojo) * Math.min(1, dt * 0.6)
-      ;(liquido.material as THREE.MeshPhysicalMaterial).color.copy(colorLiquido).lerp(new THREE.Color(0xd9363e), rojo * 0.7)
+      ;(liquido.material as THREE.MeshPhysicalMaterial).color.copy(colorLiquido).lerp(colorRojo, rojo * 0.7)
 
       pVaso.texto(`Solución · ${numero(ent.pct, 2)} % de sal`)
       pCelula.texto(l.rota ? `${celula.nombre} · estalló` : `${celula.nombre} · ${numero(l.v, 2)}×`)

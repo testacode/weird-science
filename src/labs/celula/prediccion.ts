@@ -1,10 +1,10 @@
-// Preguntas de "Predecí antes de correr". La respuesta sale del modelo: se corre la ósmosis hasta el
-// equilibrio (o hasta que la célula estalla) y se mide el volumen final; no está escrita a mano.
+// Preguntas de "Predecí antes de correr". La respuesta sale del modelo: se resuelve el equilibrio
+// (o la rotura) y se mide el volumen final; no está escrita a mano.
 import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
 import { numero } from '../../ui/formato'
 import { V_ROTURA, osmolaridad } from './constantes'
-import { CELULAS, conPared, leer, mOsmInterior, pctDeRotura, relativa, simular, type Entorno, type Forma } from './model'
+import { CELULAS, conPared, leer, mOsmInterior, pctDeRotura, simular, tonicidad, type Entorno, type Forma } from './model'
 
 export type Respuesta = Forma | 'sal' | 'agua' | 'nada'
 
@@ -38,48 +38,65 @@ function causaRotura(ent: Entorno): string {
   return ` Afuera hay mucha menos sal que adentro (${numero(afuera, 0)} contra ${numero(adentro, 0)} mOsm/L) y el agua entra hasta pasar el límite de la membrana${av(`; en este modelo eso ocurre por debajo de ${numero(pctDeRotura(), 2)} % de sal`)}.`
 }
 
+/** Por qué la pared frenó al agua, según lo que haya pasado con la sal. */
+function causaTurgencia(ent: Entorno, presion: number): string {
+  const freno = `la membrana empujó contra la pared, que devuelve ${numero(presion, 2)} MPa de presión${av(' (turgencia)')}`
+  return ent.selectiva && tonicidad(ent) === 'hipo'
+    ? `${freno}. Con esa presión el agua deja de entrar: por eso la célula vegetal no estalla en agua dulce.`
+    : ent.selectiva
+      ? `${freno}.`
+      : `${freno}. La sal pasó libre y solo hacían fuerza las moléculas grandes de adentro: la pared las frena.`
+}
+
 const EXPLICACION: Record<Forma, (ent: Entorno, v: number, presion: number) => string> = {
   rota: (ent) =>
     `Estalló: el volumen llegó a <b>${numero(V_ROTURA, 2)}×</b> el normal, el límite de la membrana${av(ent.celula === 'globulo' ? ' (una esfera de 150 fL, contra 90 fL del glóbulo normal)' : ' (se supone el mismo que el del glóbulo)')}.${causaRotura(ent)}`,
   hincha: (ent, v, presion) =>
     conPared(ent)
-      ? `El volumen subió a <b>${numero(v, 2)}×</b>: el agua entró y la membrana empujó contra la pared, que devuelve ${numero(presion, 2)} MPa de presión${av(' (turgencia)')}. Con esa presión el agua deja de entrar: por eso la célula vegetal no estalla en agua dulce.`
+      ? `El volumen subió a <b>${numero(v, 2)}×</b>: entró agua y ${causaTurgencia(ent, presion)}`
       : `El volumen subió a <b>${numero(v, 2)}×</b>: entró agua, pero no llegó al límite de la membrana (${numero(V_ROTURA, 2)}×).`,
-  igual: (ent) => `El volumen quedó en <b>1×</b>: ${conPared(ent) ? 'casi no hay diferencia de concentración y' : 'adentro y afuera hay lo mismo, y'} el agua cruza en los dos sentidos al mismo ritmo, así que no hay cambio neto.`,
+  igual: (ent, v, presion) =>
+    presion > 0.05
+      ? `El volumen quedó en <b>${numero(v, 2)}×</b>, casi igual, pero no por falta de diferencia: ${causaTurgencia(ent, presion)}`
+      : `El volumen quedó en <b>${numero(v, 2)}×</b>: adentro y afuera hay casi lo mismo, el agua cruza en los dos sentidos al mismo ritmo y no hay cambio neto.`,
   achica: (ent, v) =>
-    `El volumen bajó a <b>${numero(v, 2)}×</b>: afuera hay más sal, el agua sale hasta emparejar${av(' las concentraciones')} y la sal se queda afuera. ${ent.celula === 'vegetal' ? 'La pared no se achica y la membrana se despega: plasmólisis.' : 'La membrana se arruga: crenación.'}`,
+    `El volumen bajó a <b>${numero(v, 2)}×</b>: afuera hay más sal, el agua sale hasta emparejar${av(' las concentraciones')} y la sal se queda afuera. ${conPared(ent) ? 'La pared no se achica y la membrana se despega: plasmólisis.' : 'La membrana se arruga: crenación.'}`,
 }
 
 const preguntaDestino = (ent: Entorno): Pregunta => ({
   texto: `¿Qué le pasa a ${situacion(ent)}?`,
   opciones: opcionesDestino(ent),
   resolver: (e) => {
-    const { final } = simular(e)
-    const l = leer(final, e)
+    const l = leer(simular(e).final, e)
     return { correcta: l.forma, explicacion: EXPLICACION[l.forma](e, l.v, l.presion) }
   },
 })
 
+const mezclar = <T>(lista: T[]): T[] => lista.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x)
+
 /** Para el mito "la sal entra y la arruga": lo que cruza la membrana en el primer instante. */
 const preguntaCruza = (ent: Entorno): Pregunta => ({
-  texto: `Con ${porcentaje(ent.pct)} afuera, ¿qué cruza la membrana de ${ent.celula === 'vegetal' ? 'la célula vegetal' : 'un glóbulo rojo'}?`,
-  opciones: [
+  texto: `Con ${porcentaje(ent.pct)} afuera, ¿qué cruza la membrana de ${CELULAS[ent.celula].un}?`,
+  // El orden se mezcla: si no, el mito quedaría siempre primero.
+  opciones: mezclar<Opcion<Respuesta>>([
     { valor: 'sal', texto: 'Entra sal: la célula se llena de sal' },
     { valor: 'agua', texto: 'Sale agua: la sal se queda afuera' },
     { valor: 'nada', texto: 'No cruza nada' },
-  ],
+  ]),
   resolver: (e) => {
     const { final, dv0, ds0 } = simular(e)
-    const correcta: Respuesta = dv0 < -0.02 ? 'agua' : ds0 > 0.02 ? 'sal' : 'nada'
+    const correcta: 'agua' | 'sal' | 'nada' = dv0 < -1e-6 ? 'agua' : ds0 > 1e-6 ? 'sal' : 'nada'
     const l = leer(final, e)
-    return {
-      correcta,
-      explicacion: `Salió agua: el volumen bajó a <b>${numero(l.v, 2)}×</b>. La membrana deja pasar el agua pero no la sal, y el agua va hacia donde hay más soluto${av(` (afuera ${numero(l.mOsmFuera, 0)} mOsm/L, adentro empezó en ${numero(mOsmInterior(e.celula), 0)})`)}. La sal no entró.`,
+    const explicaciones: Record<'agua' | 'sal' | 'nada', string> = {
+      agua: `Salió agua: el volumen bajó a <b>${numero(l.v, 2)}×</b>. La membrana deja pasar el agua pero no la sal, y el agua va hacia donde hay más soluto${av(` (afuera ${numero(l.mOsmFuera, 0)} mOsm/L, adentro empezó en ${numero(mOsmInterior(e.celula), 0)})`)}. La sal no entró.`,
+      sal: 'Entró sal: la membrana la deja pasar.',
+      nada: 'No cruzó nada neto: no hay diferencia de concentración.',
     }
+    return { correcta, explicacion: explicaciones[correcta] }
   },
 })
 
 /** Con la membrana selectiva y mucha sal afuera, la pregunta es el mito de la sal; si no, qué le pasa a la célula. */
 export function preguntaPara(ent: Entorno): Pregunta {
-  return ent.selectiva && relativa(ent) > 1.1 ? preguntaCruza(ent) : preguntaDestino(ent)
+  return ent.selectiva && tonicidad(ent) === 'hiper' ? preguntaCruza(ent) : preguntaDestino(ent)
 }

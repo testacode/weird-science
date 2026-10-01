@@ -49,8 +49,8 @@ export const CELULAS: Record<Celula, ParamsCelula> = {
 
 /** Variación de volumen por debajo de la cual se considera "igual". */
 export const TOLERANCIA_VOLUMEN = 0.03
-/** |dv/dt| (1/s) por debajo del cual se considera que la célula llegó al equilibrio. */
-const UMBRAL_EQUILIBRIO = 0.003
+/** Distancia al volumen de equilibrio por debajo de la cual se considera que la célula llegó. */
+const UMBRAL_EQUILIBRIO = 0.004
 /** Presión osmótica (MPa) de la célula vegetal en la plasmólisis incipiente: π = osmolaridad · R · T, con T = 20 °C. */
 export const PI0_VEGETAL_MPA = (osmolaridad(PCT_PLASMOLISIS_VEGETAL) * 8.314 * 293.15) / 1e6
 const PASO_S = 0.005
@@ -59,6 +59,7 @@ const PASO_S = 0.005
 export const mOsmInterior = (celula: Celula) => osmolaridad(CELULAS[celula].pctIso)
 export const estadoInicial = (): Estado => ({ t: 0, v: 1, s: 0, rota: false })
 export const conPared = (e: Entorno) => e.celula === 'vegetal' && e.pared
+const presionPared = (v: number, ent: Entorno) => (conPared(ent) ? RIGIDEZ_PARED * Math.max(0, v - 1) : 0)
 /** Concentración de afuera relativa a la isotónica de la célula. */
 export const relativa = (e: Entorno) => e.pct / CELULAS[e.celula].pctIso
 
@@ -67,9 +68,8 @@ export function derivadas(est: Estado, ent: Entorno): { dv: number; ds: number }
   const p = CELULAS[ent.celula]
   const agua = est.v - p.b
   const adentro = (1 - p.b + est.s) / agua
-  const presion = conPared(ent) ? RIGIDEZ_PARED * Math.max(0, est.v - 1) : 0
   const afuera = relativa(ent)
-  return { dv: p.k * (adentro - afuera - presion), ds: ent.selectiva ? 0 : K_SOLUTO * (afuera - est.s / agua) }
+  return { dv: p.k * (adentro - afuera - presionPared(est.v, ent)), ds: ent.selectiva ? 0 : K_SOLUTO * (afuera - est.s / agua) }
 }
 
 export function paso(est: Estado, ent: Entorno, dt: number): Estado {
@@ -90,6 +90,35 @@ export type Forma = 'rota' | 'hincha' | 'igual' | 'achica'
 export const forma = (v: number, rota: boolean): Forma =>
   rota ? 'rota' : v > 1 + TOLERANCIA_VOLUMEN ? 'hincha' : v < 1 - TOLERANCIA_VOLUMEN ? 'achica' : 'igual'
 
+export type Tonicidad = 'hipo' | 'iso' | 'hiper'
+/**
+ * Un solo criterio para "igual / hipo / hiper": la célula sin pared quedaría dentro de ±TOLERANCIA_VOLUMEN de su volumen normal.
+ * Lo usan la métrica, el estado, el relato y la pregunta. Con la sal atravesando la membrana la tonicidad es la de lo que no pasa (`hipo`).
+ */
+export function tonicidad(ent: Entorno): Tonicidad {
+  if (!ent.selectiva) return 'hipo'
+  const { b } = CELULAS[ent.celula]
+  const v = b + (1 - b) / relativa(ent)
+  return v > 1 + TOLERANCIA_VOLUMEN ? 'hipo' : v < 1 - TOLERANCIA_VOLUMEN ? 'hiper' : 'iso'
+}
+
+/** Volumen y soluto del equilibrio (o `rota` si la membrana no llega a aguantar), resuelto por bisección: dv = 0 en `derivadas`. */
+export function equilibrio(ent: Entorno): Estado {
+  const p = CELULAS[ent.celula]
+  // Con la sal atravesando la membrana el soluto se reparte igual y solo empujan las moléculas grandes de adentro.
+  const afuera = ent.selectiva ? relativa(ent) : 0
+  const sobra = (v: number) => (1 - p.b) / (v - p.b) - afuera - presionPared(v, ent)
+  const s = (v: number) => (ent.selectiva ? 0 : relativa(ent) * (v - p.b))
+  if (!conPared(ent) && sobra(V_ROTURA) >= 0) return { t: 0, v: V_ROTURA, s: s(V_ROTURA), rota: true }
+  let [bajo, alto] = [p.b + 0.08, V_ROTURA]
+  for (let i = 0; i < 60; i++) {
+    const medio = (bajo + alto) / 2
+    if (sobra(medio) > 0) bajo = medio
+    else alto = medio
+  }
+  return { t: 0, v: bajo, s: s(bajo), rota: false }
+}
+
 export interface Lectura {
   v: number
   /** Soluto permeante que entró (en múltiplos de c₀·V₀). */
@@ -104,18 +133,22 @@ export interface Lectura {
   mOsmFuera: number
   /** Presión de turgencia (MPa); 0 sin pared. */
   presion: number
-  /** `hipo` también cuando la sal atraviesa la membrana: la tonicidad es la de lo que no pasa. */
-  tonicidad: 'hipo' | 'iso' | 'hiper'
+  tonicidad: Tonicidad
   /** Agua neta: > 0 entra, < 0 sale (1/s). */
   flujo: number
   listo: boolean
+}
+
+/** Llegó cuando está cerca del volumen de equilibrio y lo que se muestra ya coincide con el veredicto (misma forma). */
+function llegoAlEquilibrio(v: number, ent: Entorno): boolean {
+  const eq = equilibrio(ent)
+  return !eq.rota && Math.abs(v - eq.v) < UMBRAL_EQUILIBRIO && forma(v, false) === forma(eq.v, false)
 }
 
 export function leer(est: Estado, ent: Entorno): Lectura {
   const p = CELULAS[ent.celula]
   const { dv } = derivadas(est, ent)
   const agua = est.v - p.b
-  const r = relativa(ent)
   // Rota: lo de adentro se mezcla con lo de afuera.
   const pctDentro = est.rota ? ent.pct : ((1 - p.b + est.s) / agua) * p.pctIso
   return {
@@ -127,10 +160,10 @@ export function leer(est: Estado, ent: Entorno): Lectura {
     pctDentro,
     mOsmDentro: osmolaridad(pctDentro),
     mOsmFuera: osmolaridad(ent.pct),
-    presion: conPared(ent) && !est.rota ? RIGIDEZ_PARED * Math.max(0, est.v - 1) * PI0_VEGETAL_MPA : 0,
-    tonicidad: !ent.selectiva || r < 0.95 ? 'hipo' : r > 1.05 ? 'hiper' : 'iso',
+    presion: est.rota ? 0 : presionPared(est.v, ent) * PI0_VEGETAL_MPA,
+    tonicidad: tonicidad(ent),
     flujo: est.rota ? 0 : dv,
-    listo: est.rota || (est.t > p.tMin && Math.abs(dv) < UMBRAL_EQUILIBRIO),
+    listo: est.rota || (est.t > p.tMin && llegoAlEquilibrio(est.v, ent)),
   }
 }
 
@@ -141,12 +174,10 @@ export interface Resultado {
   ds0: number
 }
 
-/** Corre la ósmosis hasta el equilibrio (o hasta que la célula estalla) sin dibujar nada. */
+/** Resultado final de la ósmosis en `ent` (equilibrio o rotura) sin correrla, más los flujos del primer instante. */
 export function simular(ent: Entorno): Resultado {
-  let est = estadoInicial()
-  const { dv, ds } = derivadas(est, ent)
-  for (let i = 0; i < 20000 && !leer(est, ent).listo; i++) est = paso(est, ent, 0.01)
-  return { final: est, dv0: dv, ds0: ds }
+  const { dv, ds } = derivadas(estadoInicial(), ent)
+  return { final: equilibrio(ent), dv0: dv, ds0: ds }
 }
 
 /** Con qué % de NaCl llega el glóbulo justo al volumen de rotura (Boyle–van't Hoff). */

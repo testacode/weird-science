@@ -87,7 +87,7 @@ function cambiarCelula(celula: Celula) {
 function cambiarPct(pct: number) {
   ent = { ...ent, pct }
   controles.set.pct(ent.celula, pct)
-  if (pred.pendiente || pred.enCurso) pred.ocultar()
+  pred.ocultar()
   if (!corriendo) seguir(true)
 }
 function cambiarVelocidad(v: number) {
