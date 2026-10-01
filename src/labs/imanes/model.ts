@@ -59,6 +59,7 @@ export type MaterialId = 'hierro' | 'acero' | 'niquel' | 'cobalto' | 'aluminio' 
 
 export interface Material {
   nombre: string
+  /** Objeto cotidiano hecho de ese material, con artículo (vacío si no hay uno típico). */
   ejemplo: string
   ferro: boolean
   /** Susceptibilidad magnética volumétrica (SI). En los ferromagnéticos es enorme y no es una constante. */
@@ -71,13 +72,13 @@ export interface Material {
 /** χ: Fe 200.000, Ni 600, Al +2,2×10⁻⁵, Cu −9,63×10⁻⁶, PVC −1,071×10⁻⁵ (Wikipedia, "Magnetic susceptibility"). Cobalto y acero: sin dato
  *  verificado; el modelo usa un valor ≫ 3 y el resultado no cambia (la forma limita la respuesta, ver `chiEfectivo`). */
 export const MATERIALES: Record<MaterialId, Material> = {
-  hierro: { nombre: 'Hierro', ejemplo: 'clavo', ferro: true, chi: 2e5, densidad: 7.874, color: 0x6b6f72 },
-  acero: { nombre: 'Acero', ejemplo: 'lata de conserva', ferro: true, chi: 1e3, densidad: 7.85, color: 0x9aa3a8 },
-  niquel: { nombre: 'Níquel', ejemplo: 'pieza de níquel', ferro: true, chi: 600, densidad: 8.9, color: 0xc9d2d6 },
-  cobalto: { nombre: 'Cobalto', ejemplo: 'pieza de cobalto', ferro: true, chi: 250, densidad: 8.834, color: 0x7f93b8 },
-  aluminio: { nombre: 'Aluminio', ejemplo: 'lata de gaseosa', ferro: false, chi: 2.2e-5, densidad: 2.7, color: 0xd9dde0 },
-  cobre: { nombre: 'Cobre', ejemplo: 'caño de cobre', ferro: false, chi: -9.63e-6, densidad: 8.92, color: 0xd7814a },
-  plastico: { nombre: 'Plástico', ejemplo: 'tapita (PVC)', ferro: false, chi: -1.071e-5, densidad: 1.372, color: 0xe8efe6 },
+  hierro: { nombre: 'Hierro', ejemplo: 'un clavo', ferro: true, chi: 2e5, densidad: 7.874, color: 0x6b6f72 },
+  acero: { nombre: 'Acero', ejemplo: 'una lata de conserva', ferro: true, chi: 1e3, densidad: 7.85, color: 0x9aa3a8 },
+  niquel: { nombre: 'Níquel', ejemplo: '', ferro: true, chi: 600, densidad: 8.9, color: 0xc9d2d6 },
+  cobalto: { nombre: 'Cobalto', ejemplo: '', ferro: true, chi: 250, densidad: 8.834, color: 0x7f93b8 },
+  aluminio: { nombre: 'Aluminio', ejemplo: 'una lata de gaseosa', ferro: false, chi: 2.2e-5, densidad: 2.7, color: 0xd9dde0 },
+  cobre: { nombre: 'Cobre', ejemplo: 'un caño de cobre', ferro: false, chi: -9.63e-6, densidad: 8.92, color: 0xd7814a },
+  plastico: { nombre: 'Plástico', ejemplo: 'una tapita de PVC', ferro: false, chi: -1.071e-5, densidad: 1.372, color: 0xe8efe6 },
 }
 export const ORDEN_MATERIALES: MaterialId[] = ['hierro', 'acero', 'niquel', 'cobalto', 'aluminio', 'cobre', 'plastico']
 
