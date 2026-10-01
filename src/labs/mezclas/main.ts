@@ -7,7 +7,7 @@ import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, num, relato } from './contenido'
 import { ESPECIES, MEZCLAS, METODOS, mezclaDe, metodoDe, type MetodoId, type MezclaId } from './datos'
 import { crearEscena } from './escena'
@@ -151,6 +151,7 @@ lab.append(
         h('button', { class: 'boton', type: 'button', onclick: () => cambiar({ mezcla: 'agua-sal', metodo: 'filtro', sobresaturar: false }) }, 'Filtrar agua salada'),
         sobresaturar.el)),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
   ),

@@ -27,7 +27,7 @@ const escena = crearEscena(lab, SEGMENTOS.map((s) => s.nombre))
 escena.setComida(comida.gramos, bocados)
 const escalaPh = leyendaPh()
 const hud = crearHud(lab, [escalaPh.el])
-const pred = prediccion<Respuesta, { pregunta: Pregunta; ref: ReturnType<typeof referencia> }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; ref: ReturnType<typeof referencia> }>(() => seguir(true), { saltar: () => seguir(true) })
 const controles = crearControles({ comida, config, velocidad, vista, bocados }, {
   alternar,
   reiniciar,
@@ -48,7 +48,7 @@ function seguir(va: boolean) {
 function predecir() {
   const pregunta = preguntaPara(config)
   if (!pregunta) return pred.ocultar()
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ref: referencia(comida.gramos) })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ref: referencia(comida.gramos) })) return seguir(true)
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
 }

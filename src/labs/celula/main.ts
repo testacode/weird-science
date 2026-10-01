@@ -21,7 +21,7 @@ let graficoCortado = false
 
 const escena = crearEscena(lab)
 const hud = crearHud(lab)
-const pred = prediccion<Respuesta, { pregunta: Pregunta; ent: Entorno }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; ent: Entorno }>(() => seguir(true), { saltar: () => seguir(true) })
 const controles = crearControles(ent, velocidad, {
   alternar,
   reiniciar: nueva,
@@ -41,7 +41,7 @@ function seguir(va: boolean) {
 }
 function predecir() {
   const pregunta = preguntaPara(ent)
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ent })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ent })) return seguir(true)
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
 }

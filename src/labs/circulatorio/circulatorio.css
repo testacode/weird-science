@@ -15,4 +15,3 @@
 .aviso { padding: 12px 14px; font-size: 13px; border-color: var(--magenta); }
 .aviso[hidden] { display: none; }
 .aviso strong { color: var(--magenta); }
-.hud-der .saltar { justify-self: start; }

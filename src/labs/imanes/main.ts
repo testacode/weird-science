@@ -6,7 +6,7 @@ import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico, type Serie } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, campoPartes, fuerzaPartes, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import { smooth } from './geometria'
@@ -74,26 +74,23 @@ const soloDos = [distanciaDos.el, botonDoble]
 const soloMaterial = [distanciaMat.el, grupo('Material de prueba', h('div', { class: 'grupo' }, materialesA.el, materialesB.el))]
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---
-let temporizador = 0
-const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const nueva = pred.datos?.nueva
-  descartarPendiente()
-  if (nueva) aplicarSuave(nueva)
-} }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => {
   if (!pred.datos) return
   const { nueva, pregunta } = pred.datos
-  saltar.hidden = true
   aplicarSuave(nueva)
   const resultado = pregunta.resolver(nueva)
-  temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
+  pred.revelarEn(ESPERA_REVELAR_MS, () => pred.revelar(resultado.correcta, resultado.explicacion))
+}, {
+  // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
+  saltar: () => {
+    const nueva = pred.datos?.nueva
+    if (nueva) aplicarSuave(nueva)
+  },
+  textoSaltar: 'Saltar y hacerlo igual',
 })
-/** Si la config cambia, la pregunta abierta (o ya respondida y sin revelar) deja de valer: se oculta y se cancela el reveal. */
+/** Si la config cambia, la pregunta abierta (o ya respondida y sin revelar) deja de valer: se oculta (y se cancela el reveal). */
 function descartarPendiente() {
-  if (!pred.pendiente && !pred.enCurso) return
-  window.clearTimeout(temporizador)
-  saltar.hidden = true
-  pred.ocultar()
+  if (pred.pendiente || pred.enCurso) pred.ocultar()
 }
 
 /** Corta la animación llevando gap y sep a su valor final: lo que se pida después parte de ahí, no de un punto a mitad de camino. */
@@ -117,8 +114,7 @@ function pedir(cambio: Partial<Config>, intencion?: Intencion) {
   const pregunta = preguntaPara(config, nueva, intencion)
   if (!pregunta) return intencion ? aplicarSuave(nueva) : aplicar(nueva)
   const conAjuste = { ...nueva, ...pregunta.ajuste }
-  pred.preguntar(pregunta.texto, pregunta.opciones, { nueva: conAjuste, pregunta })
-  saltar.hidden = false
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { nueva: conAjuste, pregunta })) return aplicarSuave(conAjuste)
   sincronizar()
 }
 function reiniciar() {
@@ -221,9 +217,9 @@ lab.append(
         separacion.el,
         temperatura.el)),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
-    saltar,
   ),
   ayuda.el,
 )

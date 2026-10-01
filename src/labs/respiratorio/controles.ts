@@ -1,4 +1,5 @@
 import { interruptorAvanzado } from '../../ui/avanzado'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { grupo, interruptor, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
@@ -50,6 +51,7 @@ export function crearControles(inicial: Config, m: Manejadores) {
     grupo('Altura sobre el nivel del mar', h('div', { class: 'grupo' }, altura.el, notaAltura)),
     grupo('Romper el sistema', h('div', { class: 'grupo' }, aguanta.el, montana.el)),
     interruptorAvanzado(),
+    interruptorPreguntas(),
   )
 
   return {

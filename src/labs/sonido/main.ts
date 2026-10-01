@@ -75,21 +75,19 @@ lab.append(
 
 // --- Predecí antes de correr: la pregunta va antes del cambio y el cambio se hace al responder ---
 const ayuda = modal()
-const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const d = pred.datos
-  descartarPendiente()
-  if (d) hacer(d.pregunta.tipo)
-} }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta, { pregunta: Pregunta; datos: Datos }>(() => {
   const d = pred.datos
-  if (!d) return
-  saltar.hidden = true
-  hacer(d.pregunta.tipo)
+  if (d) hacer(d.pregunta.tipo)
+}, {
+  // Saltar (o apagar las preguntas): se hace igual, sin predicción.
+  saltar: () => {
+    const d = pred.datos
+    if (d) hacer(d.pregunta.tipo)
+  },
+  textoSaltar: 'Saltar y hacerlo igual',
 })
 function descartarPendiente() {
-  if (!pred.pendiente) return
-  saltar.hidden = true
-  pred.ocultar()
+  if (pred.pendiente) pred.ocultar()
 }
 /** Hace lo que se estaba por predecir. */
 function hacer(tipo: Pregunta['tipo']) {
@@ -100,10 +98,10 @@ function hacer(tipo: Pregunta['tipo']) {
     seguir(true)
   }
 }
+/** Pregunta antes de hacer `tipo`; con las preguntas apagadas lo hace directo. */
 function preguntar(tipo: Pregunta['tipo']) {
   const p = preguntaPara(tipo)
-  pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud, frecuencia: frecuenciaOida(config) } })
-  saltar.hidden = false
+  if (!pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud, frecuencia: frecuenciaOida(config) } })) hacer(tipo)
 }
 function revelar() {
   const d = pred.datos
@@ -116,7 +114,6 @@ function invalidar(cambio: Partial<Config>) {
   const tipo = pred.datos?.pregunta.tipo
   if (!tipo) return
   if ((tipo === 'golpe' && ('distancia' in cambio || 'modo' in cambio)) || (tipo === 'bomba' && ('amplitud' in cambio || 'frecuencia' in cambio || 'modo' in cambio || cambio.bomba === false))) {
-    saltar.hidden = true
     pred.ocultar()
   }
 }
@@ -181,7 +178,7 @@ const controles = crearControles(config, {
     if (!audio.activar(si) && si) controles.sonido(false)
   },
 })
-lab.append(hud('der', controles.el, pred.el, saltar), ayuda.el)
+lab.append(hud('der', controles.el, pred.el), ayuda.el)
 controles.sincronizar(config, corriendo)
 graficar()
 

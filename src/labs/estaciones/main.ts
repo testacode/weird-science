@@ -6,7 +6,7 @@ import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import { crearInset } from './inset'
@@ -124,7 +124,7 @@ lab.append(h('div', { class: 'hud-linea' }, tiempo.el))
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '▶ Seguir')
 let tRevela = 0
-const pred = prediccion<Respuesta, { pregunta: Pregunta; eps: number }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; eps: number }>(() => seguir(true), { saltar: () => seguir(true) })
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
@@ -133,7 +133,7 @@ function predecir() {
   const pregunta = preguntaPara(eps, idea)
   t = pregunta.inicio
   tRevela = pregunta.revela >= pregunta.inicio ? pregunta.revela : pregunta.revela + YEAR
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, eps })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, eps })) return seguir(true)
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -224,6 +224,7 @@ lab.append(
       inclinacion.el,
       grupo('Romper el sistema', h('div', { class: 'grupo' }, ideaDistanciaSwitch.el, ejeDerecho.el)),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
   ),

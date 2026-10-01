@@ -5,7 +5,7 @@ import { fila, grupo, interruptor, metrica, modal, segmentado } from '../../ui/c
 import { h } from '../../ui/dom'
 import { hud } from '../../ui/hud'
 import { grafico } from '../../ui/grafico'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { AVISO_CORTO, COMO_FUNCIONA, GANCHO, num, relato } from './contenido'
 import { crearEscena, type Accion } from './escena'
 import { CONFIG_INICIAL, MAX_LAMPARAS, VOLTAJES, resolver, type Config } from './model'
@@ -83,37 +83,30 @@ const botonPoner = h('button', { class: 'boton', type: 'button', onclick: () => 
 
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---
-let temporizador = 0
-const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const nueva = pred.datos?.nueva
-  descartarPendiente()
-  if (nueva) aplicar(nueva)
-} }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => {
   if (!pred.datos) return
   const { nueva, pregunta } = pred.datos
-  saltar.hidden = true
   const antes = r
   aplicar(nueva)
   const resultado = pregunta.resolver(antes, r)
-  temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
+  pred.revelarEn(ESPERA_REVELAR_MS, () => pred.revelar(resultado.correcta, resultado.explicacion))
+}, {
+  // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
+  saltar: () => {
+    const nueva = pred.datos?.nueva
+    if (nueva) aplicar(nueva)
+  },
+  textoSaltar: 'Saltar y hacerlo igual',
 })
-function descartarPendiente() {
-  if (!pred.pendiente) return
-  saltar.hidden = true
-  pred.ocultar()
-}
 
 /** Todo cambio pasa por acá: si corresponde una predicción, primero se pregunta; si no, se aplica. */
 function pedir(cambio: Partial<Config>) {
-  descartarPendiente()
+  // Cualquier cambio retira la tarjeta (y su reveal programado): la respuesta no coincidiría con lo que se ve.
+  pred.ocultar()
   let nueva = { ...copia(config), ...cambio }
   if (cambio.cantidad !== undefined && cambio.cantidad !== config.cantidad) nueva = { ...nueva, sacadas: [false, false, false] }
   const pregunta = preguntaPara(config, nueva)
-  if (!pregunta) return aplicar(nueva)
-  window.clearTimeout(temporizador)
-  pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })
-  saltar.hidden = false
+  if (!pregunta || !pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })) return aplicar(nueva)
   sincronizar()
 }
 function sacarUna() {
@@ -124,8 +117,6 @@ function alternarLampara(i: number) {
   pedir({ sacadas: config.sacadas.map((s, k) => (k === i ? !s : s)) })
 }
 function reiniciar() {
-  descartarPendiente()
-  window.clearTimeout(temporizador)
   pred.ocultar()
   aplicar(copia(CONFIG_INICIAL))
   reiniciarGrafico()
@@ -178,9 +169,9 @@ lab.append(
         h('div', { class: 'romper' }, botonSacar, botonPoner),
         corto.el)),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
-    saltar,
   ),
   ayuda.el,
 )

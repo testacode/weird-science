@@ -75,7 +75,7 @@ lab.append(
 
 // --- Predecí antes de correr: al elegir algo para romper, el objeto espera la respuesta antes de soltarse ---
 const ayuda = modal()
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
 
 function seguir(va: boolean) {
   corriendo = va
@@ -121,8 +121,9 @@ function aplicar(parcial: Partial<Config>) {
   const nueva = preguntaPara(config)
   const yaPreguntada = nueva?.id === preguntaPara(antes)?.id || (nueva?.id === 'barco' && antes.objeto === 'barco')
   if (nueva && !yaPreguntada) {
+    // Con las preguntas apagadas, se suelta directo.
+    if (!pred.preguntar(nueva.texto, nueva.opciones, { pregunta: nueva, config })) return soltar()
     soltar(true)
-    pred.preguntar(nueva.texto, nueva.opciones, { pregunta: nueva, config })
     return pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }
   const esperaba = pred.pendiente

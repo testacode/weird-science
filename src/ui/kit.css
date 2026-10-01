@@ -163,6 +163,8 @@ body.sin-avanzado .avanzado { display: none; }
 .prediccion .boton.correcta { opacity: 1; border-color: var(--marca); background: rgba(198, 243, 94, 0.14); }
 .prediccion.error .boton.elegida:not(.correcta) { border-color: var(--magenta); }
 .prediccion .resultado p { margin: 0; font-size: 13px; color: #cfdcd6; }
+.prediccion .saltar { justify-self: start; text-align: center; }
+.prediccion .saltar[hidden] { display: none; }
 .prediccion .resultado .veredicto { margin-bottom: 4px; font: 600 13px/1.3 var(--mono); color: var(--apagado); }
 .prediccion.acierto .veredicto { color: var(--marca); }
 .prediccion.error .veredicto { color: var(--magenta); }

@@ -82,47 +82,40 @@ function dibujarGrafico() {
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---
 const ayuda = modal()
-let temporizador = 0
-const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const nueva = pred.datos?.nueva
-  descartar()
-  if (nueva) aplicar(nueva)
-} }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => {
   if (!pred.datos) return
   const { nueva, pregunta } = pred.datos
-  saltar.hidden = true
   aplicar(nueva)
   const resultado = pregunta.resolver()
-  temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
+  pred.revelarEn(ESPERA_REVELAR_MS, () => pred.revelar(resultado.correcta, resultado.explicacion))
+}, {
+  // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
+  saltar: () => {
+    const nueva = pred.datos?.nueva
+    if (nueva) aplicar(nueva)
+  },
+  textoSaltar: 'Saltar y hacerlo igual',
 })
-/** Saca la tarjeta (pendiente, en curso o ya revelada) y cancela la revelación: la config cambió y no vale más. */
-function descartar() {
-  window.clearTimeout(temporizador)
-  saltar.hidden = true
-  pred.ocultar()
-}
 
 /** Todo cambio pasa por acá: si corresponde una predicción, primero se pregunta; si no, se aplica. */
 function pedir(cambio: Partial<Config>) {
   if ((Object.keys(cambio) as (keyof Config)[]).every((k) => cambio[k] === config[k])) return
-  descartar()
+  // La config cambió: la tarjeta (pendiente, en curso o revelada) y su reveal programado no valen más.
+  pred.ocultar()
   let nueva = { ...config, ...cambio }
   // El ojo no puede mirar tan de costado que la luz salga por afuera de la pecera.
   if (nueva.escena === 'lapiz') nueva = { ...nueva, ojo: Math.min(nueva.ojo, ojoMax(nueva)) }
   const pregunta = preguntaPara(config, nueva)
-  if (!pregunta) return aplicar(nueva)
-  pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })
-  saltar.hidden = false
+  if (!pregunta || !pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })) return aplicar(nueva)
   consola.sincronizar(config)
 }
 function reiniciar() {
-  descartar()
+  pred.ocultar()
   aplicar({ ...CONFIG_INICIAL })
 }
 
 const consola = crearConsola({ cambiar: pedir, reiniciar, ayuda: () => ayuda.abrir(COMO_FUNCIONA) }, config)
-lab.append(hud('der', consola.el, pred.el, saltar), ayuda.el)
+lab.append(hud('der', consola.el, pred.el), ayuda.el)
 
 const grados = (v: number) => num(v, 1)
 let relatoPrevio = ''

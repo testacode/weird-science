@@ -10,6 +10,5 @@
 .romper { display: flex; gap: 6px; }
 .romper .boton { flex: 1; padding: 8px; font-size: 13px; }
 .romper .boton:disabled { opacity: 0.4; cursor: default; }
-.hud-der .saltar { justify-self: start; }
 
 .interruptor .segmentado { min-width: 170px; }

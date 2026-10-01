@@ -8,7 +8,6 @@
 .nota-altura { font: 400 11px/1.4 var(--mono); color: var(--cielo); }
 .interruptor .segmentado { min-width: 130px; }
 .hud-der .consola { gap: 10px; padding: 12px 14px; }
-.hud-der .saltar { justify-self: start; }
 
 .aviso { padding: 12px 14px; font-size: 13px; border-color: var(--magenta); }
 .aviso[hidden] { display: none; }
