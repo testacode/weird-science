@@ -47,26 +47,26 @@ function llenarCurva(g: ReturnType<typeof grafico>) {
   for (let x = 0; x < YEAR; x += MUESTREO_DIAS) g.agregar(x, valoresCurva(x))
   g.agregar(YEAR, valoresCurva(YEAR))
 }
-function crearCurva() {
-  const luz = modoGrafico === 'luz'
-  const series = luz
+function seriesCurva() {
+  return modoGrafico === 'luz'
     ? [{ id: 'obs', nombre: 'Horas de luz', color: 'ambar' }]
     : [{ id: 'obs', nombre: ciudad.nombre, color: 'ambar' }, ...(idea ? [{ id: 'idea', nombre: 'Idea: distancia', color: 'magenta' }] : [])]
-  const g = grafico(series, {
-    titulo: luz ? 'Horas de luz según el día del año' : 'Energía por m² (% del promedio anual)',
-    unidadX: ' d', unidadY: luz ? ' h' : ' %', xMax: YEAR, yMax: 0, alto: 104,
-  })
-  llenarCurva(g)
-  g.el.append(marcaHoy)
-  return g
 }
+function opcionesCurva() {
+  const luz = modoGrafico === 'luz'
+  return {
+    titulo: luz ? 'Horas de luz según el día del año' : 'Energía por m² (% del promedio anual)',
+    unidadX: ' d', unidadY: luz ? ' h' : ' %', xMax: YEAR, yMax: 0, yTecho: luz ? 24 : undefined,
+  }
+}
+const curva = grafico(seriesCurva(), { ...opcionesCurva(), alto: 104 })
 const marcaHoy = h('span', { class: 'marca-hoy' })
-let curva = crearCurva()
-/** Cambió la ciudad o el tipo de gráfico (cambian las series): se arma de nuevo. */
+curva.el.append(marcaHoy)
+llenarCurva(curva)
+/** Cambió la ciudad o el tipo de gráfico (cambian las series): se rearma y se vuelve a llenar. */
 function rehacerCurva() {
-  const vieja = curva.el
-  curva = crearCurva()
-  vieja.replaceWith(curva.el)
+  curva.cambiar(seriesCurva(), opcionesCurva())
+  llenarCurva(curva)
 }
 function ubicarMarca(d: number) {
   const lienzo = curva.el.querySelector<HTMLElement>('canvas')

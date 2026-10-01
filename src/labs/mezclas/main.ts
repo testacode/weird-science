@@ -47,13 +47,12 @@ const filaRecuperado = (i: number) => {
 const filas = [filaRecuperado(0), filaRecuperado(1)]
 const textoAhora = h('div')
 const ahora = h('div', { class: 'panel ahora' }, h('div', { class: 'recuperados' }, ...filas.map((f) => f.el)), textoAhora)
-const huecoGrafico = h('div')
 
 /**
- * Las series (una por componente) y la unidad del tiempo quedan fijas al crear el gráfico: se crea uno nuevo solo
- * cuando cambia la mezcla o la unidad. Para todo lo demás (método, mechero, sal) alcanza con `limpiar()`.
+ * Las series (una por componente) y la unidad del tiempo cambian solo con la mezcla o la unidad: ahí se usa `cambiar()`.
+ * Para todo lo demás (método, mechero, sal) alcanza con `limpiar()`.
  */
-let curva = grafico([])
+const curva = grafico([], { alto: 110 })
 let claveCurva = ''
 let ultimoPunto = 0
 /** La destilación dura minutos u horas: su eje va en minutos. */
@@ -67,10 +66,9 @@ function armarGrafico() {
   if (clave === claveCurva) curva.limpiar(escala)
   else {
     claveCurva = clave
-    curva = grafico(especies.map((e) => ({ id: e, nombre: ESPECIES[e].nombre, color: ESPECIES[e].color })), {
-      titulo: 'Gramos recuperados', unidadX: escalaT < 1 ? ' min' : ' s', unidadY: 'g', alto: 110, ...escala,
+    curva.cambiar(especies.map((e) => ({ id: e, nombre: ESPECIES[e].nombre, color: ESPECIES[e].color })), {
+      titulo: 'Gramos recuperados', unidadX: escalaT < 1 ? ' min' : ' s', unidadY: 'g', ...escala,
     })
-    huecoGrafico.replaceChildren(curva.el)
   }
   ultimoPunto = -1
   agregarPunto(leer(corrida, 0))
@@ -87,7 +85,7 @@ lab.append(
     gancho,
     h('div', { class: 'metricas' }, mPureza.el, mTiempo.el, mTipo.el, mPropiedad.el),
     ahora,
-    huecoGrafico,
+    curva.el,
   ),
 )
 

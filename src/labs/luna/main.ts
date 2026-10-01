@@ -34,15 +34,12 @@ const avanzadoActivo = () => !document.body.classList.contains('sin-avanzado')
 const escena = crearEscena(lab, TAM_INSET)
 
 // --- Gráfico: % iluminada vs día. La curva siempre llega hasta el día actual. ---
-const crearCurva = () =>
-  grafico(
-    [
-      { id: 'real', nombre: config.sombraTierra ? 'Observada' : 'Iluminada', color: 'ambar' },
-      ...(config.sombraTierra ? [{ id: 'idea', nombre: 'Idea errónea', color: 'magenta' as const }] : []),
-    ],
-    { titulo: '% iluminada según el día', unidadX: ' d', unidadY: '%', xMax: MES_SINODICO, yMax: 100 },
-  )
-let curva = crearCurva()
+const seriesCurva = () => [
+  { id: 'real', nombre: config.sombraTierra ? 'Observada' : 'Iluminada', color: 'ambar' },
+  ...(config.sombraTierra ? [{ id: 'idea', nombre: 'Idea errónea', color: 'magenta' as const }] : []),
+]
+const OPCIONES_CURVA = { titulo: '% iluminada según el día', unidadX: ' d', unidadY: '%', xMax: MES_SINODICO, yMax: 100 }
+const curva = grafico(seriesCurva(), OPCIONES_CURVA)
 let curvaDia = -1
 let curvaCiclo = 0
 function valoresCurva(dia: number) {
@@ -151,9 +148,7 @@ function cambiarConfig(clave: keyof Config, valor: boolean) {
   if (clave === 'sombraTierra') {
     vistaIdea.hidden = !valor
     etiquetaReal.textContent = valor ? 'Lo que se observa' : 'Vista desde la Tierra'
-    const vieja = curva.el
-    curva = crearCurva()
-    vieja.replaceWith(curva.el)
+    curva.cambiar(seriesCurva(), OPCIONES_CURVA)
     curvaCiclo = 0
   } else reiniciar()
 }

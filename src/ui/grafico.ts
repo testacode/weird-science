@@ -19,6 +19,8 @@ export interface EscalaGrafico {
   yMax?: number
   /** Máximo para el piso del eje Y (negativo para mostrar valores bajo cero); baja si los datos bajan más. Sin valor, 0. */
   yMin?: number
+  /** Límite físico del eje Y (24 h, 100 %): el redondeo del tope nunca lo pasa. */
+  yTecho?: number
 }
 
 export interface OpcionesGrafico extends EscalaGrafico {
@@ -52,27 +54,39 @@ function resolver(c: string): string {
 /**
  * Gráfico de líneas en el tiempo sobre canvas 2D, en un panel de vidrio con leyenda viva.
  * `agregar(x, { serie: valor })` suma un punto; `limpiar()` lo reinicia y puede cambiar la escala
- * (lo que no se pase queda como en las opciones iniciales).
+ * (lo que no se pase queda como en las opciones iniciales). `cambiar()` reemplaza series, textos y escala
+ * sin crear otro gráfico.
  */
 export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
-  const { titulo, unidadX = '', unidadY = '', alto = 120 } = opciones
-  const inicial: EscalaGrafico = { xMax: opciones.xMax, yMax: opciones.yMax, yMin: opciones.yMin }
+  const alto = opciones.alto ?? 120
+  let { titulo, unidadX = '', unidadY = '' } = opciones
+  let inicial: EscalaGrafico = { xMax: opciones.xMax, yMax: opciones.yMax, yMin: opciones.yMin, yTecho: opciones.yTecho }
   let escala = inicial
   let puntos: { x: number; v: Record<string, number> }[] = []
+  let valores: HTMLElement[] = []
 
-  const canvas = h('canvas', { class: 'grafico-lienzo', role: 'img', 'aria-label': titulo ?? 'Gráfico' })
+  const canvas = h('canvas', { class: 'grafico-lienzo', role: 'img' })
   canvas.style.height = `${alto}px`
-  const valores = series.map(() => h('b', {}, '0'))
-  const leyenda = h('div', { class: 'leyenda' },
-    ...series.map((s, i) => {
-      const kit = COLORES_KIT.includes(s.color)
-      const item = h('span', kit ? { class: `c-${s.color}` } : {}, `${s.nombre} `, valores[i], unidadY && h('small', {}, unidadY))
-      if (!kit) item.style.color = s.color
-      return item
-    }),
-  )
-  const el = h('div', { class: 'panel grafico' }, titulo && h('span', { class: 'etiqueta' }, titulo), leyenda, canvas)
+  const etiqueta = h('span', { class: 'etiqueta' })
+  const leyenda = h('div', { class: 'leyenda' })
+  const el = h('div', { class: 'panel grafico' }, etiqueta, leyenda, canvas)
   const ctx = canvas.getContext('2d')!
+
+  function armar() {
+    etiqueta.textContent = titulo ?? ''
+    etiqueta.hidden = !titulo
+    canvas.setAttribute('aria-label', titulo ?? 'Gráfico')
+    valores = series.map(() => h('b', {}, '0'))
+    leyenda.replaceChildren(
+      ...series.map((s, i) => {
+        const kit = COLORES_KIT.includes(s.color)
+        const item = h('span', kit ? { class: `c-${s.color}` } : {}, `${s.nombre} `, valores[i], unidadY && h('small', {}, unidadY))
+        if (!kit) item.style.color = s.color
+        return item
+      }),
+    )
+  }
+  armar()
 
   function dibujar() {
     const dpr = window.devicePixelRatio || 1
@@ -86,7 +100,7 @@ export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
     const ultimo = puntos[puntos.length - 1]
     const xMax = escala.xMax ?? Math.max(ultimo?.x ?? 0, 1e-9)
     const datos = puntos.flatMap((p) => Object.values(p.v))
-    const yMax = tope(Math.max(escala.yMax ?? 0, 0, ...datos))
+    const yMax = Math.min(tope(Math.max(escala.yMax ?? 0, 0, ...datos)), escala.yTecho ?? Infinity)
     const bajo = Math.min(escala.yMin ?? 0, 0, ...datos)
     const yMin = bajo < 0 ? -tope(-bajo) : 0
     const w = ancho - MARGEN.izq - MARGEN.der
@@ -138,6 +152,16 @@ export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
     agregar(x: number, v: Record<string, number>) {
       puntos.push({ x, v })
       series.forEach((s, i) => (valores[i].textContent = corto(v[s.id] ?? 0)))
+      dibujar()
+    },
+    /** Otras series y textos (cambió la mezcla, la ciudad o el tipo de gráfico): arranca vacío con la escala nueva. */
+    cambiar(nuevas: Serie[], nuevasOpciones: Omit<OpcionesGrafico, 'alto'> = {}) {
+      series = nuevas
+      ;({ titulo, unidadX = '', unidadY = '' } = nuevasOpciones)
+      inicial = { xMax: nuevasOpciones.xMax, yMax: nuevasOpciones.yMax, yMin: nuevasOpciones.yMin, yTecho: nuevasOpciones.yTecho }
+      escala = inicial
+      puntos = []
+      armar()
       dibujar()
     },
     limpiar(nuevaEscala?: EscalaGrafico) {
