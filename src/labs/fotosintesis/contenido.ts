@@ -19,11 +19,12 @@ export const FACTORES: Record<Factor, { corto: string; nombre: string; clase: st
 
 export const GANCHO = `Una rama de Elodea, una lámpara y un vaso. Con luz y <span class="c-magenta">CO₂</span> disuelto, la planta fabrica <span class="c-ambar">glucosa</span> y suelta <span class="c-cielo">oxígeno</span>: cada burbuja que sube es la prueba${av(' (6 CO₂ + 6 H₂O + luz → C₆H₁₂O₆ + 6 O₂)')}.`
 
+/** El mito del verde, con los números del modelo. */
+export const ABSORCION_VERDE = `La hoja absorbe ${num(ABSORCION.verde * 100, 0)}% de la luz verde contra ${num(ABSORCION.blanca * 100, 0)}% de la blanca: el verde no "rebota todo", se usa casi tanto. La hoja se ve verde por lo poco que rebota.`
+
 const o2 = (n: number) => `<span class="c-cielo">${num(n)} µmol/min</span>`
 
 function consejo(c: Config, d: Derivados): string {
-  if (c.color === 'verde' && d.limita === 'luz')
-    return `La hoja absorbe un poco menos de luz verde que de blanca${av(` (${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}%)`)}, pero igual usa la mayor parte. Lo poco que rebota es lo que nos llega a los ojos: por eso se ve verde.`
   if (Math.min(d.fLuz, d.fCo2, d.fTemp) >= 0.9) return 'Casi todo está al máximo: ningún factor frena mucho.'
   if (d.limita === 'luz') return 'Lo que frena es la luz: acercá la lámpara.'
   if (d.limita === 'co2') return `Lo que frena es el <span class="c-magenta">CO₂</span>: agregá bicarbonato.${av(' Aunque haya mucha luz, sin CO₂ el ciclo de Calvin no tiene materia prima.')}`
@@ -66,7 +67,7 @@ export const COMO_FUNCIONA = `
     <li><b>Info avanzada:</b> muestra u oculta las fórmulas y los detalles del modelo.</li>
   </ul>
   <h3>Predecí antes de correr</h3>
-  <p>Cuando apagás la luz o la ponés verde, el lab te pregunta qué va a pasar. Elegí, dejá correr 2 minutos del experimento y se revela si acertaste.</p>
+  <p>Cuando apagás la luz o elegís la luz verde, el lab te pregunta qué va a pasar. Elegí, dejá correr 2 minutos del experimento y se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> la ecuación de la fotosíntesis, que la respiración sigue siempre (también de noche), que la hoja absorbe menos el verde que el rojo y el azul (aunque usa la mayor parte), que la luz cae con la distancia, que la tasa se frena con frío y con calor, y que el oxígeno de una planta acuática se puede contar en burbujas.</p>
   <p><b>Simplificado:</b> las constantes son aproximadas, la respiración no cambia con la temperatura, el O₂ sale todo en burbujas (en la realidad parte queda disuelto en el agua), la lámpara no calienta el agua, el cuadrito de la célula no está a escala y la maqueta tampoco. Modelo educativo: verificá los datos con tu docente o manual.</p>

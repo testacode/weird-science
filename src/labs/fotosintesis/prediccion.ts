@@ -2,15 +2,13 @@
 
 import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
-import { num } from './contenido'
-import { ABSORCION, simular, tasas, type Config } from './model'
+import { ABSORCION_VERDE, num } from './contenido'
+import { tasas, type Config } from './model'
 
 export type Respuesta = 'mas' | 'igual' | 'menos' | 'cero' | 'consume'
 
 /** Minutos del experimento que se miden antes de revelar la respuesta. */
 export const VENTANA_MIN = 2
-/** Variación relativa por debajo de la cual se considera "igual". */
-const TOLERANCIA = 0.1
 
 export interface Pregunta {
   id: 'oscuro' | 'verde'
@@ -38,31 +36,36 @@ const OSCURO: Pregunta = {
   },
 }
 
+/** Por debajo de esta fracción de la tasa con luz blanca ya no es "casi como con blanca". */
+const CASI_IGUAL = 0.8
+const NOMBRE_LIMITE = { luz: 'la luz', co2: 'el CO₂', temp: 'la temperatura' } as const
+
 const VERDE: Pregunta = {
   id: 'verde',
-  texto: 'Con luz verde (misma lámpara, misma distancia), ¿cuántas burbujas salen?',
+  texto: '¿La planta sigue haciendo fotosíntesis con luz verde (misma lámpara, misma distancia)?',
   opciones: [
-    { valor: 'mas', texto: 'Más que con luz blanca' },
-    { valor: 'igual', texto: 'Igual o casi igual' },
-    { valor: 'menos', texto: 'Menos que con luz blanca' },
+    { valor: 'igual', texto: 'Sí, casi como con luz blanca' },
+    { valor: 'menos', texto: 'Sí, pero mucho menos' },
+    { valor: 'cero', texto: 'No: el verde rebota y no sirve' },
   ],
   resolver: (config) => {
-    const real = simular(config, VENTANA_MIN).burbujas
-    const blanca = simular({ ...config, color: 'blanca' }, VENTANA_MIN).burbujas
-    const cambio = blanca === 0 ? 0 : (real - blanca) / blanca
-    const correcta: Respuesta = Math.abs(cambio) < TOLERANCIA ? 'igual' : cambio > 0 ? 'mas' : 'menos'
-    const hecho = `Con luz verde se contaron <b>${real} burbujas</b> en ${VENTANA_MIN} min; con luz blanca habrían sido ${blanca}.`
-    const causa =
-      correcta === 'igual'
-        ? ` La hoja usa casi tanta luz verde como blanca${av(` (absorbe ${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}%)`)}: la idea de que "el verde rebota todo" es un mito. Se ve verde por lo poco que rebota.`
-        : ` La hoja absorbe un poco menos de verde${av(` (${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}% de la blanca)`)}, pero igual usa la mayor parte: la idea de que "el verde rebota todo" es un mito. Se ve verde por lo poco que rebota.`
-    return { correcta, explicacion: hecho + causa }
+    // Con la tasa continua, no con burbujas contadas: el redondeo no decide la respuesta.
+    const verde = tasas({ ...config, color: 'verde' })
+    const blanca = tasas({ ...config, color: 'blanca' })
+    const r = verde.bruta / blanca.bruta
+    const correcta: Respuesta = r >= CASI_IGUAL ? 'igual' : r > 0.05 ? 'menos' : 'cero'
+    const hecho = `Con luz verde fabrica <b>${num(verde.bruta)} µmol/min</b> de O₂; con blanca, ${num(blanca.bruta)} (${num(r * 100, 0)}%).`
+    const causa = verde.limita === 'luz'
+      ? ''
+      : ` Además, acá lo que frena no es la luz sino ${NOMBRE_LIMITE[verde.limita]}, así que el color casi no cambia nada.`
+    return { correcta, explicacion: `${hecho} ${ABSORCION_VERDE}${causa}` }
   },
 }
 
 /** La pregunta que corresponde a lo que el usuario rompió, o `null` si todo funciona. Apagar la luz tiene prioridad. */
 export function preguntaPara(config: Config): Pregunta | null {
   if (!config.encendida) return OSCURO
-  if (config.color === 'verde') return VERDE
+  // Si con luz blanca tampoco fabrica (sin CO₂, frío o calor extremos), preguntar por el verde confundiría la causa.
+  if (config.color === 'verde' && tasas({ ...config, color: 'blanca' }).bruta > 0) return VERDE
   return null
 }
