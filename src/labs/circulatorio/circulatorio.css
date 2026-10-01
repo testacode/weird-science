@@ -1,0 +1,18 @@
+/* Estilos propios del lab del sistema circulatorio. Colores: rojo = sangre con O₂, azul = sangre que volvió de los tejidos, lima = latidos, ámbar = lo que pide el cuerpo, magenta = el defecto. */
+:root { --sangre: #ff5a5a; --venosa: #6f95ff; }
+.c-sangre { color: var(--sangre); }
+.c-venosa { color: var(--venosa); }
+
+/* Títulos con el color de lo que regulan */
+.grupo.act .etiqueta { color: var(--ambar); }
+.grupo.romper > .etiqueta { color: var(--magenta); }
+.deslizador .etiqueta { color: var(--marca); }
+.deslizador.gravedad .etiqueta { color: var(--magenta); }
+.hud-der .consola { gap: 10px; padding: 12px 14px; }
+.grupo.romper .segmentado button { flex: 1; padding-inline: 6px; }
+.grupo.romper.sin-defecto .deslizador { opacity: 0.4; }
+
+.aviso { padding: 12px 14px; font-size: 13px; border-color: var(--magenta); }
+.aviso[hidden] { display: none; }
+.aviso strong { color: var(--magenta); }
+.hud-der .saltar { justify-self: start; }
