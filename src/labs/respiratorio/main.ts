@@ -5,10 +5,10 @@ import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
-import { COMO_FUNCIONA, GANCHO, aviso, num, relato } from './contenido'
+import { COMO_FUNCIONA, GANCHO, aviso, num, relato, type Motivo } from './contenido'
 import { crearControles } from './controles'
 import { crearEscena } from './escena'
-import { ACELERACION, CONFIG_INICIAL, derivados, estadoEn, paso, quiebra, type Config } from './model'
+import { ACELERACION, CONFIG_INICIAL, QUIEBRE_CO2, derivados, estadoEn, paso, quiebra, type Config } from './model'
 import { PREGUNTA_INICIAL, preguntaPara, type Foto, type Pregunta, type Respuesta } from './prediccion'
 
 /** Segundos del cuerpo que muestra el gráfico antes de volver a empezar, y cada cuánto se toma un punto. */
@@ -19,8 +19,8 @@ const lab = document.querySelector<HTMLElement>('#lab')!
 let config: Config = { ...CONFIG_INICIAL }
 let estado = estadoEn(config)
 let corriendo = true
-/** El cerebro acaba de obligar a respirar (se avisa hasta el próximo cambio). */
-let quebro = false
+/** El cerebro acaba de obligar a respirar, o no deja empezar a aguantar (se avisa hasta el próximo cambio). */
+let motivo: Motivo | null = null
 
 const escena = crearEscena(lab)
 
@@ -71,21 +71,22 @@ lab.append(
 
 // --- Predecí antes de correr: la pregunta va antes del cambio (la primera, sobre el aire que sale, no cambia nada); el cambio se hace al responder y se revela tras unos segundos ---
 const ayuda = modal()
-let pendiente: { nueva: Config; pregunta: Pregunta } | null = null
+let pendiente: { cambio: Partial<Config>; pregunta: Pregunta } | null = null
 let enCurso: { pregunta: Pregunta; antes: Foto; t0: number } | null = null
 const foto = (): Foto => ({ c: config, e: estado })
 const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const nueva = pendiente?.nueva
+  const cambio = pendiente?.cambio
   descartarPendiente()
-  if (nueva) aplicar(nueva)
+  if (cambio) aplicar({ ...config, ...cambio })
 } }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta>(() => {
   if (!pendiente) return
-  const { nueva, pregunta } = pendiente
+  // El cambio se arma sobre la config de ahora (si en el medio el cerebro soltó la respiración, no se vuelve a aguantar).
+  const { cambio, pregunta } = pendiente
   pendiente = null
   saltar.hidden = true
   const antes = foto()
-  aplicar(nueva)
+  aplicar({ ...config, ...cambio })
   enCurso = { pregunta, antes, t0: estado.t }
 })
 function descartarPendiente() {
@@ -98,12 +99,13 @@ function revelar() {
   if (!enCurso) return
   const r = enCurso.pregunta.resolver(enCurso.antes, foto())
   enCurso = null
-  pred.revelar(r.correcta, r.explicacion)
+  if (r) pred.revelar(r.correcta, r.explicacion)
+  else pred.ocultar()
 }
 
 /** Al abrir el lab (y al restablecer) se pregunta por el aire que sale, sin cambiar nada: el cuerpo ya está en reposo. */
 function preguntarInicial() {
-  pendiente = { nueva: config, pregunta: PREGUNTA_INICIAL }
+  pendiente = { cambio: {}, pregunta: PREGUNTA_INICIAL }
   pred.preguntar(PREGUNTA_INICIAL.texto, PREGUNTA_INICIAL.opciones)
 }
 
@@ -111,6 +113,11 @@ function preguntarInicial() {
 function pedir(cambio: Partial<Config>) {
   descartarPendiente()
   const nueva = { ...config, ...cambio }
+  if (!config.aguanta && nueva.aguanta && estado.paco2 >= QUIEBRE_CO2) {
+    // Con el CO₂ así de alto el cerebro no deja empezar a aguantar.
+    motivo = { tipo: 'imposible', co2: estado.paco2 }
+    return controles.sincronizar(config, corriendo)
+  }
   const pregunta = preguntaPara(config, nueva)
   if (!pregunta) {
     if (enCurso) {
@@ -120,7 +127,7 @@ function pedir(cambio: Partial<Config>) {
     return aplicar(nueva)
   }
   enCurso = null
-  pendiente = { nueva, pregunta }
+  pendiente = { cambio, pregunta }
   pred.preguntar(pregunta.texto, pregunta.opciones)
   saltar.hidden = false
   controles.sincronizar(config, corriendo)
@@ -129,7 +136,7 @@ function pedir(cambio: Partial<Config>) {
 function aplicar(nueva: Config) {
   if (config.aguanta && !nueva.aguanta) escena.exhalar()
   config = nueva
-  quebro = false
+  motivo = null
   controles.sincronizar(config, corriendo)
   muestrear()
 }
@@ -139,7 +146,7 @@ function reiniciar() {
   corriendo = true
   config = { ...CONFIG_INICIAL }
   estado = estadoEn(config)
-  quebro = false
+  motivo = null
   controles.sincronizar(config, corriendo)
   reiniciarCurva()
   preguntarInicial()
@@ -167,7 +174,7 @@ function actualizarHud() {
   controles.reloj(`Tiempo del cuerpo ${mmss(estado.t)} · ×${ACELERACION}${corriendo ? '' : ' · en pausa'}`)
   const texto = relato(config, d, estado)
   if (texto !== relatoPrevio) ahora.innerHTML = relatoPrevio = texto
-  const alto = aviso(config, d, estado, quebro) ?? ''
+  const alto = aviso(config, d, estado, motivo) ?? ''
   if (alto !== avisoPrevio) {
     alerta.innerHTML = avisoPrevio = alto
     alerta.hidden = !alto
@@ -188,7 +195,7 @@ function cuadro(t: number) {
       if (quiebra(estado, config)) {
         // El cerebro obliga a respirar: se suelta la respiración y, si había una predicción en curso, se revela.
         aplicar({ ...config, aguanta: false })
-        quebro = true
+        motivo = { tipo: 'quiebre', co2: estado.paco2 }
         revelar()
         break
       }

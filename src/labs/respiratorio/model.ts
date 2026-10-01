@@ -4,8 +4,9 @@
 //                    VA = f · (VT − VD)            (lo que llega a los alvéolos; el espacio muerto VD no intercambia gases)
 // Aire que entra:    PIO₂ = 0,2093 · (Pb − 47)     (21 % de O₂; 47 mmHg es el vapor de agua de las vías aéreas)
 // Presión del aire:  Pb(h) = 760 · (1 − 2,25577e-5 · h)^5,25588 mmHg      (atmósfera estándar)
-// O₂ alveolar:       V · dPAO₂/dt = VA · (PIO₂ − PAO₂) − 0,863 · VO₂      (lavado del alvéolo menos lo que absorbe la sangre)
-//                    piso en la PO₂ venosa mixta (40 mmHg): el alvéolo no baja de lo que trae la sangre
+// O₂ alveolar:       V · dPAO₂/dt = VA · (PIO₂ − PAO₂) − 0,863 · VO₂ · (PAO₂ − PV) / (98 − PV)
+//                    (lavado del alvéolo menos lo que absorbe la sangre; la absorción es proporcional al gradiente con la
+//                    sangre venosa: se llega a 98 mmHg en reposo y se frena cuando el alvéolo se acerca a PV, sin piso duro)
 // CO₂ de la sangre:  C · dPaCO₂/dt = VCO₂ − VA · PaCO₂ / 0,863                (reservorio del cuerpo menos lo que se exhala)
 // O₂ de la sangre:   dPaO₂/dt = (PAO₂ − PaO₂) / τ                             (la sangre tarda en enterarse)
 // Saturación:        SpO₂ = x^n / (1 + x^n), con x = PaO₂ / P50              (curva de Hill de la hemoglobina)
@@ -52,8 +53,10 @@ const FIO2 = 0.2093
 /** Fracción de CO₂ del aire (≈ 0,04 %). */
 export const FICO2 = 0.0004
 const VAPOR = 47
-/** PO₂ de la sangre venosa mixta (mmHg). */
-const PO2_VENOSA = 40
+/** PO₂ de la sangre venosa a la que la absorción de O₂ se frena (mmHg; ajustada, más baja que los 40 de reposo porque baja con el esfuerzo y la altura). */
+const PO2_VENOSA = 25
+/** PAO₂ de referencia (mmHg): con ella la sangre absorbe justo el O₂ que el cuerpo pide en reposo. */
+const PAO2_REF = 98
 /** Presión de O₂ a la que la hemoglobina está al 50 % y pendiente de la curva. */
 /** Límites de lo normal: PaCO₂ de 45 mmHg y PAO₂ de 60 mmHg (a partir de ahí la saturación cae rápido). */
 const PACO2_LIMITE = 45
@@ -72,6 +75,9 @@ const CO2_MAX = 80
 
 /** Cuántos segundos del cuerpo pasan por cada segundo real (así los cambios se ven en segundos y no en minutos). */
 export const ACELERACION = 6
+
+/** Aire (L/min) que equivale a lo que la sangre absorbe por cada mmHg de PAO₂ sobre PV: el O₂ absorbido es `absorcion · (PAO₂ − PV)`. */
+const absorcion = (vo2: number) => (K * vo2) / (PAO2_REF - PO2_VENOSA)
 
 export const presion = (altura: number) => 760 * (1 - 2.25577e-5 * altura) ** 5.25588
 export const presionO2 = (altura: number) => FIO2 * (presion(altura) - VAPOR)
@@ -117,7 +123,7 @@ export function derivados(c: Config, e: Estado): Derivados {
   const pb = presion(c.altura)
   const pio2 = presionO2(c.altura)
   // Aire alveolar mínimo: el que mantiene el CO₂ en el límite normal (45 mmHg) y el O₂ alveolar en 60 mmHg (saturación ≈ 90 %).
-  const vaNecesario = Math.max((K * vco2) / PACO2_LIMITE, (K * vo2) / Math.max(pio2 - PAO2_MINIMA, 5))
+  const vaNecesario = Math.max((K * vco2) / PACO2_LIMITE, (absorcion(vo2) * (PAO2_MINIMA - PO2_VENOSA)) / Math.max(pio2 - PAO2_MINIMA, 1))
   // Aire mixto que sale: lo del alvéolo (va/ve) mezclado con el del espacio muerto, que sale tal como entró.
   const alveolar = ve > 0 ? va / ve : 0
   const aire = pb - VAPOR
@@ -135,7 +141,7 @@ export function estadoEn(c: Config): Estado {
   if (c.aguanta) return estadoEn({ ...c, aguanta: false })
   const va = c.frecuencia * Math.max(c.volumen - ESPACIO_MUERTO, 0)
   const { vo2 } = ACTIVIDADES[c.actividad]
-  const pao2 = Math.max(presionO2(c.altura) - (K * vo2) / va, PO2_VENOSA)
+  const pao2 = (va * presionO2(c.altura) + absorcion(vo2) * PO2_VENOSA) / (va + absorcion(vo2))
   return { t: 0, pao2, paco2: Math.min(Math.max((K * RQ * vo2) / va, CO2_MIN), CO2_MAX), sangre: pao2 }
 }
 
@@ -148,15 +154,11 @@ export function paso(e: Estado, c: Config, dt: number): Estado {
   // Respirando, el alvéolo es la CRF más media respiración; aguantando, se supone que se tomó una buena bocanada antes.
   const volumenAlveolar = CRF + (c.aguanta ? INSPIRACION_LLENA : c.volumen / 2)
 
-  let pao2: number
-  if (va > 0) {
-    const a = va / volumenAlveolar
-    const meta = presionO2(c.altura) - (K * vo2) / va
-    pao2 = meta + (e.pao2 - meta) * Math.exp(-a * min)
-  } else {
-    pao2 = e.pao2 - ((K * vo2) / volumenAlveolar) * min
-  }
-  pao2 = Math.max(pao2, PO2_VENOSA)
+  // Con VA = 0 la fórmula sigue andando: el alvéolo solo cede O₂ a la sangre y tiende a PV.
+  const g = absorcion(vo2)
+  const a = (va + g) / volumenAlveolar
+  const meta = (va * presionO2(c.altura) + g * PO2_VENOSA) / (va + g)
+  const pao2 = meta + (e.pao2 - meta) * Math.exp(-a * min)
 
   let paco2: number
   if (va > 0) {

@@ -3,7 +3,7 @@ import { grupo, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
-import { ACTIVIDADES, ALTURAS, LIMITES, presionO2, type Actividad, type Config } from './model'
+import { ACTIVIDADES, ALTURAS, LIMITES, presion, type Actividad, type Config } from './model'
 
 export interface Manejadores {
   pedir: (cambio: Partial<Config>) => void
@@ -63,7 +63,7 @@ export function crearControles(inicial: Config, m: Manejadores) {
       altura.set(String(c.altura))
       aguanta.set(c.aguanta ? 'si' : 'no')
       montana.set(c.altura === ALTURAS.montana ? 'si' : 'no')
-      notaAltura.textContent = `${numero(c.altura, 0)} m · cada bocanada trae el ${numero((presionO2(c.altura) / presionO2(0)) * 100, 0)} % del O₂ del llano`
+      notaAltura.textContent = `${numero(c.altura, 0)} m · cada bocanada trae el ${numero((presion(c.altura) / presion(0)) * 100, 0)} % del O₂ del llano`
       botonPlay.textContent = corriendo ? '⏸ Pausa' : '▶ Seguir'
     },
     /** Texto del reloj del cuerpo (cambia en cada cuadro). */

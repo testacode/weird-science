@@ -18,12 +18,16 @@ export interface Pregunta {
   opciones: Opcion<Respuesta>[]
   /** Segundos del cuerpo que se dejan correr antes de revelar. */
   ventana: number
-  /** Dice cuál era la respuesta correcta con lo que realmente pasó en el modelo. */
-  resolver: (antes: Foto, despues: Foto) => { correcta: Respuesta; explicacion: string }
+  /** Dice cuál era la respuesta correcta con lo que realmente pasó en el modelo; `null` si no hubo tiempo de medir nada. */
+  resolver: (antes: Foto, despues: Foto) => { correcta: Respuesta; explicacion: string } | null
 }
 
 /** Puntos de saturación (o mmHg de CO₂) de cambio por debajo de los cuales se considera "igual". */
 const TOLERANCIA = 2
+/** mmHg de PO₂ de la sangre por debajo de los cuales se considera que el O₂ "no cambió". */
+const TOLERANCIA_PO2 = 3
+/** Segundos del cuerpo mínimos de aguante para poder medir algo. */
+const MIN_AGUANTE = 20
 
 const sat = (f: Foto) => derivados(f.c, f.e).spo2
 
@@ -63,7 +67,7 @@ export const PREGUNTA_INICIAL: Pregunta = {
     const correcta: Respuesta = sale.o2 > 20.93 ? 'o2' : veces > 1.5 ? 'co2' : 'ninguno'
     return {
       correcta,
-      explicacion: `Entran 21 % de O₂ y ${num(FICO2 * 100, 2)} % de CO₂; salen ≈ <b>${num(sale.o2, 0)} % de O₂</b> y <b>${num(sale.co2, 1)} % de CO₂</b>. El único gas que sale en más cantidad es el CO₂ (unas ${num(veces, 0)} veces más). Y no usamos todo el oxígeno: del 21 % solo se queda una parte.${av(' El nitrógeno (78 %) entra y sale casi igual: no participa.')}`,
+      explicacion: `Entran 21 % de O₂ y ${num(FICO2 * 100, 2)} % de CO₂; salen ≈ <b>${num(sale.o2, 0)} % de O₂</b> y <b>${num(sale.co2, 1)} % de CO₂</b>. El gas que el cuerpo agrega es el CO₂ (unas ${num(veces, 0)} veces más), además del vapor de agua. Y no usamos todo el oxígeno: del 21 % solo se queda una parte.${av(' El nitrógeno (78 %) entra y sale casi igual: no participa.')}`,
     }
   },
 }
@@ -77,11 +81,12 @@ const ALTURA = (c: Config): Pregunta => ({
   ],
   ventana: 45,
   resolver: (antes, despues) => {
-    const razon = presionO2(despues.c.altura) / presionO2(0)
+    // El O₂ de cada bocanada sigue a la presión del aire: el aire sigue siendo 21 % oxígeno.
+    const razon = presion(despues.c.altura) / presion(0)
     const correcta: Respuesta = razon > 0.95 ? 'igual' : razon > 0.8 ? 'poco' : 'mucho'
     return {
       correcta,
-      explicacion: `A ${num(despues.c.altura, 0)} m la presión del aire es el ${num((presion(despues.c.altura) / presion(0)) * 100, 0)} % de la del llano: cada bocanada trae ≈ <b>${num(razon * 100, 0)} %</b> del O₂. El aire sigue siendo 21 % oxígeno; lo que baja es cuánto aire entra. La saturación pasó de ${num(sat(antes), 0)} % a <b>${num(sat(despues), 0)} %</b>.${av(` PO₂ del aire que entra: ${num(presionO2(0), 0)} → ${num(presionO2(despues.c.altura), 0)} mmHg.`)}`,
+      explicacion: `A ${num(despues.c.altura, 0)} m la presión del aire es el <b>${num(razon * 100, 0)} %</b> de la del llano, así que cada bocanada trae ≈ ${num(razon * 100, 0)} % del O₂. El aire sigue siendo 21 % oxígeno; lo que baja es cuánto aire entra. La saturación pasó de ${num(sat(antes), 0)} % a <b>${num(sat(despues), 0)} %</b>.${av(` PO₂ del aire que entra: ${num(presionO2(0), 0)} → ${num(presionO2(despues.c.altura), 0)} mmHg.`)}`,
     }
   },
 })
@@ -95,14 +100,18 @@ const AGUANTAR: Pregunta = {
   ],
   ventana: 60,
   resolver: (antes, despues) => {
-    const dSat = sat(despues) - sat(antes)
+    const segundos = despues.e.t - antes.e.t
+    const dPo2 = antes.e.sangre - despues.e.sangre
     const dCo2 = despues.e.paco2 - antes.e.paco2
-    const baja = dSat < -TOLERANCIA
+    const baja = dPo2 > TOLERANCIA_PO2
     const sube = dCo2 > TOLERANCIA
+    // Si el aguante duró poco (o el CO₂ ya estaba al tope) no hay nada que medir: no se revela.
+    if (segundos < MIN_AGUANTE || (!baja && !sube)) return null
     const correcta: Respuesta = baja && sube ? 'ambos' : sube ? 'solo_co2' : 'solo_o2'
+    const plana = Math.abs(sat(despues) - sat(antes)) < TOLERANCIA ? ' La saturación casi no se movió: con tanto O₂ de sobra, la curva de la hemoglobina es plana.' : ''
     return {
       correcta,
-      explicacion: `En ${num(despues.e.t - antes.e.t, 0)} segundos la saturación pasó de ${num(sat(antes), 0)} % a <b>${num(sat(despues), 0)} %</b> y el CO₂ subió de ${num(antes.e.paco2, 0)} a <b>${num(despues.e.paco2, 0)} mmHg</b>. Los pulmones guardan un poco de aire, pero el cuerpo sigue gastando O₂ y produciendo CO₂, y sin respirar no hay cómo sacarlo. Lo que te va a obligar a volver a respirar es el CO₂.`,
+      explicacion: `En ${num(segundos, 0)} segundos la saturación pasó de ${num(sat(antes), 0)} % a <b>${num(sat(despues), 0)} %</b> y el CO₂ subió de ${num(antes.e.paco2, 0)} a <b>${num(despues.e.paco2, 0)} mmHg</b>.${av(` El O₂ de la sangre bajó de ${num(antes.e.sangre, 0)} a ${num(despues.e.sangre, 0)} mmHg.`)}${plana} Los pulmones guardan un poco de aire, pero el cuerpo sigue gastando O₂ y produciendo CO₂, y sin respirar no hay cómo sacarlo. Lo que te va a obligar a volver a respirar es el CO₂.`,
     }
   },
 }

@@ -47,10 +47,16 @@ export function relato(c: Config, d: Derivados, e: Estado): string {
   return `<strong>Todo en equilibrio.</strong> ${verbo[c.actividad]}, ${marca(`${num(d.ve, 1)} L de aire por minuto`)} alcanzan para los ${pide} que pide el cuerpo, y la sangre sale con ${sat} de saturación. Del aire que entra (21 % de O₂) la sangre se queda con una parte: sale con ≈ ${cielo(`${num(sale.o2, 0)} % de O₂`)} y ${magenta(`${num(sale.co2, 1)} % de CO₂`)}, unas ${num(veces, 0)} veces más CO₂ que el que entró.`
 }
 
+/** Por qué se cortó el aguante (o no se pudo empezar), con el CO₂ de ese momento. */
+export type Motivo = { tipo: 'quiebre' | 'imposible'; co2: number }
+
 /** Aviso destacado (o `null`): el cerebro obligó a respirar, o la respiración fija ya sería peligrosa. */
-export function aviso(c: Config, d: Derivados, e: Estado, quebro: boolean): string | null {
-  if (quebro) {
-    return `<strong>El cerebro te obligó a respirar.</strong> El ${magenta('CO₂')} llegó a unos ${QUIEBRE_CO2} mmHg y el cuerpo no te dejó aguantar más, aunque todavía quedaba O₂ en la sangre. Mirá cómo se recupera.`
+export function aviso(c: Config, d: Derivados, e: Estado, motivo: Motivo | null): string | null {
+  if (motivo?.tipo === 'quiebre') {
+    return `<strong>El cerebro te obligó a respirar.</strong> El ${magenta('CO₂')} llegó a ${num(motivo.co2, 0)} mmHg y el cuerpo no te dejó aguantar más, aunque todavía quedaba O₂ en la sangre. Mirá cómo se recupera.`
+  }
+  if (motivo?.tipo === 'imposible') {
+    return `<strong>No podés aguantar ahora.</strong> El ${magenta('CO₂')} ya está en ${num(motivo.co2, 0)} mmHg (el cerebro obliga a respirar desde unos ${QUIEBRE_CO2}). Respirá hasta que baje y probá de nuevo.`
   }
   return !c.aguanta && (d.spo2 < 88 || e.paco2 > 60)
     ? '<strong>Zona de riesgo.</strong> Con la respiración fija así, tu cuerpo real ya te habría obligado a respirar más: el cerebro lo hace solo. Acá la controlás vos.'
@@ -78,5 +84,5 @@ export const COMO_FUNCIONA = `
   <h3>Predecí antes de correr</h3>
   <p>Al abrir el lab te pregunta por el aire que exhalás, y cuando empezás a correr, subís a la montaña o aguantás la respiración te pregunta qué va a pasar. Elegí, dejá correr unos segundos y se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>
-  <p><b>Real:</b> el aire tiene 21 % de O₂ y exhalamos ≈ 16 % de O₂ y ≈ 4 % de CO₂ (no usamos todo el oxígeno, y el único gas que sale en mucha más cantidad es el CO₂), el espacio muerto, que la saturación normal ronda 97 %, que a más esfuerzo hace falta más aire, que la presión baja con la altura, y que lo que te obliga a volver a respirar es el CO₂.</p>
-  <p><b>Simplificado:</b> es una persona adulta de 70 kg. La respiración queda fija en lo que elegís, pero el cerebro real la ajusta solo (por eso acá las situaciones se ponen peor que en la vida real). El reloj del cuerpo va ${ACELERACION} veces más rápido que el real (así los cambios se ven en segundos), pero la maqueta respira en tiempo real. No incluye aclimatación a la altura ni el corazón (los latidos son solo dibujo). El alvéolo es esquemático y no está a escala. Los valores son de libro de texto y aproximados: verificalos con tu docente o manual.</p>`
+  <p><b>Real:</b> el aire tiene 21 % de O₂ y exhalamos ≈ 16 % de O₂ y ≈ 4 % de CO₂ (no usamos todo el oxígeno, y el gas que el cuerpo agrega es el CO₂, además del vapor de agua), el espacio muerto, que la saturación normal ronda 97 %, que a más esfuerzo hace falta más aire, que la presión baja con la altura, y que lo que te obliga a volver a respirar es el CO₂.</p>
+  <p><b>Simplificado:</b> es una persona adulta de 70 kg. La respiración queda fija en lo que elegís, pero el cerebro real la ajusta solo (por eso acá las situaciones se ponen peor que en la vida real). El reloj del cuerpo va ${ACELERACION} veces más rápido que el real (así los cambios se ven en segundos), pero la maqueta respira en tiempo real. La absorción de O₂ de la sangre es una versión simplificada (se frena sola cuando el alvéolo se queda sin O₂), así que no conserva el O₂ al detalle. No incluye aclimatación a la altura ni el corazón (los latidos son solo dibujo). El alvéolo es esquemático y no está a escala. Los valores son de libro de texto y aproximados: verificalos con tu docente o manual.</p>`
