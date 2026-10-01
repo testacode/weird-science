@@ -114,6 +114,8 @@ function alternar() {
  * respuesta; si se mueve otro control con una pregunta abierta, se descarta.
  */
 function aplicar(parcial: Partial<Config>) {
+  // Volver a tocar la opción ya elegida no cambia nada (ni descarta una pregunta abierta).
+  if ((Object.keys(parcial) as (keyof Config)[]).every((k) => parcial[k] === config[k])) return
   const antes = config
   config = { ...config, ...parcial }
   if (parcial.agujero) config.objeto = 'barco'

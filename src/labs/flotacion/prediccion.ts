@@ -85,7 +85,7 @@ function preguntaPlaneta(config: Config): Pregunta {
       const correcta: Respuesta = Math.abs(cambio) < TOLERANCIA ? 'igual' : cambio < 0 ? 'mas' : 'menos'
       return {
         correcta,
-        explicacion: `El peso baja de <b>${newtons(tierra.peso)} N</b> a <b>${newtons(aca.peso)} N</b> y el empuje baja en la misma proporción: queda <b>${num(aca.sumergido * 100, 0)} %</b> sumergida, igual que en la Tierra.${av(' La fracción sumergida es ρ_objeto / ρ_líquido y no tiene g: la gravedad se simplifica.')}`,
+        explicacion: `El peso baja de <b>${newtons(tierra.peso)} N</b> a <b>${newtons(aca.peso)} N</b> y el empuje baja en la misma proporción: queda <b>${num(aca.sumergido * 100, 0)} %</b> sumergida, ${correcta === 'igual' ? 'igual que' : correcta === 'mas' ? 'más que' : 'menos que'} en la Tierra.${av(' La fracción sumergida es ρ_objeto / ρ_líquido y no tiene g: la gravedad se simplifica.')}`,
       }
     },
   }

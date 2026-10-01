@@ -189,8 +189,8 @@ export function derivar(c: Config, e: Estado): Derivados {
   const rhoObjeto = masa / d.v
   const enFondo = e.y <= d.alto / 2 + 1e-6
   const flota = rhoObjeto < rho
-  // Un cuerpo apenas más liviano que el líquido queda a ras: sumergido casi todo, pero quieto, así que flota.
-  const subiendo = x >= 0.999 && e.v > 0.002
+  // Si flota y está todo sumergido, todavía sube: su equilibrio siempre deja una parte afuera.
+  const subiendo = x >= 0.999
   const fase: Fase = !e.toco ? 'aire' : flota ? (subiendo ? 'sube' : 'flota') : enFondo ? 'fondo' : 'hunde'
   return {
     g, masa, peso, empuje, rhoObjeto, rhoLiquido: rho, flota, fase, aguaDentro,
@@ -216,7 +216,10 @@ export function paso(c: Config, e: Estado, dt: number): Estado {
     if (v < 0) v = 0
   }
   const toco = e.toco || x > 0
-  const reposo = toco && Math.abs(v) < 0.003 && (enFondo || Math.abs(anet - roce * v) < 0.3)
+  // Quieto de verdad: apoyado en el fondo, o flotando en la superficie con peso y empuje equilibrados.
+  // Un cuerpo que sube o baja muy despacio a media agua tiene velocidad terminal chica pero no está en reposo.
+  const enSuperficie = x < 0.999 && Math.abs(empuje - peso) < 0.02 * peso
+  const reposo = toco && Math.abs(v) < 0.003 && (enFondo || enSuperficie)
 
   // Torricelli: el agujero está en el fondo del casco; entra líquido mientras afuera haya más columna que adentro.
   let lleno = e.lleno
@@ -231,7 +234,8 @@ export function paso(c: Config, e: Estado, dt: number): Estado {
 export function terminado(c: Config, e: Estado): boolean {
   if (e.t >= T_MAX) return true
   if (e.quieto < QUIETO_S) return false
-  return !(c.agujero && OBJETOS[c.objeto].hueco) || !derivar(c, e).flota
+  // El casco agujereado se llena de a poco y puede quedar casi equilibrado un rato: termina recién al tocar el fondo.
+  return !(c.agujero && OBJETOS[c.objeto].hueco) || derivar(c, e).fase === 'fondo'
 }
 
 /** Suelta el objeto y corre el modelo hasta que termina. Es lo que usa la predicción para saber la respuesta. */
