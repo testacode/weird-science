@@ -2,6 +2,8 @@ import * as THREE from 'three'
 
 /** Distancia mínima (px) entre una pastilla y el borde de la pantalla. */
 const MARGEN = 6
+/** Hasta cuántos px fuera de la pantalla puede estar el punto anclado y la pastilla sigue visible (pegada al borde). */
+const TOLERANCIA = 80
 
 export interface OpcionesPildora {
   clase?: string
@@ -26,7 +28,7 @@ export interface Pildora {
 
 /**
  * Pastillas HTML (`.pildora`) ancladas a puntos de la maqueta. `ubicar()` las proyecta con la cámara y
- * las mantiene dentro de la pantalla; si el punto mismo queda afuera (o detrás de la cámara), se ocultan.
+ * las mantiene dentro de la pantalla. Si el punto queda lejos de la pantalla (o detrás de la cámara), se ocultan.
  */
 export function crearPildoras(contenedor: HTMLElement, camera: THREE.Camera) {
   const lista: (Pildora & { origen: 'centro' | 'izquierda' })[] = []
@@ -55,7 +57,7 @@ export function crearPildoras(contenedor: HTMLElement, camera: THREE.Camera) {
         proyectado.copy(p.ancla).project(camera)
         const x = (proyectado.x * 0.5 + 0.5) * ancho
         const y = (-proyectado.y * 0.5 + 0.5) * alto
-        const afuera = proyectado.z > 1 || x < 0 || x > ancho || y < 0 || y > alto
+        const afuera = proyectado.z > 1 || x < -TOLERANCIA || x > ancho + TOLERANCIA || y < -TOLERANCIA || y > alto + TOLERANCIA
         p.el.style.visibility = afuera ? 'hidden' : ''
         if (afuera) return
         const izq = p.origen === 'izquierda' ? x + p.dx : x + p.dx - w / 2
