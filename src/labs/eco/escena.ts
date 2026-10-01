@@ -4,7 +4,7 @@ import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
 import { crearPildoras } from '../../escena/pildoras'
 import { numero } from '../../ui/formato'
-import { nivelEco, recorrido, ruido, superficie, type Config, type Estado, type SuperficieId } from './model'
+import { nivelEco, recorrido, ruido, superficie, tiempoEco, tiempoFinal, type Config, type Estado, type SuperficieId } from './model'
 import { Y_MAR, crearMuros, crearMar, crearBarco, crearPersona } from './piezas'
 
 /** Largo de la maqueta entre la fuente y la superficie, en unidades de la escena (el sonar es vertical y más corto). */
@@ -143,7 +143,9 @@ export function crearEscena(contenedor: HTMLElement) {
         salida.scale.setScalar(R * largo)
         ;(salida.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - R * 0.35)
       }
-      const vuelve = R > 1 && R <= R_MAX
+      // El eco dibujado se apaga solo: del final de la ida (R = 2, de vuelta en la fuente) hasta el final del experimento.
+      const fin = Math.min(R_MAX, (2 * tiempoFinal(c)) / tiempoEco(c))
+      const vuelve = R > 1 && R < fin
       vuelta.visible = vuelve
       // El eco dibujado es más tenue cuanto más cae respecto del ruido: 0 dB sobre el ruido casi no se ve.
       const margen = Math.max(0, Math.min(1, (nivelEco(c) - ruido(c)) / Math.max(1, c.volumen - ruido(c))))
@@ -151,12 +153,12 @@ export function crearEscena(contenedor: HTMLElement) {
       if (vuelve) {
         vuelta.position.x = 2 * largo
         vuelta.scale.setScalar(R * largo)
-        ;(vuelta.material as THREE.MeshBasicMaterial).opacity = fuerza * (R > 2 ? Math.max(0, 1 - (R - 2) / (R_MAX - 2)) : 1)
+        ;(vuelta.material as THREE.MeshBasicMaterial).opacity = fuerza * (R > 2 ? Math.max(0, 1 - (R - 2) / (fin - 2)) : 1)
       }
 
       // Pastillas.
       pFuente.ancla.copy(aMundo(0, aire ? 1.1 : -1.3))
-      pFuente.texto(aire ? `Vos · grito de ${numero(c.volumen, 0)} dB` : `Barco · ping de ${numero(c.volumen, 0)} dB`)
+      pFuente.texto(aire ? `Vos · grito de ${numero(c.volumen, 0)} dB` : `Barco · ping de ${numero(c.volumen, 0)} dB (rel.)`)
       pSuperficie.ancla.copy(aMundo(largo, aire ? 2.2 : -3.7))
       pSuperficie.texto(superficie(c.superficie).nombre)
       pDistancia.ancla.copy(aMundo(largo / 2, aire ? -1.55 : 1.9))

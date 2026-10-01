@@ -5,8 +5,8 @@
 import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
 import { numero } from '../../ui/formato'
-import { distanciaMinima, ms } from './contenido'
-import { UMBRAL_ECO, caida, clasificar, nivelEco, ruido, superficie, tiempoEco, type Config } from './model'
+import { UMBRAL, distanciaMinima, ms } from './contenido'
+import { caida, clasificar, nivelEco, ruido, superficie, tiempoEco, type Config } from './model'
 
 const num = numero
 
@@ -21,7 +21,6 @@ export interface Datos {
 }
 
 const el = (c: Config) => (c.superficie === 'fondo' ? 'el fondo del mar' : `la ${superficie(c.superficie).nombre.toLowerCase()}`)
-const umbral = UMBRAL_ECO.toString().replace('.', ',')
 
 function mezclar<T>(lista: T[]): T[] {
   const m = [...lista]
@@ -87,8 +86,8 @@ export function resolver(d: Datos): { correcta: Respuesta; explicacion: string }
   const correcta = clasificar(c)
   const dB = `${num(nivelEco(c), 0)} dB`
   const hecho: Record<typeof correcta, string> = {
-    claro: `El eco tardó <b>${ms(t)}</b>, más de ${umbral} s, y llegó a ${dB}, sobre el ruido de fondo (${num(ruido(c), 0)} dB): se oye aparte.`,
-    mezcla: `El eco tardó solo <b>${ms(t)}</b>, menos de ${umbral} s: se pega al grito y suena a una sola voz larga (reverberación). Para oírlo aparte hace falta estar a más de ${num(distanciaMinima(c), 1)} m de la superficie.`,
+    claro: `El eco tardó <b>${ms(t)}</b>, más de ${UMBRAL} s, y llegó a ${dB}, sobre el ruido de fondo (${num(ruido(c), 0)} dB): se oye aparte.`,
+    mezcla: `El eco tardó solo <b>${ms(t)}</b>, menos de ${UMBRAL} s: se pega al grito y suena a una sola voz larga (reverberación). Para oírlo aparte hace falta estar a más de ${num(distanciaMinima(c), 1)} m de la superficie.`,
     ausente: `El eco llegó a <b>${dB}</b>, por debajo del ruido de fondo (${num(ruido(c), 0)} dB): casi no vuelve.${c.superficie === 'cortina' ? ` Una cortina absorbe el ${num(s.alfa * 100, 0)} % de la energía.` : ' El sonido se reparte en una esfera cada vez más grande.'}`,
   }
   return { correcta, explicacion: hecho[correcta] }

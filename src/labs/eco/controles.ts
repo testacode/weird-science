@@ -4,7 +4,7 @@ import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
 import { interruptorPreguntas } from '../../ui/prediccion'
-import { REF_VOZ, SUPERFICIES, TEMPERATURA, VOLUMEN, superficie, type Config, type Modo, type SuperficieId } from './model'
+import { REF_VOZ, SUPERFICIES, TEMPERATURA, VOLUMEN, superficie, velocidadAire, type Config, type Modo, type SuperficieId } from './model'
 
 export interface Manejadores {
   /** Un cambio de la config pasa por acá. */
@@ -23,6 +23,8 @@ export interface Manejadores {
 export interface Vista {
   corriendo: boolean
   estimacion: number
+  /** Ya se comprobó la respuesta: la estimación queda bloqueada hasta pedir otra distancia. */
+  comprobada: boolean
   /** Ya se puede comprobar: el eco volvió y todavía no se comprobó. */
   puedeComprobar: boolean
 }
@@ -63,13 +65,16 @@ export function crearControles(inicial: Config, m: Manejadores) {
   const botonOtra = h('button', { class: 'boton', type: 'button', onclick: m.otraDistancia }, 'Otra distancia')
   const filaMedir = h('div', { class: 'fila' }, botonComprobar, botonOtra)
 
+  // En el sonar el mismo control es la potencia del ping, en dB relativos (sin las referencias de la voz).
+  let sonar = false
   const volumen = deslizador({
     titulo: 'Volumen (a 1 m)', min: VOLUMEN.min, max: VOLUMEN.max, paso: 1, valor: inicial.volumen, color: 'var(--cielo)',
-    formato: (x) => `${x} dB`, nota: referenciaVolumen, alCambiar: (x) => m.pedir({ volumen: x }),
+    formato: (x) => `${x} dB`, nota: (x) => (sonar ? 'relativos' : referenciaVolumen(x)), alCambiar: (x) => m.pedir({ volumen: x }),
   })
+  const tituloVolumen = volumen.el.querySelector<HTMLElement>('.etiqueta')!
   const temperatura = deslizador({
     titulo: 'Temperatura del aire', min: TEMPERATURA.min, max: TEMPERATURA.max, paso: 1, valor: inicial.temperatura,
-    formato: (x) => `${x} °C`, nota: (x) => `${numero(331.4 + 0.6 * x, 0)} m/s`, alCambiar: (x) => m.pedir({ temperatura: x }),
+    formato: (x) => `${x} °C`, nota: (x) => `${numero(velocidadAire(x), 0)} m/s`, alCambiar: (x) => m.pedir({ temperatura: x }),
   })
   const botonOir = h('button', { class: 'boton', type: 'button', onclick: m.oir }, '🔊 Oír en tiempo real')
 
@@ -93,21 +98,23 @@ export function crearControles(inicial: Config, m: Manejadores) {
     el,
     sincronizar(c: Config, v: Vista) {
       if (armadoPara !== c.superficie) armarDistancias(c.superficie, c, v)
+      sonar = superficie(c.superficie).medio === 'agua'
       lugar.set(c.superficie)
       modo.set(c.modo)
       distancia.set(c.distancia)
       estimacion.set(v.estimacion)
+      tituloVolumen.textContent = sonar ? 'Potencia del ping' : 'Volumen (a 1 m)'
       volumen.set(c.volumen)
       temperatura.set(c.temperatura)
       const medir = c.modo === 'medir'
-      const agua = superficie(c.superficie).medio === 'agua'
       cajaDistancia.hidden = medir
       cajaEstimacion.hidden = !medir
       filaMedir.hidden = !medir
       botonComprobar.disabled = !v.puedeComprobar
-      temperatura.el.hidden = agua
-      botonOir.hidden = agua
-      botonGritar.textContent = agua ? '¡Ping!' : '¡Gritar!'
+      estimacion.input.disabled = v.comprobada
+      temperatura.el.hidden = sonar
+      botonOir.hidden = sonar
+      botonGritar.textContent = sonar ? '¡Ping!' : '¡Gritar!'
       botonPlay.textContent = v.corriendo ? '⏸ Pausa' : '▶ Seguir'
     },
   }

@@ -4,13 +4,13 @@ import { metrica, modal } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { grafico, type Serie } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { prediccion, preguntasActivas } from '../../ui/prediccion'
 import { crearAudio } from './audio'
 import { COMO_FUNCIONA, GANCHO, ms, num, relato, textoOido, type Medicion } from './contenido'
 import { crearControles } from './controles'
 import { crearEscena } from './escena'
 import {
-  CONFIG_INICIAL, ESTADO_INICIAL, claseSegura, clasificar, distanciaAlAzar, ecoPasado, medioDe, nivelEco, nivelEn, paso, ruido, superficie, tiempoEco, tiempoFinal, velocidad,
+  CONFIG_INICIAL, ESTADO_INICIAL, claseSegura, clasificar, distanciaAlAzar, ecoAudible, ecoPasado, medioDe, nivelEco, nivelEn, paso, ruido, superficie, tiempoEco, tiempoFinal, velocidad,
   type Clase, type Config, type Estado,
 } from './model'
 import { armar, resolver, type Datos, type Respuesta, type Tipo } from './prediccion'
@@ -40,11 +40,18 @@ mIda.el.classList.add('c-magenta')
 mVel.el.classList.add('c-cielo')
 const ahora = h('div', { class: 'panel ahora' })
 
-const SERIES: Serie[] = [{ id: 'nivel', nombre: 'Lo que oís', color: 'cielo' }, { id: 'ruido', nombre: 'Ruido de fondo', color: '#93a8a0' }]
-const curva = grafico(SERIES, { titulo: 'Sonómetro a tu lado', unidadX: ' ms', unidadY: ' dB', yMax: 100, yMin: 0, yTecho: 100, alto: 130 })
+const seriesDe = (c: Config): Serie[] => {
+  const agua = medioDe(c) === 'agua'
+  return [{ id: 'nivel', nombre: agua ? 'Lo que capta' : 'Lo que oís', color: 'cielo' }, { id: 'ruido', nombre: agua ? 'Umbral del sonar' : 'Ruido de fondo', color: '#93a8a0' }]
+}
+const tituloDe = (c: Config) => (medioDe(c) === 'agua' ? 'Hidrófono junto al barco' : 'Sonómetro a tu lado')
+const curva = grafico(seriesDe(config), { titulo: tituloDe(config), unidadX: ' ms', unidadY: ' dB', yMax: 100, yMin: 0, yTecho: 100, alto: 130 })
 let ultimoX = -1
 function graficar() {
-  curva.cambiar(SERIES, { titulo: 'Sonómetro a tu lado', unidadX: ' ms', unidadY: ' dB', xMax: tiempoFinal(config) * 1000, yMax: 100, yMin: 0, yTecho: 100 })
+  // Con la distancia escondida, el eje no puede delatarla: sale de la distancia máxima de la superficie.
+  const escondida = config.modo === 'medir' && !medir.comprobada
+  const base = escondida ? { ...config, distancia: rango(config).max } : config
+  curva.cambiar(seriesDe(config), { titulo: tituloDe(config), unidadX: ' ms', unidadY: ' dB', xMax: tiempoFinal(base) * 1000, yMax: 100, yMin: 0, yTecho: 100 })
   ultimoX = -1
 }
 /** Suma puntos hasta el instante actual, de a 8 ms como mucho: la campana del pulso (30 ms) se dibuja bien aunque la animación sea lenta. */
@@ -77,7 +84,8 @@ const pred = prediccion<Respuesta, Datos>(() => {
   if (d) lanzar(d.tipo)
 }, {
   // Saltar (o apagar las preguntas): se grita igual, sin predicción.
-  saltar: (d) => d && lanzar(d.tipo),
+  // Con las preguntas apagadas (modo libre) no cuenta como contestada: al volver a encenderlas se hacen.
+  saltar: (d) => d && lanzar(preguntasActivas() ? d.tipo : undefined),
   textoSaltar: 'Saltar y gritar igual',
   listo: (d) => ecoPasado(estado, d.config),
 })
@@ -91,9 +99,10 @@ function revelar() {
 /** Qué se pregunta antes de este grito (o `null` si va directo). */
 function elegir(): Datos | null {
   if (config.modo !== 'explorar') return null
-  if (!preguntadas.has('mismo')) return { tipo: 'mismo', config: { ...config } }
+  // "Mismo sonido" y "más fuerte" solo tienen sentido si de verdad vuelve algo.
+  if (!preguntadas.has('mismo') && ecoAudible(config)) return { tipo: 'mismo', config: { ...config } }
   const u = ultimo
-  if (u && !preguntadas.has('volumen') && config.volumen - u.volumen >= 10 && u.superficie === config.superficie && u.distancia === config.distancia && u.temperatura === config.temperatura) {
+  if (u && medioDe(u) === 'aire' && ecoAudible(u) && !preguntadas.has('volumen') && config.volumen - u.volumen >= 10 && u.superficie === config.superficie && u.distancia === config.distancia && u.temperatura === config.temperatura) {
     return { tipo: 'volumen', config: { ...config }, previo: { volumen: u.volumen, tiempo: tiempoEco(u) } }
   }
   if (medioDe(config) === 'aire' && !clasesPreguntadas.has(clasificar(config)) && claseSegura(config)) return { tipo: 'eco', config: { ...config } }
@@ -156,7 +165,7 @@ function reiniciar() {
 }
 const puedeComprobar = () => config.modo === 'medir' && !medir.comprobada && ecoPasado(estado, config)
 function sincronizar() {
-  controles.sincronizar(config, { corriendo, estimacion: medir.estimacion, puedeComprobar: puedeComprobar() })
+  controles.sincronizar(config, { corriendo, estimacion: medir.estimacion, comprobada: medir.comprobada, puedeComprobar: puedeComprobar() })
 }
 
 const controles = crearControles(config, {
@@ -167,6 +176,8 @@ const controles = crearControles(config, {
   },
   ayuda: () => ayuda.abrir(COMO_FUNCIONA),
   estimar: (m) => {
+    // Comprobada la respuesta, la estimación queda bloqueada hasta pedir otra distancia.
+    if (medir.comprobada) return
     medir = { estimacion: m, comprobada: false }
     sincronizar()
   },

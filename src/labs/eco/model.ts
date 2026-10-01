@@ -49,7 +49,7 @@ export const VOLUMEN = { min: 50, max: 100, inicial: 76 } as const
 export const REF_VOZ = { conversacion: 58, grito: 76 } as const
 /** Separación mínima para oír el eco aparte del grito, s: regla didáctica de 1/10 de segundo (Wikipedia, "Echo"). */
 export const UMBRAL_ECO = 0.1
-/** Ruido de fondo, dB: un cuarto/campo muy tranquilo (20–30 dB, Wikipedia "Sound pressure"); en el agua los dB son relativos (parámetro). */
+/** Ruido de fondo del aire, dB: un cuarto/campo muy tranquilo (20–30 dB, Wikipedia "Sound pressure"). En el agua, 0 dB es el umbral de detección del sonar y los dB son relativos al ping: no hay referencia común con el aire (parámetro). */
 export const RUIDO: Record<MedioId, number> = { aire: 25, agua: 0 }
 /** Duración del pulso (σ de una campana), s: un "¡ey!" corto (parámetro). */
 export const SIGMA = 0.03
@@ -75,7 +75,9 @@ export interface Estado {
 }
 export const ESTADO_INICIAL: Estado = { t: null }
 
-export const velocidad = (c: Config): number => (superficie(c.superficie).medio === 'agua' ? V_MAR : 331.4 + 0.6 * c.temperatura)
+/** Velocidad del sonido en el aire a `temperatura` °C, m/s. */
+export const velocidadAire = (temperatura: number): number => 331.4 + 0.6 * temperatura
+export const velocidad = (c: Config): number => (superficie(c.superficie).medio === 'agua' ? V_MAR : velocidadAire(c.temperatura))
 export const medioDe = (c: Config): MedioId => superficie(c.superficie).medio
 /** Tiempo de ida y vuelta, s. */
 export const tiempoEco = (c: Config): number => (2 * c.distancia) / velocidad(c)
@@ -90,6 +92,8 @@ export function clasificar(c: Config): Clase {
   if (nivelEco(c) < ruido(c)) return 'ausente'
   return medioDe(c) === 'aire' && tiempoEco(c) < UMBRAL_ECO ? 'mezcla' : 'claro'
 }
+/** El eco supera con margen el ruido de fondo (o el umbral de detección del sonar): de verdad vuelve algo. */
+export const ecoAudible = (c: Config): boolean => nivelEco(c) - ruido(c) >= MARGEN_DB
 /** La clase no está cerca de un umbral: sirve para preguntar. */
 export function claseSegura(c: Config): boolean {
   if (Math.abs(nivelEco(c) - ruido(c)) < MARGEN_DB) return false
