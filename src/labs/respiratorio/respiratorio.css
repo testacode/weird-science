@@ -10,7 +10,6 @@
 .hud-der .consola { gap: 10px; padding: 12px 14px; }
 
 .aviso { padding: 12px 14px; font-size: 13px; border-color: var(--magenta); }
-.aviso[hidden] { display: none; }
 .aviso strong { color: var(--magenta); }
 
 .pildora.p-aire { color: var(--marca); border-color: var(--marca); }

@@ -104,7 +104,10 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config; arranque: Estado }>(() => seguir(true), { saltar: () => seguir(true) })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config; arranque: Estado }>(() => seguir(true), {
+  saltar: () => seguir(true),
+  listo: (d) => d.pregunta.listo(estado, d.config),
+})
 
 function seguir(va: boolean) {
   corriendo = va
@@ -122,7 +125,7 @@ function preguntar(pregunta: Pregunta) {
 }
 function revelar() {
   const datos = pred.datos
-  if (!datos || !pred.enCurso || !datos.pregunta.listo(estado, datos.config)) return
+  if (!pred.listo || !datos) return
   const r = datos.pregunta.resolver(datos.config, datos.arranque)
   pred.revelar(r.correcta, r.explicacion)
 }

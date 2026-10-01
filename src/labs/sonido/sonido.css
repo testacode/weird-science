@@ -4,7 +4,6 @@
 .c-agua { color: var(--agua); }
 .c-acero { color: var(--acero); }
 
-.consola [hidden] { display: none; }
 .hud-der .consola { gap: 10px; padding: 12px 14px; }
 .boton-golpe { background: var(--ambar); color: #0b1413; border-color: transparent; font-weight: 700; font-size: 15px; padding: 10px; }
 .boton-golpe:hover { background: #ffd981; }

@@ -18,10 +18,15 @@ let corriendo = false
 /** Tiempo de la célula en el que se sumó el último punto al gráfico; con la célula rota se corta el gráfico. */
 let ultimoPunto = 0
 let graficoCortado = false
+/** Lo que muestra la pantalla en este cuadro: decide cuándo se puede revelar. */
+let lectura = leer(est, ent)
 
 const escena = crearEscena(lab)
 const hud = crearHud(lab)
-const pred = prediccion<Respuesta, { pregunta: Pregunta; ent: Entorno }>(() => seguir(true), { saltar: () => seguir(true) })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; ent: Entorno }>(() => seguir(true), {
+  saltar: () => seguir(true),
+  listo: () => lectura.listo,
+})
 const controles = crearControles(ent, velocidad, {
   alternar,
   reiniciar: nueva,
@@ -47,7 +52,7 @@ function predecir() {
 }
 function revelar() {
   const datos = pred.datos
-  if (!datos || !pred.enCurso) return
+  if (!pred.listo || !datos) return
   const r = datos.pregunta.resolver(datos.ent)
   pred.revelar(r.correcta, r.explicacion)
 }
@@ -63,7 +68,8 @@ function nueva() {
   hud.reiniciarCurva(ent)
   ultimoPunto = 0
   graficoCortado = false
-  hud.muestrear(0, ent, leer(est, ent))
+  lectura = leer(est, ent)
+  hud.muestrear(0, ent, lectura)
   seguir(true)
   predecir()
 }
@@ -111,13 +117,13 @@ function cuadro(t: number) {
   anterior = t
   const p = CELULAS[ent.celula]
   if (corriendo) est = paso(est, ent, dtReal * velocidad * p.ritmo)
-  const lectura = leer(est, ent)
+  lectura = leer(est, ent)
   if (corriendo && !graficoCortado && est.t - ultimoPunto >= MUESTREO_PANTALLA_S * p.ritmo * velocidad) {
     hud.muestrear(est.t, ent, lectura)
     ultimoPunto = est.t
     graficoCortado = est.rota
   }
-  if (lectura.listo) revelar()
+  revelar()
   controles.reloj.textContent = corriendo
     ? p.ritmo * velocidad < 1 ? `Cámara lenta ×${numero(1 / (p.ritmo * velocidad), 1)}` : `Reloj acelerado ×${numero(p.ritmo * velocidad, 1)}`
     : 'Reloj detenido'

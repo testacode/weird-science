@@ -1,5 +1,4 @@
 /* Colores con significado: magenta = polo N, cielo = polo S, ámbar = fuerza, lima = campo y regla. */
-.consola [hidden] { display: none; }
 
 .pildora.polo-n, .pildora.polo-s { padding: 1px 8px; font-size: 13px; background: rgba(7, 16, 15, 0.55); }
 .pildora.polo-n { color: var(--magenta); border-color: var(--magenta); }

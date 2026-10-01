@@ -11,8 +11,7 @@
 
 1. **Próxima ola de labs:** volcanes y placas; electrostática (quedó fuera de imanes); eco (quedó fuera de sonido).
 2. **Kit, pedidos de la ola 5:**
-   - `listo()` del lab en el kit de predicción: que el reveal exija que lo que se ve coincida con el veredicto (hoy célula lo hace a mano).
-   - `[hidden] { display: none !important }` en `kit.css` (`fila`, `deslizador` y `grupo` le ganan al atributo; luz y célula lo parchearon).
+   - Pasar a la opción `listo` (+ `if (!pred.listo) return` en el `revelar` del lab) los labs que todavía deciden el reveal a mano en el loop: flotación (`terminado`), circulatorio, respiratorio y fotosíntesis (ventana de tiempo), digestivo, mezclas (`progreso`), estaciones y luna (`tRevela`).
    - `grafico.cargar(puntos)` para dibujar de una vez (sonido, estaciones).
    - `segmentado` con estado deshabilitado; `deslizador` logarítmico y deshabilitado.
    - Botones con muestra de color (luz, flotación) como componente.
@@ -31,6 +30,7 @@
 
 ## Hecho reciente
 
+- 2026-10-01 — Kit: opción `listo` de `prediccion` y getter `pred.listo` (hay predicción en curso y la pantalla ya muestra lo que se corrige); célula, sonido, partículas y ciclo del agua migrados (`resolver` corre una sola vez). `[hidden] { display: none !important }` global en `kit.css` y fuera los parches (10 en labs y 3 en el kit).
 - 2026-10-01 — Kit de predicción: modo libre (interruptor "Preguntas" junto a "Info avanzada", en localStorage), `revelarEn` (el timer lo cancela la tarjeta), botón "Saltar y hacerlo igual" en la tarjeta y `saltar(datos)` como único camino para seguir sin predecir; los 15 labs migrados.
 - 2026-10-01 — Ola 5 completa: imanes, sonido, circulatorio, luz y célula, cada uno con code review, arreglos y prueba en CDP; fuentes integradas en `docs/fuentes.md`.
 - 2026-10-01 — Datos pendientes: aire (20,95 % O₂), atmósfera estándar, pan y papas fritas (USDA) verificados; 16 % de O₂ exhalado derivado; P50, milanesa y absorción de Elodea declarados como aproximados en cada lab.

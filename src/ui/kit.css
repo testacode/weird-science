@@ -21,6 +21,8 @@
 }
 
 * { box-sizing: border-box; }
+/* El atributo `hidden` gana siempre: `.fila`, `.deslizador`, `.grupo`… declaran su propio display. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -123,7 +125,6 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 }
 .pildora.activa { color: var(--marca); border-color: var(--marca); }
 .pildora.multilinea { display: flex; flex-direction: column; gap: 1px; border-radius: 12px; }
-.pildora[hidden] { display: none; }
 
 /* --- Deslizador --- */
 .deslizador { display: grid; gap: 4px; }
@@ -154,7 +155,6 @@ body.sin-avanzado .avanzado { display: none; }
 
 /* --- Predecí antes de correr --- */
 .prediccion { padding: 12px 14px; display: grid; gap: 8px; }
-.prediccion[hidden] { display: none; }
 .prediccion .pregunta { margin: 0; font-size: 14px; font-weight: 600; }
 .prediccion .opciones { display: grid; gap: 6px; }
 .prediccion .boton { text-align: left; font-size: 13.5px; }
@@ -164,7 +164,6 @@ body.sin-avanzado .avanzado { display: none; }
 .prediccion.error .boton.elegida:not(.correcta) { border-color: var(--magenta); }
 .prediccion .resultado p { margin: 0; font-size: 13px; color: #cfdcd6; }
 .prediccion .saltar { justify-self: start; text-align: center; }
-.prediccion .saltar[hidden] { display: none; }
 .prediccion .resultado .veredicto { margin-bottom: 4px; font: 600 13px/1.3 var(--mono); color: var(--apagado); }
 .prediccion.acierto .veredicto { color: var(--marca); }
 .prediccion.error .veredicto { color: var(--magenta); }
