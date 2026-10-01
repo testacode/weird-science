@@ -8,5 +8,5 @@ export const meta: Lab = {
   nap: 'Primaria 5° · el sonido: vibración y medio',
   temas: ['energia', 'materia'],
   orden: 3,
-  listo: false,
+  listo: true,
 }
