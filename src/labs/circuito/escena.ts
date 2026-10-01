@@ -2,7 +2,9 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
+import { crearPildoras } from '../../escena/pildoras'
 import { MAX_LAMPARAS, type Config, type Resultado } from './model'
 import { COLOR_MARCA, crearInterruptor, crearLamparita, crearPila } from './piezas'
 import { BY, X_CORTO, X_INTERRUPTOR, XB, ZB, ZF, mediaLargoPila, trazado, xLampara, type Arista } from './trazado'
@@ -16,7 +18,8 @@ const VELOCIDAD_POR_AMPERIO = 6
 const VELOCIDAD_MAX = 16
 /** Ancho (en unidades de la mesada) que tiene que entrar entre los dos HUD. */
 const ANCHO_MAQUETA = 9.8
-const ANCHO_HUD = 770
+/** Aire (px) entre la maqueta y los HUD. */
+const MARGEN_HUECO = 20
 const ELEVACION = (46 * Math.PI) / 180
 
 const FILAMENTO_FRIO = new THREE.Color(0x3a2a20)
@@ -24,18 +27,12 @@ const LUZ_BAJA = new THREE.Color(0xff5a1a)
 const LUZ_ALTA = new THREE.Color(0xffc566)
 const LUZ_BLANCA = new THREE.Color(0xfff2d0)
 
-interface Pildora {
-  el: HTMLElement
-  ancla: THREE.Vector3
-}
-
 export type Accion = { tipo: 'lampara'; indice: number } | { tipo: 'interruptor' }
 
 export function crearEscena(contenedor: HTMLElement) {
-  const { scene, camera, renderer, render } = crearEscenario(contenedor)
+  // La cámara queda más lejos que en el digestivo: la niebla por defecto apagaría la maqueta.
+  const { scene, camera, renderer, render } = crearEscenario(contenedor, { bloom: 0.15, niebla: { cerca: 32, lejos: 70 } })
   scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture
-  // La cámara queda más lejos que en el digestivo: el niebla por defecto apagaría la maqueta.
-  if (scene.fog instanceof THREE.Fog) Object.assign(scene.fog, { near: 32, far: 70 })
 
   const objetivo = new THREE.Vector3(-0.9, 0.5, 0.2)
   const controles = new OrbitControls(camera, renderer.domElement)
@@ -47,14 +44,13 @@ export function crearEscena(contenedor: HTMLElement) {
   controles.maxPolarAngle = Math.PI * 0.46
   let movida = false
   controles.addEventListener('start', () => (movida = true))
-  function encuadrar() {
+  // Con la cámara movida por el usuario, solo se recentra el cuadro (sin pisarle el zoom).
+  encuadrarEntreHuds(camera, contenedor, ({ libre, alto }) => {
+    if (movida) return
     const tan = Math.tan((camera.fov * Math.PI) / 360)
-    const libre = Math.max(contenedor.clientWidth - ANCHO_HUD, 380)
-    const d = Math.max((ANCHO_MAQUETA * contenedor.clientHeight) / (libre * 2 * tan), 12)
+    const d = Math.max((ANCHO_MAQUETA * alto) / (Math.max(libre - MARGEN_HUECO, 380) * 2 * tan), 12)
     camera.position.copy(objetivo).add(new THREE.Vector3(0, Math.sin(ELEVACION), Math.cos(ELEVACION)).multiplyScalar(d))
-  }
-  encuadrar()
-  window.addEventListener('resize', () => !movida && encuadrar())
+  })
 
   // --- Mesada y luces ---
   const mesada = new THREE.Mesh(new RoundedBoxGeometry(15, 0.5, 8.6, 4, 0.12), new THREE.MeshStandardMaterial({ color: 0x17221f, roughness: 0.55, metalness: 0.3 }))
@@ -121,40 +117,14 @@ export function crearEscena(contenedor: HTMLElement) {
   }
 
   // --- Etiquetas HTML ancladas a las piezas ---
-  const crearPildora = (clase = '') => {
-    const el = document.createElement('div')
-    el.className = `pildora ${clase}`
-    contenedor.append(el)
-    return el
-  }
+  const rotulos = crearPildoras(contenedor, camera)
   const pildoras = {
-    pila: crearPildora(),
-    mas: crearPildora(),
-    menos: crearPildora(),
-    interruptor: crearPildora(),
-    lamparas: lamparas.map(() => crearPildora('luz')),
-    corto: crearPildora('peligro'),
-  }
-  pildoras.mas.textContent = '+'
-  pildoras.menos.textContent = '−'
-  pildoras.corto.textContent = 'Sin carga'
-  const anclas = {
-    pila: new THREE.Vector3(XB, 1.35, 0), mas: new THREE.Vector3(), menos: new THREE.Vector3(),
-    interruptor: new THREE.Vector3(X_INTERRUPTOR, 1.1, ZF), corto: new THREE.Vector3(X_CORTO + 0.5, 0.5, 0),
-  }
-  const anclaLampara = lamparas.map(() => new THREE.Vector3())
-  const todas: Pildora[] = [
-    { el: pildoras.pila, ancla: anclas.pila }, { el: pildoras.mas, ancla: anclas.mas }, { el: pildoras.menos, ancla: anclas.menos },
-    { el: pildoras.interruptor, ancla: anclas.interruptor }, { el: pildoras.corto, ancla: anclas.corto },
-    ...pildoras.lamparas.map((el, i) => ({ el, ancla: anclaLampara[i] })),
-  ]
-  const proyectado = new THREE.Vector3()
-  function ubicarPildoras() {
-    for (const { el, ancla } of todas) {
-      proyectado.copy(ancla).project(camera)
-      el.style.left = `${(proyectado.x * 0.5 + 0.5) * contenedor.clientWidth}px`
-      el.style.top = `${(-proyectado.y * 0.5 + 0.5) * contenedor.clientHeight}px`
-    }
+    pila: rotulos.crear('', { ancla: new THREE.Vector3(XB, 1.35, 0) }),
+    mas: rotulos.crear('+'),
+    menos: rotulos.crear('−'),
+    interruptor: rotulos.crear('', { ancla: new THREE.Vector3(X_INTERRUPTOR, 1.1, ZF) }),
+    lamparas: lamparas.map(() => rotulos.crear('', { clase: 'luz' })),
+    corto: rotulos.crear('Sin carga', { clase: 'peligro', ancla: new THREE.Vector3(X_CORTO + 0.5, 0.5, 0) }),
   }
 
   // --- Click sobre el interruptor y las lamparitas (sin confundirlo con arrastrar la cámara) ---
@@ -199,8 +169,8 @@ export function crearEscena(contenedor: HTMLElement) {
         scene.add(pila)
         voltajePila = config.voltaje
         const hl = mediaLargoPila(config.voltaje)
-        anclas.mas.set(XB, BY + 0.6, -hl - 0.1)
-        anclas.menos.set(XB, BY + 0.6, hl + 0.1)
+        pildoras.mas.ancla.set(XB, BY + 0.6, -hl - 0.1)
+        pildoras.menos.ancla.set(XB, BY + 0.6, hl + 0.1)
       }
       const clave = `${config.conexion}-${config.cantidad}-${config.voltaje}-${config.corto}`
       if (clave !== claveTrazado) {
@@ -215,17 +185,18 @@ export function crearEscena(contenedor: HTMLElement) {
         const x = xLampara(i, config.cantidad)
         const z = config.conexion === 'serie' ? ZB : 0
         l.grupo.position.set(x, 0, z)
-        anclaLampara[i].set(x, (config.conexion === 'serie' ? 2.15 : 2.5) + (i % 2) * 0.75, z)
+        const p = pildoras.lamparas[i]
+        p.ancla.set(x, (config.conexion === 'serie' ? 2.15 : 2.5) + (i % 2) * 0.75, z)
         l.objetivo = r.lamparas[i].brillo
         l.quitaObjetivo = config.sacadas[i] ? 1 : 0
-        pildoras.lamparas[i].textContent = textos.lamparas[i]
-        pildoras.lamparas[i].classList.toggle('activa', r.lamparas[i].brillo > 0.02)
-        pildoras.lamparas[i].style.display = i < config.cantidad ? '' : 'none'
+        p.texto(textos.lamparas[i])
+        p.el.classList.toggle('activa', r.lamparas[i].brillo > 0.02)
+        p.el.hidden = i >= config.cantidad
       })
       anguloObjetivo = config.cerrado ? 0 : 0.75
-      pildoras.pila.textContent = textos.pila
-      pildoras.interruptor.textContent = textos.interruptor
-      pildoras.corto.style.display = config.corto ? '' : 'none'
+      pildoras.pila.texto(textos.pila)
+      pildoras.interruptor.texto(textos.interruptor)
+      pildoras.corto.el.hidden = !config.corto
     },
     dibujar(ahora: number) {
       const dt = Math.min(ahora - previo, 0.1)
@@ -260,7 +231,7 @@ export function crearEscena(contenedor: HTMLElement) {
       }
       electrones.instanceMatrix.needsUpdate = true
 
-      ubicarPildoras()
+      rotulos.ubicar()
       controles.update()
       render()
     },

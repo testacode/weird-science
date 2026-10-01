@@ -3,6 +3,7 @@ import './circuito.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
+import { hud } from '../../ui/hud'
 import { grafico } from '../../ui/grafico'
 import { prediccion } from '../../ui/prediccion'
 import { AVISO_CORTO, COMO_FUNCIONA, GANCHO, num, relato } from './contenido'
@@ -55,7 +56,7 @@ function reiniciarGrafico() {
   puntoGrafico()
 }
 lab.append(
-  h('div', { class: 'hud hud-izq' },
+  hud('izq',
     h('a', { href: '../../', class: 'etiqueta' }, '← Weird Science'),
     h('h1', { class: 'titulo' }, h('small', {}, 'Lab del circuito eléctrico'), h('span', {}, 'Pila, cable y lamparita')),
     gancho,
@@ -169,7 +170,7 @@ function aplicar(nueva: Config) {
 escena.onTocar((a: Accion) => (a.tipo === 'interruptor' ? pedir({ cerrado: !config.cerrado }) : alternarLampara(a.indice)))
 
 lab.append(
-  h('div', { class: 'hud hud-der' },
+  hud('der',
     h('div', { class: 'panel consola' },
       h('div', { class: 'fila' },
         h('button', { class: 'boton', type: 'button', onclick: reiniciar }, '↺ Restablecer'),

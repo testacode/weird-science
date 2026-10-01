@@ -12,6 +12,4 @@
 .romper .boton:disabled { opacity: 0.4; cursor: default; }
 .hud-der .saltar { justify-self: start; }
 
-/* Con la predicción abierta la columna puede pasar el alto de la ventana: que scrollee en vez de cortarse. */
-.hud-der { max-height: calc(100vh - 40px); overflow-y: auto; scrollbar-width: thin; }
 .interruptor .segmentado { min-width: 170px; }

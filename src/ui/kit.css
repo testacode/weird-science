@@ -84,7 +84,7 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 
 .metricas { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
 .metrica { padding: 9px 10px; min-width: 0; }
-.metrica .etiqueta { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metrica .etiqueta { white-space: nowrap; }
 .metrica b { display: block; margin-top: 6px; font: 600 16px/1 var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .metrica b.dos-lineas { white-space: normal; line-height: 1.15; }
 .metrica b small { font-size: 10px; color: var(--apagado); margin-left: 2px; }

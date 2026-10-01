@@ -2,9 +2,10 @@
 
 import { av } from '../../ui/avanzado'
 import { BRILLO_PELIGRO, R_CABLE, R_INTERNA, R_LAMPARA, V_NOMINAL, presentes, type Config, type Resultado } from './model'
+import { numero } from '../../ui/formato'
 
 /** Número con coma decimal. */
-export const num = (n: number, dec = 1) => n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+export const num = numero
 export const amperes = (i: number) => `${num(i, i >= 10 ? 1 : 2)} A`
 export const ohms = (r: number) => (Number.isFinite(r) ? `${num(r, r >= 100 ? 0 : 1)} Ω` : '∞')
 
