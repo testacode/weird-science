@@ -25,3 +25,6 @@
 - **HUD con scroll y `backdrop-filter`**: `mask-image`, `filter` u `opacity` en `.hud-*` rompen el vidrio esmerilado de los paneles; la pista "más ↓" es un `::after` sticky.
 - **Encuadre y ResizeObserver**: el alto de un HUD cambia al aparecer la predicción. `encuadrarEntreHuds` solo reencuadra si cambia el ancho, para no pisar el zoom del usuario.
 - **`overflow-y: auto` fuerza `overflow-x: auto`**: los HUD con scroll recortan el `box-shadow` y los outlines de foco en los costados.
+- **`agent-browser errors` no alcanza como evidencia**: no atrapó un TypeError real del loop de render (respiratorio). Para declarar "consola limpia" mirar también `agent-browser console` (filtrando error/warn) y el log de Vite.
+- **`dt` negativo**: el timestamp de `requestAnimationFrame` puede ser anterior a un `performance.now()` tomado antes; acotar con `Math.max(0, …)` antes de usarlo (por ejemplo en `getPointAt`).
+- **`segmentado` (kit)**: no avisa si se vuelve a tocar la opción ya elegida. Antes, en flotación y ciclo del agua, eso descartaba la predicción abierta.
