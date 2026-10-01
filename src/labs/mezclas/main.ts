@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './mezclas.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
@@ -47,13 +47,12 @@ const filaRecuperado = (i: number) => {
 const filas = [filaRecuperado(0), filaRecuperado(1)]
 const textoAhora = h('div')
 const ahora = h('div', { class: 'panel ahora' }, h('div', { class: 'recuperados' }, ...filas.map((f) => f.el)), textoAhora)
-const huecoGrafico = h('div')
 
 /**
- * Las series (una por componente) y la unidad del tiempo quedan fijas al crear el gráfico: se crea uno nuevo solo
- * cuando cambia la mezcla o la unidad. Para todo lo demás (método, mechero, sal) alcanza con `limpiar()`.
+ * Las series (una por componente) y la unidad del tiempo cambian solo con la mezcla o la unidad: ahí se usa `cambiar()`.
+ * Para todo lo demás (método, mechero, sal) alcanza con `limpiar()`.
  */
-let curva = grafico([])
+const curva = grafico([], { alto: 110 })
 let claveCurva = ''
 let ultimoPunto = 0
 /** La destilación dura minutos u horas: su eje va en minutos. */
@@ -67,10 +66,9 @@ function armarGrafico() {
   if (clave === claveCurva) curva.limpiar(escala)
   else {
     claveCurva = clave
-    curva = grafico(especies.map((e) => ({ id: e, nombre: ESPECIES[e].nombre, color: ESPECIES[e].color })), {
-      titulo: 'Gramos recuperados', unidadX: escalaT < 1 ? ' min' : ' s', unidadY: 'g', alto: 110, ...escala,
+    curva.cambiar(especies.map((e) => ({ id: e, nombre: ESPECIES[e].nombre, color: ESPECIES[e].color })), {
+      titulo: 'Gramos recuperados', unidadX: escalaT < 1 ? ' min' : ' s', unidadY: 'g', ...escala,
     })
-    huecoGrafico.replaceChildren(curva.el)
   }
   ultimoPunto = -1
   agregarPunto(leer(corrida, 0))
@@ -87,7 +85,7 @@ lab.append(
     gancho,
     h('div', { class: 'metricas' }, mPureza.el, mTiempo.el, mTipo.el, mPropiedad.el),
     ahora,
-    huecoGrafico,
+    curva.el,
   ),
 )
 
@@ -95,8 +93,7 @@ lab.append(
 const ayuda = modal()
 const botonSeparar = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => separar() }, 'Separar')
 const reloj = h('span', { class: 'etiqueta' })
-let pregunta: Pregunta = preguntaPara(config)
-const pred = prediccion<Respuesta>(() => separar())
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => separar())
 
 const selectorMezcla = segmentado<MezclaId>(MEZCLAS.map((m) => ({ valor: m.id, texto: m.nombre })), config.mezcla, (m) =>
   cambiar({ mezcla: m, sobresaturar: m === 'agua-sal' ? config.sobresaturar : false }))
@@ -105,14 +102,14 @@ const mechero = deslizador({
   titulo: 'Mechero', min: T_MECHERO.min, max: T_MECHERO.max, paso: T_MECHERO.paso, valor: config.tMechero, color: 'var(--ambar)', clase: 'mechero',
   formato: (v) => `${v} °C`, alCambiar: (v) => cambiar({ tMechero: v }),
 })
-const sobresaturar = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) =>
-  cambiar({ sobresaturar: v === 'si', mezcla: v === 'si' ? 'agua-sal' : config.mezcla }))
+const sobresaturar = interruptor('Sobresaturar con sal', false, (si) =>
+  cambiar({ sobresaturar: si, mezcla: si ? 'agua-sal' : config.mezcla }))
 
 /** Pone todos los controles en el estado de `config` (también cuando el cambio vino de un botón de "romper"). */
 function mostrarControles() {
   selectorMezcla.set(config.mezcla)
   selectorMetodo.set(config.metodo)
-  sobresaturar.set(config.sobresaturar ? 'si' : 'no')
+  sobresaturar.set(config.sobresaturar)
   mechero.set(config.tMechero)
   mechero.input.disabled = fase !== 'listo'
   mechero.el.hidden = config.metodo !== 'destilacion'
@@ -130,8 +127,8 @@ function reiniciar() {
   t = 0
   escena.preparar(corrida)
   armarGrafico()
-  pregunta = preguntaPara(config)
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  const pregunta = preguntaPara(config)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
   mostrarControles()
 }
 function separar() {
@@ -152,7 +149,7 @@ lab.append(
       reloj,
       grupo('Romper el sistema', h('div', { class: 'grupo' },
         h('button', { class: 'boton', type: 'button', onclick: () => cambiar({ mezcla: 'agua-sal', metodo: 'filtro', sobresaturar: false }) }, 'Filtrar agua salada'),
-        h('div', { class: 'interruptor' }, h('span', {}, 'Sobresaturar con sal'), sobresaturar.el))),
+        sobresaturar.el)),
       interruptorAvanzado(),
     ),
     pred.el,
@@ -207,8 +204,9 @@ function cuadro(ahoraMs: number) {
   const lectura = leer(corrida, t)
   if (fase !== 'listo' && lectura.t - ultimoPunto >= corrida.duracion / PUNTOS_GRAFICO) agregarPunto(lectura)
   if (fase === 'terminado' && ultimoPunto < corrida.duracion) agregarPunto(lectura)
-  if (fase !== 'listo' && lectura.progreso >= 0.5 && (pred.pendiente || pred.enCurso)) {
-    const r = pregunta.resolver(config)
+  const datos = pred.datos
+  if (fase !== 'listo' && lectura.progreso >= 0.5 && datos) {
+    const r = datos.pregunta.resolver(datos.config)
     pred.revelar(r.correcta, r.explicacion)
   }
   actualizarHud(lectura)

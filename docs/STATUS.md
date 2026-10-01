@@ -9,18 +9,13 @@
 
 ## Backlog
 
-1. **Kit: subir lo que quedó copiado entre labs.**
-   - Línea de tiempo arrastrable (luna, estaciones).
-   - Helper `interruptor` (varios labs).
-   - `grafico` con series mutables, `destruir()`, `yMin` positivo y tope exacto (24 h, no 25).
-   - `crearPildoras` con `origen: 'derecha'`.
-   - Migrar los otros 7 labs a `pred.datos` (siguen con `let pregunta` y resuelven con la config viva). El review marcó que en luna `sombraTierra` no descarta la pregunta abierta (no verificado).
-2. **Fuentes en los otros 6 labs** (digestivo, luna, estaciones, circuito, fotosíntesis, ciclo del agua): verificar sus datos en navegador, anotarlos en `docs/fuentes.md` y sumar `fuentes(...)` al "Cómo funciona". En los 4 ya hechos faltan: gravedad de los planetas (flotación) y P50, Hill, 47 mmHg y 21/16/4 % (respiratorio).
-3. **Próxima ola de labs** (temas en `temario.md`): sistema circulatorio, la célula, imanes y electricidad estática, luz (reflexión y refracción), sonido, volcanes y placas.
-4. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
-5. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
-6. **Detalles:**
+1. **Fuentes en los otros 6 labs** (digestivo, luna, estaciones, circuito, fotosíntesis, ciclo del agua): verificar sus datos en navegador, anotarlos en `docs/fuentes.md` y sumar `fuentes(...)` al "Cómo funciona". En los 4 ya hechos faltan: gravedad de los planetas (flotación) y P50, Hill, 47 mmHg y 21/16/4 % (respiratorio).
+2. **Próxima ola de labs** (temas en `temario.md`): sistema circulatorio, la célula, imanes y electricidad estática, luz (reflexión y refracción), sonido, volcanes y placas.
+3. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
+4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
+5. **Detalles:**
    - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
+   - estaciones: `llenarCurva` redibuja el gráfico una vez por punto (~95 veces por cambio de ciudad o modo); un `cargar(puntos)` en el kit lo dejaría en una;
    - estaciones: mover la inclinación con la pregunta sin responder la descarta pero deja el año en pausa (ciclo del agua, en el mismo caso, sigue corriendo);
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
    - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
@@ -28,6 +23,7 @@
 
 ## Hecho reciente
 
+- 2026-10-01 — Kit: `fila` e `interruptor` (6 copias), `grafico.cambiar()` y `yTecho` (luna, estaciones y mezclas ya no recrean el gráfico; eje de 24 h), pastillas con `origen: 'derecha'`, línea de tiempo en `src/ui/linea.ts` (luna gana `pointercancel`), y los 10 labs con la pregunta en `pred.datos`. Descartado: `yMin` positivo (ningún lab lo usa). El "bug" de luna con `sombraTierra` no existía: la respuesta no depende de esa opción.
 - 2026-10-01 — Constantes de partículas, flotación, mezclas y respiratorio verificadas contra la fuente (`docs/fuentes.md`): Cp del etanol sólido 1,9 → 0,97, Cp del gas del etanol 1,5 → 1,6 y de la acetona 1,3 → 1,4, ebullición del SiO₂ 2230 → 2950 °C y el aceite "no hierve". Sección "Fuentes" (helper `fuentes` del kit) en esos 4 labs.
 - 2026-10-01 — Kit: `prediccion` guarda los `datos` de la pregunta (congelados al preguntar, se borran al revelar u ocultar); migrados estaciones, ciclo del agua y respiratorio.
 - 2026-10-01 — Favicon SVG en todas las páginas.

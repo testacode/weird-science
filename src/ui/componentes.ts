@@ -28,6 +28,17 @@ export function segmentado<T extends string>(
   return { el: h('div', { class: 'segmentado', role: 'group' }, ...botones), set }
 }
 
+/** Fila de la consola: texto a la izquierda y un control a la derecha. */
+export function fila(texto: string, control: HTMLElement, clases = ''): HTMLElement {
+  return h('div', { class: `interruptor ${clases}`.trim() }, h('span', {}, texto), control)
+}
+
+/** Interruptor Sí/No con su texto. */
+export function interruptor(texto: string, activo: boolean, alElegir: (si: boolean) => void, clases = '') {
+  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
+  return { el: fila(texto, s.el, clases), set: (si: boolean) => s.set(si ? 'si' : 'no') }
+}
+
 export function grupo(titulo: string, contenido: HTMLElement): HTMLElement {
   return h('div', { class: 'grupo' }, h('span', { class: 'etiqueta' }, titulo), contenido)
 }

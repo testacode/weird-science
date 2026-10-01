@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './circuito.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { hud } from '../../ui/hud'
 import { grafico } from '../../ui/grafico'
@@ -77,24 +77,21 @@ const cantidad = segmentado(
   (v) => pedir({ cantidad: Number(v) }),
 )
 const llave = segmentado([{ valor: 'cerrado', texto: 'Cerrado' }, { valor: 'abierto', texto: 'Abierto' }], 'cerrado', (v) => pedir({ cerrado: v === 'cerrado' }))
-const corto = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) => pedir({ corto: v === 'si' }))
+const corto = interruptor('Cortocircuito', false, (si) => pedir({ corto: si }))
 const botonSacar = h('button', { class: 'boton', type: 'button', onclick: () => sacarUna() }, 'Sacar una lamparita')
 const botonPoner = h('button', { class: 'boton', type: 'button', onclick: () => pedir({ sacadas: [false, false, false] }) }, 'Poner todas')
 
-const fila = (texto: string, control: HTMLElement) => h('div', { class: 'interruptor' }, h('span', {}, texto), control)
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---
-let pendiente: { nueva: Config; pregunta: Pregunta } | null = null
 let temporizador = 0
 const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const nueva = pendiente?.nueva
+  const nueva = pred.datos?.nueva
   descartarPendiente()
   if (nueva) aplicar(nueva)
 } }, 'Saltar y hacerlo igual')
-const pred = prediccion<Respuesta>(() => {
-  if (!pendiente) return
-  const { nueva, pregunta } = pendiente
-  pendiente = null
+const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => {
+  if (!pred.datos) return
+  const { nueva, pregunta } = pred.datos
   saltar.hidden = true
   const antes = r
   aplicar(nueva)
@@ -102,8 +99,7 @@ const pred = prediccion<Respuesta>(() => {
   temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
 })
 function descartarPendiente() {
-  if (!pendiente) return
-  pendiente = null
+  if (!pred.pendiente) return
   saltar.hidden = true
   pred.ocultar()
 }
@@ -116,8 +112,7 @@ function pedir(cambio: Partial<Config>) {
   const pregunta = preguntaPara(config, nueva)
   if (!pregunta) return aplicar(nueva)
   window.clearTimeout(temporizador)
-  pendiente = { nueva, pregunta }
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })
   saltar.hidden = false
   sincronizar()
 }
@@ -141,7 +136,7 @@ function sincronizar() {
   conexion.set(config.conexion)
   cantidad.set(String(config.cantidad))
   llave.set(config.cerrado ? 'cerrado' : 'abierto')
-  corto.set(config.corto ? 'si' : 'no')
+  corto.set(config.corto)
   const sacadas = config.sacadas.slice(0, config.cantidad).filter(Boolean).length
   botonSacar.disabled = sacadas === config.cantidad
   botonPoner.disabled = sacadas === 0
@@ -181,7 +176,7 @@ lab.append(
       fila('Interruptor', llave.el),
       grupo('Romper el sistema', h('div', { class: 'grupo' },
         h('div', { class: 'romper' }, botonSacar, botonPoner),
-        fila('Cortocircuito', corto.el))),
+        corto.el)),
       interruptorAvanzado(),
     ),
     pred.el,

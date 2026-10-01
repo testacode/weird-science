@@ -1,7 +1,7 @@
 // Consola de controles (arriba a la derecha). Devuelve los `set` de cada control para que
 // el teclado y el click en la vesícula mantengan la botonera sincronizada.
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import type { Bocados } from './bocados'
 import { COMIDAS, COMO_FUNCIONA, type Comida, AYUDA_ATAJOS } from './contenido'
@@ -29,7 +29,6 @@ export interface Inicial {
   bocados: Bocados
 }
 
-const sino = (v: boolean) => (v ? 'si' : 'no')
 
 export function crearControles(ini: Inicial, a: Acciones) {
   const ayuda = modal()
@@ -38,16 +37,9 @@ export function crearControles(ini: Inicial, a: Acciones) {
   const abrirAyuda = () => ayuda.abrir(COMO_FUNCIONA)
   const abrirAtajos = () => ayuda.abrir(AYUDA_ATAJOS)
 
-  function interruptor(texto: string, clave: keyof Config) {
-    const s = segmentado(
-      [{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }],
-      sino(ini.config[clave]),
-      (v) => a.config(clave, v === 'si'),
-    )
-    return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (on: boolean) => s.set(sino(on)) }
-  }
-  const bilis = interruptor('Bilis (vesícula)', 'bilis')
-  const acido = interruptor('Ácido gástrico', 'acidoGastrico')
+  const interruptorConfig = (texto: string, clave: keyof Config) => interruptor(texto, Boolean(ini.config[clave]), (si) => a.config(clave, si))
+  const bilis = interruptorConfig('Bilis (vesícula)', 'bilis')
+  const acido = interruptorConfig('Ácido gástrico', 'acidoGastrico')
   const velocidad = segmentado(
     VELOCIDADES.map((v, i) => ({ valor: String(v), texto: NOMBRE_VELOCIDAD[i] })),
     String(ini.velocidad),

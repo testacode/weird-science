@@ -1,7 +1,7 @@
 // Consola de controles: objeto, líquido, sal, tamaño, "romper el sistema" e info avanzada.
 
 import { av, interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, segmentado, type Opcion } from '../../ui/componentes'
+import { grupo, interruptor, segmentado, type Opcion } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { COLOR_LIQUIDO, COLOR_OBJETO, hex } from './constantes'
@@ -52,7 +52,7 @@ export function crearConsola(a: Acciones, inicial: Config) {
     nota: (v) => `pesa ${newtons(dimensiones({ ...config, volumen: v }).masa * PLANETAS[config.planeta].g)} N`,
     alCambiar: (v) => a.cambiar({ volumen: v }),
   })
-  const agujero = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) => a.cambiar({ agujero: v === 'si' }))
+  const agujero = interruptor('Barco agujereado', false, (si) => a.cambiar({ agujero: si }))
   const planeta = segmentado<Planeta>(
     (Object.keys(PLANETAS) as Planeta[]).map((p) => ({ valor: p, texto: PLANETAS[p].nombre })), inicial.planeta, (v) => a.cambiar({ planeta: v }),
   )
@@ -68,7 +68,7 @@ export function crearConsola(a: Acciones, inicial: Config) {
     sal.el,
     tamano.el,
     grupo('Romper el sistema', h('div', { class: 'grupo' },
-      h('div', { class: 'interruptor' }, h('span', {}, 'Barco agujereado'), agujero.el),
+      agujero.el,
       h('div', { class: 'grupo' }, h('span', {}, 'Cambiar de planeta'), planeta.el))),
     interruptorAvanzado(),
   )
@@ -83,7 +83,7 @@ export function crearConsola(a: Acciones, inicial: Config) {
       sal.set(c.sal)
       sal.input.disabled = c.liquido !== 'agua'
       tamano.set(c.volumen)
-      agujero.set(c.agujero ? 'si' : 'no')
+      agujero.set(c.agujero)
       planeta.set(c.planeta)
     },
     setPlay: (texto: string) => (botonPlay.textContent = texto),

@@ -75,8 +75,7 @@ lab.append(
 
 // --- Predecí antes de correr: al elegir algo para romper, el objeto espera la respuesta antes de soltarse ---
 const ayuda = modal()
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
 
 function seguir(va: boolean) {
   corriendo = va
@@ -91,19 +90,16 @@ function soltar(esperando = false) {
   seguir(!esperando)
   if (esperando) consola.setPlay('▶ Soltar')
 }
-function cancelarPregunta() {
-  pregunta = null
-  pred.ocultar()
-}
 function revelar() {
-  if (!pregunta || !pred.enCurso) return
-  const r = pregunta.resolver(config)
+  const datos = pred.datos
+  if (!datos || !pred.enCurso) return
+  const r = datos.pregunta.resolver(datos.config)
   pred.revelar(r.correcta, r.explicacion)
   pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 }
 function alternar() {
   if (pred.pendiente) {
-    cancelarPregunta()
+    pred.ocultar()
     return seguir(true)
   }
   seguir(!corriendo)
@@ -125,21 +121,18 @@ function aplicar(parcial: Partial<Config>) {
   const nueva = preguntaPara(config)
   const yaPreguntada = nueva?.id === preguntaPara(antes)?.id || (nueva?.id === 'barco' && antes.objeto === 'barco')
   if (nueva && !yaPreguntada) {
-    pregunta = nueva
     soltar(true)
-    pred.preguntar(nueva.texto, nueva.opciones)
+    pred.preguntar(nueva.texto, nueva.opciones, { pregunta: nueva, config })
     return pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }
-  if (pregunta) {
-    const esperaba = pred.pendiente
-    cancelarPregunta()
-    if (esperaba) seguir(true)
-  }
+  const esperaba = pred.pendiente
+  pred.ocultar()
+  if (esperaba) seguir(true)
   if (config.objeto !== antes.objeto || config.planeta !== antes.planeta) return soltar()
   if (config.volumen !== antes.volumen) estado = reescalar(antes, config, estado)
 }
 
-const consola = crearConsola({ cambiar: aplicar, soltar: () => (cancelarPregunta(), soltar()), alternar, ayuda: () => ayuda.abrir(COMO_FUNCIONA) }, config)
+const consola = crearConsola({ cambiar: aplicar, soltar: () => (pred.ocultar(), soltar()), alternar, ayuda: () => ayuda.abrir(COMO_FUNCIONA) }, config)
 lab.append(hud('der', consola.el, pred.el), ayuda.el)
 consola.sincronizar(config)
 reiniciarCurva()

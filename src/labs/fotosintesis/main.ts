@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './fotosintesis.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -94,8 +94,7 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
 
 function seguir(va: boolean) {
   corriendo = va
@@ -107,30 +106,26 @@ function reiniciar() {
   reiniciarCurva()
   seguir(true)
 }
-function preguntar() {
+function preguntar(pregunta: Pregunta | null) {
   if (!pregunta) return pred.ocultar()
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
-function cancelarPregunta() {
-  pregunta = null
-  pred.ocultar()
-}
 function revelar() {
-  if (!pregunta || !pred.enCurso) return
-  const r = pregunta.resolver(config)
+  const datos = pred.datos
+  if (!datos || !pred.enCurso) return
+  const r = datos.pregunta.resolver(datos.config)
   pred.revelar(r.correcta, r.explicacion)
 }
 /** Repite el experimento con los mismos controles; si hay algo roto, vuelve a preguntar. */
 function otraVez() {
   reiniciar()
-  pregunta = preguntaPara(config)
-  preguntar()
+  preguntar(preguntaPara(config))
 }
 function alternar() {
   if (pred.pendiente) {
-    cancelarPregunta()
+    pred.ocultar()
     return seguir(true)
   }
   corriendo = !corriendo
@@ -147,19 +142,16 @@ function aplicar(parcial: Partial<Config>) {
   const despues = preguntaPara(config)
   sincronizar()
   if (despues && despues.id !== antes) {
-    pregunta = despues
     reiniciar()
-    return preguntar()
+    return preguntar(despues)
   }
-  if (pregunta) cancelarPregunta()
+  const esperaba = pred.pendiente
+  pred.ocultar()
+  if (esperaba) seguir(true)
   muestrear()
 }
 
 // --- Consola de controles ---
-function interruptor(texto: string, activo: boolean, alElegir: (si: boolean) => void) {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
-  return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (on: boolean) => s.set(on ? 'si' : 'no') }
-}
 
 const distancia = deslizador({
   titulo: 'Distancia de la lámpara', clase: 'luz', color: 'var(--luz)', ...rango('distancia'), paso: 1, valor: config.distancia,

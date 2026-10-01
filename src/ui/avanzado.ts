@@ -1,5 +1,4 @@
-import { segmentado } from './componentes'
-import { h } from './dom'
+import { interruptor } from './componentes'
 
 const CLAVE = 'ws-avanzado'
 
@@ -28,13 +27,12 @@ function aplicar(activo: boolean) {
 export function interruptorAvanzado(): HTMLElement {
   const inicial = leer()
   aplicar(inicial)
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], inicial ? 'si' : 'no', (v) => {
-    aplicar(v === 'si')
+  return interruptor('Info avanzada', inicial, (si) => {
+    aplicar(si)
     try {
-      localStorage.setItem(CLAVE, v === 'si' ? 'si' : 'no')
+      localStorage.setItem(CLAVE, si ? 'si' : 'no')
     } catch {
       // sin localStorage (modo privado): el filtro sigue funcionando en esta pestaña.
     }
-  })
-  return h('div', { class: 'interruptor' }, h('span', {}, 'Info avanzada'), s.el)
+  }).el
 }

@@ -27,7 +27,7 @@ const escena = crearEscena(lab, SEGMENTOS.map((s) => s.nombre))
 escena.setComida(comida.gramos, bocados)
 const escalaPh = leyendaPh()
 const hud = crearHud(lab, [escalaPh.el])
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; ref: ReturnType<typeof referencia> }>(() => seguir(true))
 const controles = crearControles({ comida, config, velocidad, vista, bocados }, {
   alternar,
   reiniciar,
@@ -41,28 +41,27 @@ lab.append(columnaHud('der', controles.el, pred.el), controles.ayuda.el)
 hud.reiniciarCurva(comida, bocados)
 
 // --- Predecí antes de correr: al romper algo, la simulación espera la predicción ---
-let pregunta: Pregunta | null = null
 function seguir(va: boolean) {
   corriendo = va
   controles.botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
-  pregunta = preguntaPara(config)
+  const pregunta = preguntaPara(config)
   if (!pregunta) return pred.ocultar()
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ref: referencia(comida.gramos) })
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
 }
 function revelar() {
-  if (!pregunta || !pred.enCurso) return
-  const r = pregunta.resolver(agregado(flujo), referencia(comida.gramos))
+  const datos = pred.datos
+  if (!datos || !pred.enCurso) return
+  const r = datos.pregunta.resolver(agregado(flujo), datos.ref)
   pred.revelar(r.correcta, r.explicacion)
 }
 
 function alternar() {
   if (pred.pendiente) {
     pred.ocultar()
-    pregunta = null
     return seguir(true)
   }
   if (todosTerminaron(flujo)) return reiniciar()
@@ -80,7 +79,7 @@ function cambiarConfig(clave: keyof Config, valor: boolean) {
   config = { ...config, [clave]: valor }
   if (clave === 'bilis') controles.set.bilis(valor)
   else controles.set.acido(valor)
-  if (preguntaPara(config) || pregunta) reiniciar()
+  if (preguntaPara(config) || !pred.el.hidden) reiniciar()
 }
 function cambiarVelocidad(v: number) {
   velocidad = v

@@ -124,7 +124,7 @@ export function crearEscena(contenedor: HTMLElement) {
   const pClave = marcasClave.map(({ f, p }) => ({ f, el: pildoras.crear(`${fecha(f.dia).corta} · ${f.tipo}`, { clase: 'p-fecha', ancla: p.clone().multiplyScalar(1.22) }).el }))
   const pExtremos = [D_PERIHELIO, D_AFELIO].map((d, i) =>
     pildoras.crear(`${i ? 'Afelio' : 'Perihelio'} · ${fecha(d).corta}`, {
-      clase: 'p-extremo', ancla: extremos[i].p, ...(i ? { origen: 'izquierda', dx: 16, dy: 18 } : { dx: -78, dy: -8 }),
+      clase: 'p-extremo', ancla: extremos[i].p, ...(i ? { origen: 'izquierda', dx: 16, dy: 18 } : { origen: 'derecha', dx: -8, dy: -8 }),
     }),
   )
 

@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './estaciones.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -47,26 +47,26 @@ function llenarCurva(g: ReturnType<typeof grafico>) {
   for (let x = 0; x < YEAR; x += MUESTREO_DIAS) g.agregar(x, valoresCurva(x))
   g.agregar(YEAR, valoresCurva(YEAR))
 }
-function crearCurva() {
-  const luz = modoGrafico === 'luz'
-  const series = luz
+function seriesCurva() {
+  return modoGrafico === 'luz'
     ? [{ id: 'obs', nombre: 'Horas de luz', color: 'ambar' }]
     : [{ id: 'obs', nombre: ciudad.nombre, color: 'ambar' }, ...(idea ? [{ id: 'idea', nombre: 'Idea: distancia', color: 'magenta' }] : [])]
-  const g = grafico(series, {
-    titulo: luz ? 'Horas de luz según el día del año' : 'Energía por m² (% del promedio anual)',
-    unidadX: ' d', unidadY: luz ? ' h' : ' %', xMax: YEAR, yMax: 0, alto: 104,
-  })
-  llenarCurva(g)
-  g.el.append(marcaHoy)
-  return g
 }
+function opcionesCurva() {
+  const luz = modoGrafico === 'luz'
+  return {
+    titulo: luz ? 'Horas de luz según el día del año' : 'Energía por m² (% del promedio anual)',
+    unidadX: ' d', unidadY: luz ? ' h' : ' %', xMax: YEAR, yMax: 0, yTecho: luz ? 24 : undefined,
+  }
+}
+const curva = grafico(seriesCurva(), { ...opcionesCurva(), alto: 104 })
 const marcaHoy = h('span', { class: 'marca-hoy' })
-let curva = crearCurva()
-/** Cambió la ciudad o el tipo de gráfico (cambian las series): se arma de nuevo. */
+curva.el.append(marcaHoy)
+llenarCurva(curva)
+/** Cambió la ciudad o el tipo de gráfico (cambian las series): se rearma y se vuelve a llenar. */
 function rehacerCurva() {
-  const vieja = curva.el
-  curva = crearCurva()
-  vieja.replaceWith(curva.el)
+  curva.cambiar(seriesCurva(), opcionesCurva())
+  llenarCurva(curva)
 }
 function ubicarMarca(d: number) {
   const lienzo = curva.el.querySelector<HTMLElement>('canvas')
@@ -180,10 +180,6 @@ const ciudades = segmentado<IdCiudad>(
     rehacerCurva()
   },
 )
-function interruptor(texto: string, activo: boolean, alElegir: (v: boolean) => void) {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
-  return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (v: boolean) => s.set(v ? 'si' : 'no') }
-}
 const inclinacion = deslizador({
   titulo: 'Inclinación del eje', min: 0, max: 45, paso: 0.01, valor: eps, color: 'var(--cielo)', clase: 'avanzado',
   formato: (v) => `${num(v, 2)}°`,
@@ -223,7 +219,7 @@ lab.append(
     h('div', { class: 'panel consola' },
       h('div', { class: 'fila' }, botonPlay, h('button', { class: 'boton', type: 'button', onclick: reiniciar }, '↺ Otra vez'),
         h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),
-      h('div', { class: 'interruptor' }, h('span', {}, 'Velocidad'), segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }], '1', (v) => (velocidad = Number(v))).el),
+      fila('Velocidad', segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }], '1', (v) => (velocidad = Number(v))).el),
       h('div', { class: 'grupo ciudades' }, h('span', { class: 'etiqueta' }, 'Ciudad'), ciudades.el),
       inclinacion.el,
       grupo('Romper el sistema', h('div', { class: 'grupo' }, ideaDistanciaSwitch.el, ejeDerecho.el)),

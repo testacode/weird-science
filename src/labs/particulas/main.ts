@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './estilos.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -10,7 +10,7 @@ import { prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, etiquetaEstado, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import {
-  POTENCIA_INICIAL_W, SUSTANCIAS, T_TOPE_CALOR, T_TOPE_FRIO, estadoInicial, leer, paso, velocidadMedia, type Config, type Lectura,
+  POTENCIA_INICIAL_W, SUSTANCIAS, T_TOPE_CALOR, T_TOPE_FRIO, estadoInicial, leer, paso, velocidadMedia, type Config, type Lectura, type Sustancia,
 } from './model'
 import { preguntaPara, type Pregunta, type Respuesta } from './prediccion'
 
@@ -90,28 +90,28 @@ const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', oncl
 const reloj = h('span', { class: 'etiqueta' })
 
 // --- Predecí antes de correr: cada vez que se empieza de nuevo, la simulación espera la predicción ---
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; sus: Sustancia; config: Config }>(() => seguir(true))
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
-  pregunta = preguntaPara(sus, config)
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  const pregunta = preguntaPara(sus, config)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, sus, config })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
 function revelar(l: Lectura) {
-  if (!pregunta || !pred.enCurso || !pregunta.listo(l)) return
-  const r = pregunta.resolver({ sus, config, potencia: potencia() > 0 ? potencia() : POTENCIA_INICIAL_W })
+  const datos = pred.datos
+  if (!datos || !pred.enCurso || !datos.pregunta.listo(l)) return
+  // La potencia solo cambia los segundos de la explicación: se usa la de ahora.
+  const r = datos.pregunta.resolver({ sus: datos.sus, config: datos.config, potencia: potencia() > 0 ? potencia() : POTENCIA_INICIAL_W })
   pred.revelar(r.correcta, r.explicacion)
 }
 
 function alternar() {
   if (pred.pendiente) {
     pred.ocultar()
-    pregunta = null
     return seguir(true)
   }
   seguir(!corriendo)
@@ -153,14 +153,7 @@ function cambiarConfig(clave: keyof Config, valor: boolean) {
   config = { ...config, [clave]: valor }
   reiniciar()
 }
-function interruptor(texto: string, clave: keyof Config) {
-  const s = segmentado(
-    [{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }],
-    config[clave] ? 'si' : 'no',
-    (v) => cambiarConfig(clave, v === 'si'),
-  )
-  return h('div', { class: 'interruptor' }, h('span', {}, texto), s.el)
-}
+const interruptorConfig = (texto: string, clave: keyof Config) => interruptor(texto, Boolean(config[clave]), (si) => cambiarConfig(clave, si)).el
 
 lab.append(
   hud('der',
@@ -174,7 +167,7 @@ lab.append(
       }).el),
       grupo('Velocidad', segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }, { valor: '10', texto: '10×' }], velocidad, (v) => (velocidad = v)).el),
       reloj,
-      grupo('Romper el sistema', h('div', { class: 'grupo' }, interruptor('Tapa de olla a presión', 'tapa'), interruptor('Calor latente', 'latente'))),
+      grupo('Romper el sistema', h('div', { class: 'grupo' }, interruptorConfig('Tapa de olla a presión', 'tapa'), interruptorConfig('Calor latente', 'latente'))),
       interruptorAvanzado(),
     ),
     pred.el,

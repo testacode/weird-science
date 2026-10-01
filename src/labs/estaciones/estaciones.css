@@ -45,14 +45,7 @@
 .pildora.p-fecha { color: var(--texto); }
 .pildora.p-extremo { color: var(--magenta); border-color: var(--magenta); }
 
-/* Línea de tiempo */
-.hud-linea { position: absolute; z-index: 2; bottom: 16px; left: 410px; right: 360px; }
-.linea { padding: 10px 22px 8px; display: grid; gap: 4px; }
-.linea-cabecera { display: flex; justify-content: space-between; align-items: baseline; }
-.linea-valor { font: 600 12px/1 var(--mono); color: var(--apagado); }
-.linea-valor b { font-size: 14px; color: var(--marca); }
-.linea input[type='range'] { cursor: grab; }
-.linea input[type='range']:active { cursor: grabbing; }
+/* Línea de tiempo: la base sale del kit; acá las marcas propias. */
 .meses, .marcas, .marcas-extremo { position: relative; margin: 0 9px; }
 .meses { height: 11px; }
 .meses span { position: absolute; font: 600 9px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--apagado); }

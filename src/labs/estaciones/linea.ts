@@ -1,6 +1,7 @@
 // Línea de tiempo arrastrable: el día del año, con una marca por equinoccio y solsticio para saltar directo.
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
+import { lineaArrastrable } from '../../ui/linea'
 import { D_AFELIO, D_PERIHELIO, FECHAS_CLAVE, YEAR, fecha } from './model'
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -9,16 +10,6 @@ const pct = (d: number) => `${(d / YEAR) * 100}%`
 
 export function lineaDeTiempo(alArrastrar: (dia: number) => void, alElegirFecha: (dia: number) => void) {
   const fechaTexto = h('b', {}, '')
-  const rango = h('input', {
-    type: 'range', min: '0', max: String(YEAR), step: '0.05', value: '0', 'aria-label': 'Día del año',
-  })
-  let arrastrando = false
-  rango.addEventListener('input', () => alArrastrar(Number(rango.value)))
-  rango.addEventListener('pointerdown', () => (arrastrando = true))
-  const soltar = () => (arrastrando = false)
-  window.addEventListener('pointerup', soltar)
-  window.addEventListener('pointercancel', soltar)
-  rango.addEventListener('lostpointercapture', soltar)
 
   const marcas = FECHAS_CLAVE.map((f) => {
     const boton = h('button', {
@@ -43,22 +34,17 @@ export function lineaDeTiempo(alArrastrar: (dia: number) => void, alElegirFecha:
     return s
   })
 
-  const el = h('div', { class: 'panel linea' },
-    h('div', { class: 'linea-cabecera' },
-      h('span', { class: 'etiqueta' }, 'Día del año · arrastralo'),
-      h('span', { class: 'linea-valor' }, fechaTexto),
-    ),
-    rango,
+  const l = lineaArrastrable(
+    { etiqueta: 'Día del año · arrastralo', valor: [fechaTexto], max: YEAR, paso: 0.05, aria: 'Día del año', alArrastrar },
     h('div', { class: 'meses' }, ...meses),
     h('div', { class: 'marcas' }, ...marcas),
     h('div', { class: 'marcas-extremo avanzado' }, ...extremos),
   )
   return {
-    el,
+    el: l.el,
     /** Actualiza el control sin pisar el arrastre del usuario. */
     set(d: number) {
-      if (!arrastrando) rango.value = String(d)
-      rango.style.setProperty('--p', `${(d / YEAR) * 100}%`)
+      l.set(d)
       fechaTexto.textContent = `${fecha(d).larga} · día ${numero(Math.floor(d) + 1, 0)}`
     },
   }

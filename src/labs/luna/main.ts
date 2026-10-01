@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './luna.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
@@ -34,15 +34,12 @@ const avanzadoActivo = () => !document.body.classList.contains('sin-avanzado')
 const escena = crearEscena(lab, TAM_INSET)
 
 // --- Gráfico: % iluminada vs día. La curva siempre llega hasta el día actual. ---
-const crearCurva = () =>
-  grafico(
-    [
-      { id: 'real', nombre: config.sombraTierra ? 'Observada' : 'Iluminada', color: 'ambar' },
-      ...(config.sombraTierra ? [{ id: 'idea', nombre: 'Idea errónea', color: 'magenta' as const }] : []),
-    ],
-    { titulo: '% iluminada según el día', unidadX: ' d', unidadY: '%', xMax: MES_SINODICO, yMax: 100 },
-  )
-let curva = crearCurva()
+const seriesCurva = () => [
+  { id: 'real', nombre: config.sombraTierra ? 'Observada' : 'Iluminada', color: 'ambar' },
+  ...(config.sombraTierra ? [{ id: 'idea', nombre: 'Idea errónea', color: 'magenta' as const }] : []),
+]
+const OPCIONES_CURVA = { titulo: '% iluminada según el día', unidadX: ' d', unidadY: '%', xMax: MES_SINODICO, yMax: 100 }
+const curva = grafico(seriesCurva(), OPCIONES_CURVA)
 let curvaDia = -1
 let curvaCiclo = 0
 function valoresCurva(dia: number) {
@@ -50,7 +47,7 @@ function valoresCurva(dia: number) {
   return { real: iluminada(elongacion(g)) * 100, ...(config.sombraTierra && { idea: ideaSombra(g).iluminada * 100 }) }
 }
 function reconstruirCurva(dia: number) {
-  curva.limpiar({ xMax: MES_SINODICO, yMax: 100 })
+  curva.limpiar()
   const paso = Math.max(0.5, dia / 40)
   for (let x = 0; x < dia; x += paso) curva.agregar(x, valoresCurva(x))
   curva.agregar(dia, valoresCurva(dia))
@@ -111,32 +108,31 @@ const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', oncl
 const reloj = h('span', { class: 'etiqueta' })
 
 // --- Predecí antes de correr: arranca pausado hasta que el usuario elige (o salta la pregunta) ---
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
-  pregunta = preguntaPara(config)
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  const pregunta = preguntaPara(config)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
 /** Al llegar a la primera Luna llena se revela la respuesta, calculada con el modelo. */
 function revisarPrediccion(desdeElJuego: boolean) {
-  if (!pregunta || !(pred.enCurso || pred.pendiente) || t < T_REVELAR) return
+  const datos = pred.datos
+  if (!datos || t < T_REVELAR) return
   if (desdeElJuego) {
     t = T_REVELAR
     seguir(false)
   }
-  const r = pregunta.resolver(config)
+  const r = datos.pregunta.resolver(datos.config)
   pred.revelar(r.correcta, r.explicacion)
 }
 function alternar() {
   if (pred.pendiente) {
     pred.ocultar()
-    pregunta = null
     return seguir(true)
   }
   seguir(!corriendo)
@@ -151,22 +147,17 @@ function cambiarConfig(clave: keyof Config, valor: boolean) {
   if (clave === 'sombraTierra') {
     vistaIdea.hidden = !valor
     etiquetaReal.textContent = valor ? 'Lo que se observa' : 'Vista desde la Tierra'
-    const vieja = curva.el
-    curva = crearCurva()
-    vieja.replaceWith(curva.el)
+    curva.cambiar(seriesCurva(), OPCIONES_CURVA)
     curvaCiclo = 0
   } else reiniciar()
 }
-function interruptor(texto: string, clave: keyof Config, clases = '') {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) => cambiarConfig(clave, v === 'si'))
-  return { el: h('div', { class: `interruptor ${clases}` }, h('span', {}, texto), s.el), reiniciar: () => s.set('no') }
-}
-const idea = interruptor('¿Y si las fases fueran la sombra de la Tierra?', 'sombraTierra')
-const plana = interruptor('Órbita sin inclinación', 'sinInclinacion', 'avanzado')
+const interruptorConfig = (texto: string, clave: keyof Config, clases = '') => interruptor(texto, false, (si) => cambiarConfig(clave, si), clases)
+const idea = interruptorConfig('¿Y si las fases fueran la sombra de la Tierra?', 'sombraTierra')
+const plana = interruptorConfig('Órbita sin inclinación', 'sinInclinacion', 'avanzado')
 // Con la info avanzada apagada no hay eclipses ni inclinación: si estaba rota, se arregla.
 new MutationObserver(() => {
   if (!avanzadoActivo() && config.sinInclinacion) {
-    plana.reiniciar()
+    plana.set(false)
     cambiarConfig('sinInclinacion', false)
   }
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] })
