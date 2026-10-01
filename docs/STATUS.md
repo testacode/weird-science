@@ -16,9 +16,9 @@
    - `grafico.cargar(puntos)` para dibujar de una vez (sonido, estaciones).
    - `segmentado` con estado deshabilitado; `deslizador` logarítmico y deshabilitado.
    - Botones con muestra de color (luz, flotación) como componente.
-2. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
-3. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
-4. **Detalles:**
+3. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
+4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
+5. **Detalles:**
    - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
    - sonido: franja negra arriba de la escena;
    - célula: con la vegetal sin pared al borde de la rotura, el reveal puede tardar ~71 s a 1× (espera el equilibrio real);
@@ -28,6 +28,7 @@
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
    - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
    - archivos de más de 200 líneas: `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`, `flotacion/model.ts`, `ciclo-agua/main.ts`.
+6. **Modo libre, sin preguntas:** hoy hay que responder (o saltar) la predicción para seguir interactuando. Un interruptor del kit (junto a "Info avanzada", guardado en localStorage y válido para todos los labs) que desactive "Predecí antes de correr" y deje aplicar los cambios directo.
 
 ## Hecho reciente
 
