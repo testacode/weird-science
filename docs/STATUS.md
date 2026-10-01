@@ -1,29 +1,43 @@
 # Estado
 
-> Sitio solo para desktop (decisión 2026-09-30): no se hace versión mobile.
+> Mantenido por la skill `backlog`. Fuente única del estado del proyecto; la historia completa está en `HISTORICO.md`.
+> Sitio solo para desktop (decisión 2026-09-30).
 
-## Hecho
-- Ola 4 completa (2026-10-01): respiratorio, flotación, ciclo del agua, mezclas y estaciones, cada uno con code review y arreglos antes del merge. Kit: `segmentado` ignora la opción ya elegida, `hud` libera paneles.
-- Labs de flotación y ciclo del agua (2026-10-01), con code review y arreglos previos al merge.
-- Kit unificado (2026-10-01): deslizador, HUD con scroll, encuadre entre HUDs, pastillas que no se cortan, atajos de teclado, gráfico con negativos/colores libres/es-AR, `crearEscenario` configurable, `modal.cerrar()`. Los 5 labs migrados.
-- Code review del digestivo (2026-09-30): reloj con 3 bocados (daba ~46 h), barra espaciadora sobre botones, cámara en vista explotada, zoom solo con lo del delgado, ritmo ×N, animaciones tras cambiar de pestaña, conductos, reparto de partículas compartido, `DELGADO` derivado.
-- Digestivo, extras (2026-09-30): tubo teñido por pH, enzima activa, páncreas, vista explotada, zoom a vellosidades, atajos de teclado y 3 bocados.
-- Labs de fotosíntesis (Elodea, factor limitante, luz verde) y fases de la Luna (vista desde la Tierra por hemisferio, eclipses, idea errónea de la sombra) (2026-09-30).
-- Lab de estados de la materia (2026-09-30): curva de calentamiento con mesetas, 3 sustancias, olla a presión y predicción.
-- Lab del circuito eléctrico (2026-09-30): serie/paralelo, ley de Ohm, sacar lamparita, cortocircuito y predicción.
-- Ola 1 del kit (2026-09-30): filtro "Info avanzada", tarjeta "Predecí antes de correr" y gráfico canvas 2D, aplicados al digestivo.
-- Base del sitio: portada con catálogo por eje NAP.
-- Kit de interfaz compartido (`src/ui/`) y escenario 3D compartido (`src/escena/`: bloom + tone mapping).
-- Repo público (github.com/testacode/weird-science) y deploy en Vercel (https://weird-science.vercel.app): cada push a `main` publica.
-- Lab piloto: sistema digestivo, con modelo testeado, 3 comidas, bilis y ácido gástrico rompibles, click en la vesícula y etiquetas de hígado y vesícula.
+## En curso
+
+- Nada.
 
 ## Backlog
-- Kit: que `prediccion` guarde la configuración del experimento al preguntar (el bug de "responder con otra config" apareció en respiratorio, ciclo del agua y estaciones). `grafico` con series mutables, `destruir()`, `yMin` positivo, tope exacto (24 h, no 25). Línea de tiempo arrastrable (copiada en luna y estaciones). `crearPildoras` con `origen: 'derecha'`. Helper `interruptor` (copiado en varios labs).
-- Estaciones: etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre.
-- Mezclas/partículas/flotación: constantes marcadas "no verificadas" por los agentes (densidades, salmuera, constantes de destilación).
-- Kit, detalles del review: `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana; offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en vez de usar el encuadre.
-- Archivos de más de 200 líneas: `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`.
-- Loop de video y poster por lab para la portada (como sael.net).
-- Partículas: verificar contra NIST/CRC las constantes de alcohol y acetona (cs, cg, Lf), que el agente cargó de memoria.
-- Recorridos transversales (energía, ciclos, sistemas) además de los ejes NAP.
-- Revisión de accesibilidad (contraste, teclado, `prefers-reduced-motion`).
+
+1. **Kit: predicción que congele el experimento.** Que `prediccion` guarde la configuración al preguntar y resuelva con esa. El bug de "responder con otra config" apareció en respiratorio, ciclo del agua y estaciones.
+2. **Verificar constantes contra fuente** (NIST/CRC, navegador real). Los agentes marcaron como "no verificadas":
+   - partículas: cs, cg y Lf de alcohol y acetona;
+   - flotación: densidades, salmuera y huevo;
+   - mezclas: constantes de destilación y tamaños de grano;
+   - respiratorio: PV, C_CO2 y VO₂ por actividad.
+3. **Kit: subir lo que quedó copiado entre labs.**
+   - Línea de tiempo arrastrable (luna, estaciones).
+   - Helper `interruptor` (varios labs).
+   - `grafico` con series mutables, `destruir()`, `yMin` positivo y tope exacto (24 h, no 25).
+   - `crearPildoras` con `origen: 'derecha'`.
+4. **Próxima ola de labs** (temas en `temario.md`): sistema circulatorio, la célula, imanes y electricidad estática, luz (reflexión y refracción), sonido, volcanes y placas.
+5. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
+6. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
+7. **Detalles:**
+   - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
+   - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
+   - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
+   - archivos de más de 200 líneas: `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`, `flotacion/model.ts`, `ciclo-agua/main.ts`.
+
+## Hecho reciente
+
+- 2026-10-01 — Favicon SVG en todas las páginas.
+- 2026-10-01 — Ola 4: respiratorio, flotación, ciclo del agua, mezclas y estaciones, cada uno con code review y arreglos antes del merge.
+- 2026-10-01 — Kit: `segmentado` ignora la opción ya elegida; `hud` libera paneles.
+- 2026-10-01 — Botón y tecla H para los atajos del digestivo.
+- 2026-10-01 — Kit unificado (Opus) y migración de los 5 labs.
+- 2026-09-30 — Code review del digestivo: 10 arreglos.
+- 2026-09-30 — Ola 2: circuito, estados de la materia, fotosíntesis, Luna y extras del digestivo.
+- 2026-09-30 — Ola 1 del kit: info avanzada, predicción y gráfico.
+- 2026-09-30 — Ola 0: labs autodescubiertos.
+- 2026-09-30 — Piloto del digestivo, repo público y deploy en Vercel.
