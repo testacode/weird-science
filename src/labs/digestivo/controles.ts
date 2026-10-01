@@ -4,7 +4,7 @@ import { interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import type { Bocados } from './bocados'
-import { COMIDAS, COMO_FUNCIONA, type Comida } from './contenido'
+import { COMIDAS, COMO_FUNCIONA, type Comida, AYUDA_ATAJOS } from './contenido'
 import type { Config } from './model'
 
 export type Vista = 'normal' | 'explotada'
@@ -36,6 +36,7 @@ export function crearControles(ini: Inicial, a: Acciones) {
   const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: a.alternar }, '⏸ Pausa')
   const reloj = h('span', { class: 'etiqueta' })
   const abrirAyuda = () => ayuda.abrir(COMO_FUNCIONA)
+  const abrirAtajos = () => ayuda.abrir(AYUDA_ATAJOS)
 
   function interruptor(texto: string, clave: keyof Config) {
     const s = segmentado(
@@ -73,13 +74,14 @@ export function crearControles(ini: Inicial, a: Acciones) {
     grupo('Vista', vista.el),
     grupo('Romper el sistema', h('div', { class: 'grupo' }, bilis.el, acido.el)),
     interruptorAvanzado(),
-    h('span', { class: 'etiqueta' }, 'Atajos de teclado: tecla ?'),
+    h('button', { class: 'boton boton-atajos', type: 'button', onclick: abrirAtajos }, '⌨ Atajos de teclado (H)'),
   )
 
   return {
     el,
     ayuda,
     abrirAyuda,
+    abrirAtajos,
     botonPlay,
     reloj,
     set: {
