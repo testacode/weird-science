@@ -9,7 +9,7 @@
 
 ## Backlog
 
-1. **Datos sin verificar** (detalle en `docs/fuentes.md`): P50 y 16 % de O₂ exhalado, atmósfera estándar (respiratorio); comidas del digestivo; absorción de Elodea (fotosíntesis, estimada). Buscar fuente en navegador o declararlos como aproximados en "Qué es real y qué no".
+1. **Datos sin verificar** (detalle en `docs/fuentes.md`): P50, 21 % de O₂ en el aire y 16 % exhalado, atmósfera estándar (respiratorio); comidas del digestivo; absorción de Elodea (fotosíntesis, estimada). Buscar fuente en navegador o declararlos como aproximados en "Qué es real y qué no".
 2. **Próxima ola de labs** (temas en `temario.md`): sistema circulatorio, la célula, imanes y electricidad estática, luz (reflexión y refracción), sonido, volcanes y placas.
 3. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
 4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
