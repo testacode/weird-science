@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './estilos.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -153,14 +153,7 @@ function cambiarConfig(clave: keyof Config, valor: boolean) {
   config = { ...config, [clave]: valor }
   reiniciar()
 }
-function interruptor(texto: string, clave: keyof Config) {
-  const s = segmentado(
-    [{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }],
-    config[clave] ? 'si' : 'no',
-    (v) => cambiarConfig(clave, v === 'si'),
-  )
-  return h('div', { class: 'interruptor' }, h('span', {}, texto), s.el)
-}
+const interruptorConfig = (texto: string, clave: keyof Config) => interruptor(texto, Boolean(config[clave]), (si) => cambiarConfig(clave, si)).el
 
 lab.append(
   hud('der',
@@ -174,7 +167,7 @@ lab.append(
       }).el),
       grupo('Velocidad', segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }, { valor: '10', texto: '10×' }], velocidad, (v) => (velocidad = v)).el),
       reloj,
-      grupo('Romper el sistema', h('div', { class: 'grupo' }, interruptor('Tapa de olla a presión', 'tapa'), interruptor('Calor latente', 'latente'))),
+      grupo('Romper el sistema', h('div', { class: 'grupo' }, interruptorConfig('Tapa de olla a presión', 'tapa'), interruptorConfig('Calor latente', 'latente'))),
       interruptorAvanzado(),
     ),
     pred.el,

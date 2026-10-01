@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './ciclo-agua.css'
 import { av, interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -157,10 +157,6 @@ function aplicar(parcial: Partial<Config>) {
 }
 
 // --- Consola de controles ---
-function interruptor(texto: string, activo: boolean, alElegir: (si: boolean) => void) {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
-  return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (on: boolean) => s.set(on ? 'si' : 'no') }
-}
 const pct = (v: number) => `${num(v * 100, 0)}%`
 function rango(clave: keyof typeof LIMITES) {
   return { min: LIMITES[clave][0], max: LIMITES[clave][1] }
@@ -201,7 +197,7 @@ lab.append(
         h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),
       h('div', { class: 'grupo' }, reloj, segmentado([{ valor: '1', texto: '1×' }, { valor: '4', texto: '4×' }, { valor: '12', texto: '12×' }], velocidad, (v) => (velocidad = v)).el),
       sol.el, aire.el, plantas.el,
-      h('div', { class: 'interruptor' }, h('span', {}, 'Relieve'), relieve.el),
+      fila('Relieve', relieve.el),
       grupo('Romper el sistema', h('div', { class: 'grupo' }, apagarSol.el, talar.el)),
       interruptorAvanzado(),
     ),

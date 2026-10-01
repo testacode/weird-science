@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './mezclas.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
@@ -152,7 +152,7 @@ lab.append(
       reloj,
       grupo('Romper el sistema', h('div', { class: 'grupo' },
         h('button', { class: 'boton', type: 'button', onclick: () => cambiar({ mezcla: 'agua-sal', metodo: 'filtro', sobresaturar: false }) }, 'Filtrar agua salada'),
-        h('div', { class: 'interruptor' }, h('span', {}, 'Sobresaturar con sal'), sobresaturar.el))),
+        fila('Sobresaturar con sal', sobresaturar.el))),
       interruptorAvanzado(),
     ),
     pred.el,

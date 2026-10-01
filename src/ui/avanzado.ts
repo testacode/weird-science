@@ -1,5 +1,4 @@
-import { segmentado } from './componentes'
-import { h } from './dom'
+import { fila, segmentado } from './componentes'
 
 const CLAVE = 'ws-avanzado'
 
@@ -36,5 +35,5 @@ export function interruptorAvanzado(): HTMLElement {
       // sin localStorage (modo privado): el filtro sigue funcionando en esta pestaña.
     }
   })
-  return h('div', { class: 'interruptor' }, h('span', {}, 'Info avanzada'), s.el)
+  return fila('Info avanzada', s.el)
 }

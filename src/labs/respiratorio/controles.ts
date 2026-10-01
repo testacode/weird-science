@@ -1,5 +1,5 @@
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, segmentado } from '../../ui/componentes'
+import { fila, grupo, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
@@ -12,7 +12,6 @@ export interface Manejadores {
   ayuda: () => void
 }
 
-const fila = (texto: string, control: HTMLElement) => h('div', { class: 'interruptor' }, h('span', {}, texto), control)
 const siNo = (activo: boolean, alElegir: (si: boolean) => void) => segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
 
 /** Consola de controles. `sincronizar` deja lo que se ve igual que la config (también cuando el cambio vino de otro lado). */

@@ -1,7 +1,7 @@
 // Consola de controles: objeto, líquido, sal, tamaño, "romper el sistema" e info avanzada.
 
 import { av, interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, segmentado, type Opcion } from '../../ui/componentes'
+import { fila, grupo, segmentado, type Opcion } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { COLOR_LIQUIDO, COLOR_OBJETO, hex } from './constantes'
@@ -68,7 +68,7 @@ export function crearConsola(a: Acciones, inicial: Config) {
     sal.el,
     tamano.el,
     grupo('Romper el sistema', h('div', { class: 'grupo' },
-      h('div', { class: 'interruptor' }, h('span', {}, 'Barco agujereado'), agujero.el),
+      fila('Barco agujereado', agujero.el),
       h('div', { class: 'grupo' }, h('span', {}, 'Cambiar de planeta'), planeta.el))),
     interruptorAvanzado(),
   )

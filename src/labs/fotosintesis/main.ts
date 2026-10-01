@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './fotosintesis.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -156,10 +156,6 @@ function aplicar(parcial: Partial<Config>) {
 }
 
 // --- Consola de controles ---
-function interruptor(texto: string, activo: boolean, alElegir: (si: boolean) => void) {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
-  return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (on: boolean) => s.set(on ? 'si' : 'no') }
-}
 
 const distancia = deslizador({
   titulo: 'Distancia de la lámpara', clase: 'luz', color: 'var(--luz)', ...rango('distancia'), paso: 1, valor: config.distancia,

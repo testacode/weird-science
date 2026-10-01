@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './luna.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
@@ -157,16 +157,13 @@ function cambiarConfig(clave: keyof Config, valor: boolean) {
     curvaCiclo = 0
   } else reiniciar()
 }
-function interruptor(texto: string, clave: keyof Config, clases = '') {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) => cambiarConfig(clave, v === 'si'))
-  return { el: h('div', { class: `interruptor ${clases}` }, h('span', {}, texto), s.el), reiniciar: () => s.set('no') }
-}
-const idea = interruptor('¿Y si las fases fueran la sombra de la Tierra?', 'sombraTierra')
-const plana = interruptor('Órbita sin inclinación', 'sinInclinacion', 'avanzado')
+const interruptorConfig = (texto: string, clave: keyof Config, clases = '') => interruptor(texto, false, (si) => cambiarConfig(clave, si), clases)
+const idea = interruptorConfig('¿Y si las fases fueran la sombra de la Tierra?', 'sombraTierra')
+const plana = interruptorConfig('Órbita sin inclinación', 'sinInclinacion', 'avanzado')
 // Con la info avanzada apagada no hay eclipses ni inclinación: si estaba rota, se arregla.
 new MutationObserver(() => {
   if (!avanzadoActivo() && config.sinInclinacion) {
-    plana.reiniciar()
+    plana.set(false)
     cambiarConfig('sinInclinacion', false)
   }
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] })

@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './estaciones.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
@@ -180,10 +180,6 @@ const ciudades = segmentado<IdCiudad>(
     rehacerCurva()
   },
 )
-function interruptor(texto: string, activo: boolean, alElegir: (v: boolean) => void) {
-  const s = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
-  return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (v: boolean) => s.set(v ? 'si' : 'no') }
-}
 const inclinacion = deslizador({
   titulo: 'Inclinación del eje', min: 0, max: 45, paso: 0.01, valor: eps, color: 'var(--cielo)', clase: 'avanzado',
   formato: (v) => `${num(v, 2)}°`,
@@ -223,7 +219,7 @@ lab.append(
     h('div', { class: 'panel consola' },
       h('div', { class: 'fila' }, botonPlay, h('button', { class: 'boton', type: 'button', onclick: reiniciar }, '↺ Otra vez'),
         h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),
-      h('div', { class: 'interruptor' }, h('span', {}, 'Velocidad'), segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }], '1', (v) => (velocidad = Number(v))).el),
+      fila('Velocidad', segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }], '1', (v) => (velocidad = Number(v))).el),
       h('div', { class: 'grupo ciudades' }, h('span', { class: 'etiqueta' }, 'Ciudad'), ciudades.el),
       inclinacion.el,
       grupo('Romper el sistema', h('div', { class: 'grupo' }, ideaDistanciaSwitch.el, ejeDerecho.el)),

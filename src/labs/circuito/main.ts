@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './circuito.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { hud } from '../../ui/hud'
 import { grafico } from '../../ui/grafico'
@@ -81,7 +81,6 @@ const corto = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: '
 const botonSacar = h('button', { class: 'boton', type: 'button', onclick: () => sacarUna() }, 'Sacar una lamparita')
 const botonPoner = h('button', { class: 'boton', type: 'button', onclick: () => pedir({ sacadas: [false, false, false] }) }, 'Poner todas')
 
-const fila = (texto: string, control: HTMLElement) => h('div', { class: 'interruptor' }, h('span', {}, texto), control)
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---
 let pendiente: { nueva: Config; pregunta: Pregunta } | null = null
