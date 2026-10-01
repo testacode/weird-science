@@ -170,9 +170,11 @@ export function crearEscena(contenedor: HTMLElement) {
       pCiudad.ancla.copy(ciudadMundo)
       pCiudad.texto(c.ciudad.nombre)
       pNorte.ancla.copy(tierra.poloEnMundo(norte))
-      const cerca = pClave.find((k) => Math.abs(c.d - k.f.dia) < 16)
+      // Distancia en días sobre el calendario circular (el 3 de enero está a 12 días del solsticio de diciembre).
+      const aDias = (k: (typeof pClave)[number]) => Math.min(Math.abs(c.d - k.f.dia), YEAR - Math.abs(c.d - k.f.dia))
+      const cerca = pClave.find((k) => aDias(k) < 16)
       pClave.forEach((k) => (k.el.hidden = k === cerca))
-      nombreTierra.textContent = cerca && Math.abs(c.d - cerca.f.dia) < 3 ? `Tierra · ${cerca.f.tipo}` : 'Tierra'
+      nombreTierra.textContent = cerca && aDias(cerca) < 3 ? `Tierra · ${cerca.f.tipo}` : 'Tierra'
       distanciaTierra.textContent = `${numero(c.distancia, 1)} M km del Sol`
       distanciaTierra.classList.toggle('idea', c.idea)
       ;(lineaOrbita.material as THREE.LineBasicMaterial).color.set(c.idea ? 0xff5fa2 : 0xffffff)
