@@ -20,7 +20,7 @@ export const FACTORES: Record<Factor, { corto: string; nombre: string; clase: st
 export const GANCHO = `Una rama de Elodea, una lámpara y un vaso. Con luz y <span class="c-magenta">CO₂</span> disuelto, la planta fabrica <span class="c-ambar">glucosa</span> y suelta <span class="c-cielo">oxígeno</span>: cada burbuja que sube es la prueba${av(' (6 CO₂ + 6 H₂O + luz → C₆H₁₂O₆ + 6 O₂)')}.`
 
 /** El mito del verde, con los números del modelo. */
-export const ABSORCION_VERDE = `La hoja absorbe ${num(ABSORCION.verde * 100, 0)}% de la luz verde contra ${num(ABSORCION.blanca * 100, 0)}% de la blanca: el verde no "rebota todo", se usa casi tanto. La hoja se ve verde por lo poco que rebota.`
+export const ABSORCION_VERDE = `La hoja absorbe casi tanta luz verde como blanca${av(` (${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}%)`)}: el verde no "rebota todo". La hoja se ve verde por lo poco que rebota.`
 
 const o2 = (n: number) => `<span class="c-cielo">${num(n)} µmol/min</span>`
 

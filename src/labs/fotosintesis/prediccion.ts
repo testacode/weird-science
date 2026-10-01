@@ -65,7 +65,7 @@ const VERDE: Pregunta = {
 /** La pregunta que corresponde a lo que el usuario rompió, o `null` si todo funciona. Apagar la luz tiene prioridad. */
 export function preguntaPara(config: Config): Pregunta | null {
   if (!config.encendida) return OSCURO
-  // Si con luz blanca tampoco fabrica (sin CO₂, frío o calor extremos), preguntar por el verde confundiría la causa.
+  // Sin CO₂ no fabrica con ningún color: preguntar por el verde confundiría la causa.
   if (config.color === 'verde' && tasas({ ...config, color: 'blanca' }).bruta > 0) return VERDE
   return null
 }

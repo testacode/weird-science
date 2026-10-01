@@ -141,7 +141,8 @@ function aplicar(parcial: Partial<Config>) {
   config = { ...config, ...parcial }
   const despues = preguntaPara(config)
   sincronizar()
-  if (despues && despues.id !== antes) {
+  // Solo el color y la luz abren preguntas (si no, pasar el CO₂ por 0 reiniciaría el experimento).
+  if (despues && despues.id !== antes && ('color' in parcial || 'encendida' in parcial)) {
     reiniciar()
     return preguntar(despues)
   }
