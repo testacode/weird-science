@@ -1,0 +1,25 @@
+/* Estilos propios del lab de la luz. Colores con significado: ámbar = incidencia, magenta = reflexión, celeste = refracción. */
+
+/* Rótulos de ángulo */
+.pildora.inc { color: var(--ambar); border-color: var(--ambar); }
+.pildora.refl { color: var(--magenta); border-color: var(--magenta); }
+.pildora.refr { color: var(--cielo); border-color: var(--cielo); }
+.pildora.real { color: var(--apagado); }
+.pildora.aparente { color: var(--cielo); border-color: var(--cielo); }
+.pildora.multilinea span:first-child { color: var(--texto); }
+
+/* Los controles que no corresponden a la escena se esconden. */
+.consola [hidden] { display: none; }
+
+/* Botones de medio en grilla, cada uno con una muestra de su color */
+.medios { flex-wrap: wrap; }
+.medios button { flex: 1 1 28%; white-space: nowrap; padding: 6px 4px; font-size: 12.5px; }
+.medios button::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%;
+  background: var(--muestra); box-shadow: 0 0 5px var(--muestra);
+}
+
+.interruptor.laser .segmentado { min-width: 236px; }
+.hud-der .saltar { justify-self: start; }
+.hud-der .consola { gap: 11px; padding: 12px 14px; }
+.c-apagado { color: var(--apagado); }
