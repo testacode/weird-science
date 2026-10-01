@@ -8,5 +8,5 @@ export const meta: Lab = {
   nap: 'Primaria 4° · magnetismo (imanes, polos y materiales magnéticos)',
   temas: ['fuerzas'],
   orden: 3,
-  listo: false,
+  listo: true,
 }

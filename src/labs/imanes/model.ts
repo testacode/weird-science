@@ -32,8 +32,8 @@ export const TEMP_MAX = 600
 export const MAX_PIEZAS = 4
 export const SEP_MAX = 2
 
-/** Campo magnético terrestre en la mesada, componente horizontal, apuntando al norte. Parámetro dentro del rango real:
- *  30 µT sobre Brasil a 60 µT sobre Siberia (Wikipedia, "Earth's magnetic field"). */
+/** Campo magnético terrestre en la mesada: solo la componente horizontal, apuntando al norte. Es un parámetro: la intensidad total
+ *  va de 30 µT sobre Brasil a 60 µT sobre Siberia (Wikipedia, "Earth's magnetic field"). */
 export const CAMPO_TERRESTRE = 20e-6
 
 export interface Tipo {
