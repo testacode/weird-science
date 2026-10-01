@@ -110,6 +110,7 @@ instalarTeclado({
   acido: () => cambiarConfig('acidoGastrico', !config.acidoGastrico),
   vista: () => cambiarVista(vista === 'normal' ? 'explotada' : 'normal'),
   ayuda: () => (controles.ayuda.abierto ? controles.ayuda.cerrar() : controles.abrirAyuda()),
+  atajos: () => (controles.ayuda.abierto ? controles.ayuda.cerrar() : controles.abrirAtajos()),
 })
 
 let anterior = performance.now()
