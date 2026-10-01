@@ -1,0 +1,72 @@
+// Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
+// Colores con significado: ámbar = glucosa, cielo = oxígeno, magenta = CO₂ y respiración, lima = la fotosíntesis.
+
+import { av } from '../../ui/avanzado'
+import { ABSORCION, P_MAX, type Config, type Derivados, type Estado, type Factor } from './model'
+
+/** Número con coma decimal y signo menos tipográfico. */
+export const num = (n: number, decimales = 1) =>
+  n.toLocaleString('es-AR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales }).replace('-', '−')
+
+/** Burbujas por minuto: con decimal cuando son pocas. */
+export const burbujas = (n: number) => num(n, n < 10 ? 1 : 0)
+
+export const FACTORES: Record<Factor, { corto: string; nombre: string; clase: string }> = {
+  luz: { corto: 'Luz', nombre: 'la luz', clase: 'c-luz' },
+  co2: { corto: 'CO₂', nombre: 'el CO₂', clase: 'c-magenta' },
+  temp: { corto: 'Temp.', nombre: 'la temperatura', clase: 'c-temp' },
+}
+
+export const GANCHO = `Una rama de Elodea, una lámpara y un vaso. Con luz y <span class="c-magenta">CO₂</span> disuelto, la planta fabrica <span class="c-ambar">glucosa</span> y suelta <span class="c-cielo">oxígeno</span>: cada burbuja que sube es la prueba${av(' (6 CO₂ + 6 H₂O + luz → C₆H₁₂O₆ + 6 O₂)')}.`
+
+const o2 = (n: number) => `<span class="c-cielo">${num(n)} µmol/min</span>`
+
+function consejo(c: Config, d: Derivados): string {
+  if (c.color === 'verde' && d.limita === 'luz')
+    return `La luz verde casi no se absorbe: la hoja la rebota${av(` (absorbe ${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}% de la blanca)`)}. Por eso las hojas se ven verdes.`
+  if (Math.min(d.fLuz, d.fCo2, d.fTemp) >= 0.9) return 'Casi todo está al máximo: ningún factor frena mucho.'
+  if (d.limita === 'luz') return 'Lo que frena es la luz: acercá la lámpara.'
+  if (d.limita === 'co2') return `Lo que frena es el <span class="c-magenta">CO₂</span>: agregá bicarbonato.${av(' Aunque haya mucha luz, sin CO₂ el ciclo de Calvin no tiene materia prima.')}`
+  if (d.fTemp >= 0.8) return 'La temperatura está cerca de la ideal (28 °C): ya queda poco por ganar.'
+  return c.temperatura > 28
+    ? `Hace demasiado calor: las enzimas empiezan a dañarse${av(' (desnaturalización)')}.`
+    : `Hace frío: las enzimas trabajan lento${av(' (cada 10 °C menos, a la mitad)')}.`
+}
+
+export function relato(e: Estado, c: Config, d: Derivados): string {
+  const contadas = `Burbujas contadas: <b>${e.burbujas}</b>.`
+  if (!c.encendida)
+    return `<strong>Sin luz.</strong> La fotosíntesis se frena (${o2(0)}), pero la planta sigue <span class="c-magenta">respirando</span>: gasta ${o2(d.resp)}. El balance es <b class="c-magenta">${num(d.neto)}</b>: no sale ninguna burbuja y el agua pierde oxígeno${av('. De noche la planta vive de la glucosa que guardó')}. ${contadas}`
+  const luz = `Llega <span class="c-luz">${num(d.llega, 0)}% de luz</span> y la hoja absorbe <span class="c-luz">${num(d.absorbida, 0)}%</span>.`
+  const fabrica = `Fabrica ${o2(d.bruta)}${d.neto > 0.02 ? ` (de un máximo de ${P_MAX})` : ''} y gasta ${o2(d.resp)} respirando`
+  if (d.neto < -0.02)
+    return `<strong>La respiración le gana.</strong> ${luz} ${fabrica}: el balance es <b class="c-magenta">${num(d.neto)}</b>, no sale ninguna burbuja y el agua pierde oxígeno. ${consejo(c, d)} ${contadas}`
+  if (d.neto <= 0.02)
+    return `<strong>Empate.</strong> ${luz} ${fabrica}: no sobra oxígeno para las burbujas. ${consejo(c, d)} ${contadas}`
+  return `<strong>Frena ${FACTORES[d.limita].nombre}.</strong> ${luz} ${fabrica}: salen <b>${burbujas(d.burbujasMin)} burbujas por minuto</b>. ${consejo(c, d)} ${contadas}`
+}
+
+export const COMO_FUNCIONA = `
+  <h2>¿Cómo funciona?</h2>
+  <p>Las plantas no comen: fabrican su alimento. Con la energía de la luz, convierten agua y <span class="c-magenta">dióxido de carbono</span> en <span class="c-ambar">glucosa</span> y liberan <span class="c-cielo">oxígeno</span>. Acá la rama de Elodea está en agua, así que el oxígeno sale en burbujas que se pueden contar.${av(' El modelo calcula µmol de O₂ por minuto: la fotosíntesis bruta es P_MAX · min(factor de luz, de CO₂, de temperatura) y de eso se resta una respiración constante. Cada burbuja de ~2 mm lleva unos 0,17 µmol de O₂, y se hacen 6 O₂ por cada glucosa.')}</p>
+  <h3>Qué mirar</h3>
+  <ul>
+    <li>Los puntitos de <span class="c-luz">luz</span> viajan de la lámpara a la planta: los que se absorben desaparecen y los que rebotan se van. Con luz blanca rebotan verdes.</li>
+    <li>Los puntitos <span class="c-magenta">magenta</span> son CO₂ disuelto que entra a las hojas.</li>
+    <li>Las burbujas <span class="c-cielo">celestes</span> son oxígeno. En el cuadrito de arriba ves una célula de la hoja con sus cloroplastos, que se encienden cuando trabajan.</li>
+    <li>El gráfico compara lo que la planta fabrica (<span class="c-marca">fotosíntesis</span>) con lo que gasta (<span class="c-magenta">respiración</span>). Cuando la línea lima cae por debajo de la magenta, la planta pierde oxígeno.</li>
+  </ul>
+  <h3>Controles</h3>
+  <ul>
+    <li><b>Distancia de la lámpara:</b> más lejos, menos luz${av(' (cae con el cuadrado de la distancia: al doble, la cuarta parte)')}. Si ya hay mucha luz, acercarla ayuda cada vez menos${av(' (curva de saturación)')}.</li>
+    <li><b>CO₂ disuelto:</b> el agua de la canilla tiene poco. Con bicarbonato hay más.</li>
+    <li><b>Temperatura:</b> con frío las enzimas van lentas y con mucho calor se dañan. La mejor está cerca de los 28 °C.</li>
+    <li><b>Color de la luz:</b> la clorofila absorbe bien el rojo y el azul, y casi nada el verde.</li>
+    <li><b>¿Qué frena a la planta?</b> Manda el factor más escaso${av(' (ley de Blackman, o del mínimo de Liebig)')}: mejorar los otros no sirve hasta que arregles ese. Es como un cuello de botella.</li>
+    <li><b>Info avanzada:</b> muestra u oculta las fórmulas y los detalles del modelo.</li>
+  </ul>
+  <h3>Predecí antes de correr</h3>
+  <p>Cuando apagás la luz o la ponés verde, el lab te pregunta qué va a pasar. Elegí, dejá correr 2 minutos del experimento y se revela si acertaste.</p>
+  <h3>Qué es real y qué no</h3>
+  <p><b>Real:</b> la ecuación de la fotosíntesis, que la respiración sigue siempre (también de noche), que la clorofila absorbe poco el verde, que la luz cae con la distancia, que la tasa se frena con frío y con calor, y que el oxígeno de una planta acuática se puede contar en burbujas.</p>
+  <p><b>Simplificado:</b> las constantes son aproximadas, la respiración no cambia con la temperatura, el O₂ sale todo en burbujas (en la realidad parte queda disuelto en el agua), la lámpara no calienta el agua, el cuadrito de la célula no está a escala y la maqueta tampoco. Modelo educativo: verificá los datos con tu docente o manual.</p>`

@@ -1,0 +1,43 @@
+/* Estilos propios del lab de fotosíntesis. Los colores salen de las variables del kit. */
+:root { --luz: #fff3dc; }
+.c-luz { color: var(--luz); }
+.c-temp { color: var(--texto); }
+
+.hud-izq .metrica { min-width: 0; }
+.hud-izq .metrica .etiqueta { white-space: nowrap; }
+
+/* Deslizadores de la consola */
+.desliz { display: grid; gap: 4px; }
+.desliz .cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.desliz .cabeza b { font: 600 12px/1 var(--mono); }
+.desliz .cabeza small { color: var(--apagado); font: 400 11px/1 var(--mono); margin-left: 6px; }
+.desliz input[type='range'] { width: 100%; margin: 0; accent-color: var(--texto); cursor: pointer; }
+.desliz.luz input { accent-color: var(--luz); }
+.desliz.co2 input { accent-color: var(--magenta); }
+.desliz.co2 .etiqueta { color: var(--magenta); }
+.desliz.luz .etiqueta { color: var(--luz); }
+
+/* Muestra del color de la luz dentro de cada botón */
+.colores button::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%;
+  background: var(--muestra); box-shadow: 0 0 6px var(--muestra);
+}
+
+/* Qué frena a la planta */
+.factores { padding: 10px 14px 12px; display: grid; gap: 7px; }
+.factor { display: grid; grid-template-columns: 92px 1fr 38px; align-items: center; gap: 8px; font: 600 11px/1 var(--mono); }
+.factor .nombre { color: var(--apagado); }
+.factor .barra { height: 7px; border-radius: 99px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.factor .barra i { display: block; height: 100%; border-radius: 99px; background: var(--color); transition: width 0.2s; }
+.factor .valor { text-align: right; color: var(--apagado); }
+.factor.frena .nombre, .factor.frena .valor { color: var(--texto); }
+.factor.frena .barra { box-shadow: 0 0 0 1px var(--color); }
+.factor .tag { font-size: 9px; letter-spacing: 0.08em; color: #0b1413; background: var(--color); border-radius: 4px; padding: 2px 4px; margin-left: 5px; }
+.factor:not(.frena) .tag { display: none; }
+
+.pildora.regla { font-size: 9.5px; padding: 1px 6px; opacity: 0.8; }
+
+/* La consola de este lab es más alta que la del digestivo: se compacta y, en pantallas bajas, la columna se desplaza. */
+.hud-izq, .hud-der { max-height: calc(100vh - 40px); overflow-y: auto; scrollbar-width: none; }
+.hud-der .consola { gap: 10px; padding: 12px 14px; }
+.hud-der .interruptor .segmentado button { padding: 4px 8px; }

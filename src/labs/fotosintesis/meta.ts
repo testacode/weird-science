@@ -8,5 +8,5 @@ export const meta: Lab = {
   nap: 'Primaria 6° · modelos de nutrición',
   temas: ['energia', 'ciclos'],
   orden: 2,
-  listo: false,
+  listo: true,
 }
