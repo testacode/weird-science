@@ -6,3 +6,6 @@
 - **Postprocesado**: `OutputPass` va último, porque aplica el tone mapping y el espacio de color. Las partículas usan `MeshBasicMaterial({ toneMapped: false })` para que el bloom las haga brillar.
 - **Click en objetos 3D vs arrastrar la cámara**: el raycast solo cuenta como click si el puntero se movió menos de 5 px entre `pointerdown` y `pointerup`.
 - **Verificación**: si el Chrome CDP personal (9222) está caído, `agent-browser --session <nombre>` levanta su propio Chromium headless, que renderiza WebGL sin problemas.
+- **HUD derecho (desde la ola 1)**: `.hud-der` es una columna sin fondo; la consola va adentro como `.panel.consola` y debajo la tarjeta de predicción. Un lab que arme `hud hud-der panel` como antes queda con doble panel.
+- **Fuentes en canvas 2D**: hay que esperar `document.fonts.load(...)` y redibujar; si no, el primer cuadro del gráfico sale con la fuente de fallback.
+- **`[hidden]` vs `.panel`**: con clases que setean `display`, el atributo `hidden` no alcanza; `.prediccion[hidden]` necesita `display: none` explícito.
