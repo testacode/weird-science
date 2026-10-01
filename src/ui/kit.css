@@ -114,7 +114,8 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 .interruptor button { min-width: 64px; }
 
 .pildora {
-  position: absolute; z-index: 1; transform: translate(-50%, -50%);
+  /* La ubica `crearPildoras()` (src/escena/pildoras.ts): left/top es la esquina superior izquierda. */
+  position: absolute; z-index: 1;
   padding: 3px 9px; border-radius: 99px; pointer-events: none; white-space: nowrap;
   font: 600 10.5px/1.4 var(--mono); letter-spacing: 0.04em;
   background: rgba(7, 16, 15, 0.78); border: 1px solid var(--borde); color: var(--apagado);

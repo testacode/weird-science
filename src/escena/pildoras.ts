@@ -38,8 +38,6 @@ export function crearPildoras(contenedor: HTMLElement, camera: THREE.Camera) {
       const el = document.createElement('div')
       el.className = ['pildora', multilinea && 'multilinea', clase].filter(Boolean).join(' ')
       el.textContent = texto
-      // La posición la calcula `ubicar()` (esquina superior izquierda): sin el translate del CSS.
-      el.style.transform = 'none'
       contenedor.append(el)
       const p = { el, ancla, dx, dy, origen, texto: (t: string) => (el.textContent = t) }
       lista.push(p)

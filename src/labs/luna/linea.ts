@@ -1,5 +1,6 @@
 // Línea de tiempo arrastrable: el día del ciclo lunar, con un ícono por fase para saltar directo.
 import { h } from '../../ui/dom'
+import { numero } from '../../ui/formato'
 import { NOTA_MES } from './contenido'
 import { MES_SINODICO, esCreciente, elongacion, type Hemisferio } from './model'
 
@@ -61,7 +62,7 @@ export function lineaDeTiempo(inicial: Hemisferio, alElegir: (dia: number) => vo
   const el = h('div', { class: 'panel linea' },
     h('div', { class: 'linea-cabecera' },
       h('span', { class: 'etiqueta' }, 'Día del ciclo · arrastralo'),
-      h('span', { class: 'linea-valor' }, dia, ` de ${MES_SINODICO.toFixed(1).replace('.', ',')} `, ciclo),
+      h('span', { class: 'linea-valor' }, dia, ` de ${numero(MES_SINODICO)} `, ciclo),
     ),
     rango,
     h('div', { class: 'marcas' }, ...iconos.map((i) => i.boton)),
@@ -74,7 +75,7 @@ export function lineaDeTiempo(inicial: Hemisferio, alElegir: (dia: number) => vo
     set(valor: number, numeroCiclo: number) {
       if (!arrastrando) rango.value = String(valor)
       rango.style.setProperty('--p', `${(valor / MES_SINODICO) * 100}%`)
-      dia.textContent = valor.toFixed(1).replace('.', ',')
+      dia.textContent = numero(valor)
       ciclo.textContent = `· ciclo ${numeroCiclo}`
     },
   }
