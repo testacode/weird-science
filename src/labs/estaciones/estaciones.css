@@ -1,0 +1,71 @@
+/* Estilos propios del lab de las estaciones (lo que el kit no cubre). Colores: ámbar = Sol, cielo = Tierra, lima = tu ciudad, magenta = idea errónea. */
+.metrica.m-ciudad b { color: var(--marca); }
+.metrica.m-sol b { color: var(--ambar); }
+.metrica.m-tierra b { color: var(--cielo); }
+.metrica.m-tierra.m-idea b { color: var(--magenta); }
+
+.consola { gap: 10px; }
+.modo-grafico { margin-bottom: -4px; }
+/* El gráfico muestra el año entero: los valores de hoy están en las métricas, la leyenda solo nombra las curvas. */
+.grafico { position: relative; }
+.grafico .leyenda b, .grafico .leyenda small { display: none; }
+.marca-hoy { position: absolute; width: 0; border-left: 1.5px dashed var(--marca); pointer-events: none; }
+
+/* Comparación de la idea errónea: las dos ciudades, una debajo de la otra. */
+.comparar { display: grid; gap: 4px; margin: 8px 0; }
+.fila-idea { display: flex; align-items: baseline; gap: 8px; padding: 4px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.28); }
+.fila-idea > span { flex: 1; color: var(--apagado); font-size: 12.5px; }
+.fila-idea b { font: 600 12.5px/1.3 var(--mono); }
+.fila-idea small { font: 400 11px/1 var(--mono); color: var(--apagado); }
+
+.ciudades .segmentado { flex-wrap: wrap; }
+.ciudades .segmentado button { flex: 1 1 calc(50% - 4px); }
+
+/* "Desde tu ciudad": arriba, entre los dos HUD. */
+.hud-inset { position: absolute; z-index: 2; top: 20px; left: 410px; right: 360px; display: flex; justify-content: center; pointer-events: none; }
+.inset { width: 340px; padding: 10px; display: grid; gap: 6px; pointer-events: auto; }
+.inset-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.inset-lugar { font: 600 11px/1 var(--mono); color: var(--marca); }
+.inset-marco { position: relative; width: 320px; height: 132px; border-radius: 10px; overflow: hidden; line-height: 0; border: 1px solid var(--borde); }
+.inset-lienzo { display: block; }
+.inset-altura { position: absolute; left: 10px; top: 8px; font: 600 20px/1 var(--mono); color: var(--ambar); line-height: 1; }
+.inset-altura small { display: block; margin-top: 3px; font: 600 9px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--apagado); }
+.inset-lado { position: absolute; right: 8px; top: 108px; font: 600 10px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ambar); }
+.inset-yo { position: absolute; left: 134px; top: 108px; transform: translateX(-50%); font: 600 10px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--marca); }
+.inset-pie { margin: 0; font-size: 12.5px; line-height: 1.3; color: #cfdcd6; }
+.inset-pie b { color: var(--ambar); }
+
+/* Etiquetas de la maqueta, con el color de cada cosa. */
+.pildora.p-sol { color: var(--ambar); border-color: var(--ambar); }
+.pildora.p-tierra { color: var(--cielo); border-color: var(--cielo); }
+.pildora.p-ciudad { color: var(--marca); border-color: var(--marca); }
+.pildora.p-norte { color: var(--cielo); border-color: var(--cielo); padding: 1px 6px; }
+.pildora .p-dist { color: var(--ambar); }
+.pildora .p-dist.idea { color: var(--magenta); }
+.pildora.p-fecha { color: var(--texto); }
+.pildora.p-extremo { color: var(--magenta); border-color: var(--magenta); }
+
+/* Línea de tiempo */
+.hud-linea { position: absolute; z-index: 2; bottom: 16px; left: 410px; right: 360px; }
+.linea { padding: 10px 22px 8px; display: grid; gap: 4px; }
+.linea-cabecera { display: flex; justify-content: space-between; align-items: baseline; }
+.linea-valor { font: 600 12px/1 var(--mono); color: var(--apagado); }
+.linea-valor b { font-size: 14px; color: var(--marca); }
+.linea input[type='range'] { cursor: grab; }
+.linea input[type='range']:active { cursor: grabbing; }
+.meses, .marcas, .marcas-extremo { position: relative; margin: 0 9px; }
+.meses { height: 11px; }
+.meses span { position: absolute; font: 600 9px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--apagado); }
+.marcas { height: 32px; }
+.marca-dia {
+  position: absolute; top: 0; transform: translateX(-50%); display: grid; justify-items: center; gap: 1px; padding: 3px 8px;
+  border: 1px solid var(--borde); border-radius: 8px; background: rgba(255, 255, 255, 0.04); transition: background 0.15s;
+}
+.marca-dia:hover { background: rgba(255, 255, 255, 0.12); }
+.marca-dia b { font: 600 11px/1.1 var(--mono); }
+.marca-dia small { font: 600 9px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--apagado); }
+.marcas-extremo { height: 14px; }
+.marca-extremo {
+  position: absolute; top: 0; transform: translateX(-50%); padding: 0; border: 0; background: transparent;
+  font: 600 9px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--magenta); text-decoration: underline dotted;
+}
