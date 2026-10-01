@@ -1,6 +1,7 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import {
   CIUDADES, D_AFELIO, D_PERIHELIO, DIST_MEDIA, EXCENTRICIDAD, FECHAS_CLAVE, INCLINACION, NOMBRE_ESTACION, fecha, ideaDistancia, orbita, rangoAnual,
@@ -112,4 +113,9 @@ export const COMO_FUNCIONA = `
   <p>En los equinoccios (el ${EQ_MARZO} y el ${EQ_SEPT}) el Sol cae vertical sobre el ecuador (δ = 0°) y el día dura 12 h en todo el planeta. En los solsticios (el ${SOL_JUNIO} y el ${SOL_DIC}) el Sol cae vertical sobre un trópico (δ = ±${num(INCLINACION, 2)}°): son los días más largos de un hemisferio y los más cortos del otro.</p>`)}
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> la inclinación del eje de ${num(INCLINACION, 2)}°, que apunta siempre al mismo lado del espacio (hacia la Estrella Polar); que los dos hemisferios tienen estaciones opuestas; y que la Tierra está más cerca del Sol en enero.${av(` También son reales las fechas de equinoccios y solsticios, la distancia mínima y máxima (${num(D_MIN, 1)} y ${num(D_MAX, 1)} millones de km), la excentricidad de ${num(EXCENTRICIDAD, 4)} y las fórmulas de la altura del Sol y de las horas de luz.`)}</p>
-  <p><b>Simplificado:</b> los tamaños y distancias de la maqueta están muy fuera de escala, y la elipse de la órbita se dibuja con una excentricidad ×5 para que se note (la real es casi un círculo). Tu ciudad se muestra siempre al mediodía: el globo no gira día a día. Las horas de luz se miden con el Sol como un punto y sin atmósfera (en la realidad la luz se curva y el día dura unos minutos más). La energía se calcula como el seno de la altura del Sol al mediodía por las horas de luz (y la distancia), una aproximación: en la realidad el Sol está más bajo el resto del día. Las estaciones se definen entre equinoccios y solsticios; no se modelan la atmósfera, las nubes ni la inercia del mar, que hace que el calor máximo llegue semanas después del solsticio. En el ecuador casi no hay estaciones de temperatura, aunque sí de lluvias (no se modelan). Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> los tamaños y distancias de la maqueta están muy fuera de escala, y la elipse de la órbita se dibuja con una excentricidad ×5 para que se note (la real es casi un círculo). Tu ciudad se muestra siempre al mediodía: el globo no gira día a día. Las horas de luz se miden con el Sol como un punto y sin atmósfera (en la realidad la luz se curva y el día dura unos minutos más). La energía se calcula como el seno de la altura del Sol al mediodía por las horas de luz (y la distancia), una aproximación: en la realidad el Sol está más bajo el resto del día. Las estaciones se definen entre equinoccios y solsticios; no se modelan la atmósfera, las nubes ni la inercia del mar, que hace que el calor máximo llegue semanas después del solsticio. En el ecuador casi no hay estaciones de temperatura, aunque sí de lluvias (no se modelan). Modelo educativo: verificá los datos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: 'NASA NSSDCA, <i>Earth Fact Sheet</i>: inclinación del eje, excentricidad, distancia media y longitud del perihelio.', url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html' },
+  { texto: '«Apsis», Wikipedia: fechas del perihelio y del afelio.', url: 'https://en.wikipedia.org/wiki/Apsis' },
+  { texto: 'Wikipedia: coordenadas de Buenos Aires, Ushuaia y Madrid.', url: 'https://en.wikipedia.org/wiki/Buenos_Aires' },
+  ])}`

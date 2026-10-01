@@ -141,7 +141,8 @@ function aplicar(parcial: Partial<Config>) {
   config = { ...config, ...parcial }
   const despues = preguntaPara(config)
   sincronizar()
-  if (despues && despues.id !== antes) {
+  // Solo el color y la luz abren preguntas (si no, pasar el CO₂ por 0 reiniciaría el experimento).
+  if (despues && despues.id !== antes && ('color' in parcial || 'encendida' in parcial)) {
     reiniciar()
     return preguntar(despues)
   }
@@ -181,11 +182,9 @@ color.el.classList.add('colores')
 color.el.querySelectorAll('button').forEach((b, i) => b.style.setProperty('--muestra', `#${LUZ_HEX[COLORES_UI[i].valor].toString(16).padStart(6, '0')}`))
 
 const apagar = interruptor('Apagar la luz', false, (si) => aplicar({ encendida: !si }))
-const verde = interruptor('Luz verde', false, (si) => aplicar({ color: si ? 'verde' : 'blanca' }))
 /** Deja todo lo que se ve en pantalla igual que `config` (también cuando el cambio vino de otro control). */
 function sincronizar() {
   color.set(config.color)
-  verde.set(config.color === 'verde')
   apagar.set(!config.encendida)
   document.documentElement.style.setProperty('--luz', `#${LUZ_HEX[config.color].toString(16).padStart(6, '0')}`)
 }
@@ -199,7 +198,7 @@ lab.append(
       h('div', { class: 'grupo' }, reloj, segmentado([{ valor: '1', texto: '1×' }, { valor: '4', texto: '4×' }, { valor: '12', texto: '12×' }], '4', (v) => (velocidad = Number(v))).el),
       distancia.el, co2.el, temperatura.el,
       grupo('Color de la luz', color.el),
-      grupo('Romper el sistema', h('div', { class: 'grupo' }, apagar.el, verde.el)),
+      grupo('Romper el sistema', h('div', { class: 'grupo' }, apagar.el)),
       interruptorAvanzado(),
     ),
     pred.el,
