@@ -3,21 +3,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { crearEscenario } from '../../escena/escenario'
-import { MACROS, posicionEnTubo, type Config, type Estado, type Macro, type Nutrientes } from './model'
-import { HIGADO, TRAMOS, VESICULA, puntoEnTubo, radioEnTubo } from './tubo'
+import { MAX_BOCADOS } from './bocados'
+import { DESP_HIGADO, DESP_PANCREAS, DESP_TRAMO, despEnTubo } from './explosion'
+import { MACROS, phSegmento, posicionEnTubo, type Config, type Estado, type Macro } from './model'
+import { crearOrganos } from './organos'
+import { crearParticulas } from './particulas'
+import { colorPh } from './ph'
+import { crearRotulos } from './rotulos'
+import { TRAMOS, puntoEnTubo } from './tubo'
+import { crearVellosidades } from './vellosidades'
 
-const COLOR: Record<Macro, number> = { carbos: 0xd99a1e, proteinas: 0xd6337a, grasas: 0x2f9fd8 }
-const PARTICULAS = 96
-const VUELO_SEG = 1.4
-
-interface Particula {
-  macro: Macro
-  rango: number
-  desfase: number
-  offset: THREE.Vector3
-  absorbidaEn: number | null
-  desde: THREE.Vector3
-}
+/** Cuánto se aleja la cámara con la vista explotada, para que entre todo. */
+const ALEJAR_EXPLOTADA = 0.14
+const VIDRIO = new THREE.Color(0xdffff0)
+/** Qué tanto manda el pH sobre el color del vidrio (0 = blanco verdoso, 1 = color puro). */
+const FUERZA_PH = 0.85
+/** El vidrio también emite un poco de su color de pH, si no el tinte se pierde contra el fondo oscuro. */
+const BRILLO_PH = 0.34
+const BRILLO_ACTIVO = 0.12
+const DELGADO = 3
+const suavizar = (dt: number, ritmo: number) => 1 - Math.exp(-dt * ritmo)
 
 export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
   const { scene, camera, renderer, render } = crearEscenario(contenedor)
@@ -31,30 +36,22 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
   controles.maxPolarAngle = Math.PI * 0.62
 
   const vidrio = new THREE.MeshPhysicalMaterial({
-    color: 0xdffff0, transmission: 1, roughness: 0.1, thickness: 0.35, ior: 1.4, emissive: 0xc6f35e, emissiveIntensity: 0,
+    color: VIDRIO, transmission: 1, roughness: 0.1, thickness: 0.35, ior: 1.4, emissive: VIDRIO, emissiveIntensity: 0.15,
   })
   const tubos = TRAMOS.map((t) => {
     const mesh = new THREE.Mesh(new THREE.TubeGeometry(t.curva, 160, t.radio, 28, false), vidrio.clone())
     scene.add(mesh)
     return mesh
   })
+  // En la vista explotada, una línea tenue une el final de cada órgano con el principio del siguiente.
+  const uniones = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array((TRAMOS.length - 1) * 6), 3)),
+    new THREE.LineBasicMaterial({ color: 0xc6f35e, transparent: true }),
+  )
+  uniones.frustumCulled = false
+  scene.add(uniones)
 
-  const higado = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 40, 24),
-    new THREE.MeshPhysicalMaterial({ color: 0xa33a4a, transmission: 0.55, roughness: 0.3, thickness: 1 }),
-  )
-  higado.position.copy(HIGADO)
-  higado.scale.set(1.05, 0.5, 0.55)
-  const vesicula = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2, 32, 16),
-    new THREE.MeshStandardMaterial({ color: 0x4fd67a, emissive: 0x4fd67a, emissiveIntensity: 0.45, roughness: 0.3 }),
-  )
-  vesicula.position.copy(VESICULA)
-  const conducto = new THREE.Mesh(
-    new THREE.TubeGeometry(new THREE.CatmullRomCurve3([VESICULA, new THREE.Vector3(-0.1, 1.2, 0.2), new THREE.Vector3(0.3, 0.8, 0.05)]), 40, 0.035, 8),
-    vesicula.material,
-  )
-  scene.add(higado, vesicula, conducto)
+  const organos = crearOrganos(scene)
 
   const mesada = new THREE.Mesh(new RoundedBoxGeometry(7.5, 0.45, 3.2, 4, 0.12), new THREE.MeshStandardMaterial({ color: 0x17221f, roughness: 0.55, metalness: 0.3 }))
   mesada.position.set(0, -4.6, 0)
@@ -73,79 +70,17 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
   cielo.position.set(5, -1, 3)
   scene.add(luz, ambar, cielo)
 
-  // Partículas de comida: una sola InstancedMesh, color por macronutriente.
-  const bolitas = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 14, 10), new THREE.MeshBasicMaterial({ toneMapped: false }), PARTICULAS)
-  bolitas.frustumCulled = false
-  scene.add(bolitas)
-  let particulas: Particula[] = []
-  const matriz = new THREE.Matrix4()
-  const pos = new THREE.Vector3()
-  const escala = new THREE.Vector3()
-  const giro = new THREE.Quaternion()
+  const particulas = crearParticulas(scene, organos.centroHigado)
+  const vellosidades = crearVellosidades(contenedor)
 
-  function setComida(gramos: Record<Macro, number>) {
-    const total = MACROS.reduce((s, m) => s + gramos[m], 0)
-    particulas = []
-    for (const m of MACROS) {
-      const n = Math.round((gramos[m] / total) * PARTICULAS)
-      for (let i = 0; i < n && particulas.length < PARTICULAS; i++) {
-        particulas.push({
-          macro: m, rango: i / n, desfase: (Math.random() - 0.5) * 0.02,
-          offset: new THREE.Vector3().randomDirection().multiplyScalar(Math.random() * 0.6), absorbidaEn: null, desde: new THREE.Vector3(),
-        })
-      }
-    }
-    bolitas.count = particulas.length
-    particulas.forEach((p, i) => bolitas.setColorAt(i, new THREE.Color(COLOR[p.macro])))
-    if (bolitas.instanceColor) bolitas.instanceColor.needsUpdate = true
-  }
-
-  function ubicarParticulas(n: Nutrientes, posicion: number, ahora: number) {
-    const radio = radioEnTubo(posicion)
-    particulas.forEach((p, i) => {
-      const pool = n[p.macro]
-      const total = pool.intacto + pool.digerido + pool.absorbido
-      const fAbs = pool.absorbido / total
-      const fDig = pool.digerido / total
-      puntoEnTubo(posicion + p.desfase, pos).addScaledVector(p.offset, radio)
-      let tam = p.rango < fAbs + fDig ? 0.055 : 0.11
-      if (p.rango < fAbs) {
-        if (p.absorbidaEn === null) {
-          p.absorbidaEn = ahora
-          p.desde.copy(pos)
-        }
-        const t = Math.min((ahora - p.absorbidaEn) / VUELO_SEG, 1)
-        pos.lerpVectors(p.desde, HIGADO, t).y += Math.sin(t * Math.PI) * 0.8
-        tam = t >= 1 ? 0 : 0.06
-      } else p.absorbidaEn = null
-      matriz.compose(pos, giro, escala.setScalar(tam))
-      bolitas.setMatrixAt(i, matriz)
-    })
-    bolitas.instanceMatrix.needsUpdate = true
-  }
-
-  // Etiquetas HTML ancladas a cada órgano: primero los tramos del tubo, después los anexos.
-  const etiquetas = [
-    ...TRAMOS.map((t, i) => ({ texto: nombres[i], ancla: t.ancla })),
-    { texto: 'Hígado', ancla: new THREE.Vector3(-2.35, 2.55, 0) },
-    { texto: 'Vesícula · tocala', ancla: new THREE.Vector3(-1.75, 1.45, 0.3) },
-  ]
-  const pildoras = etiquetas.map(({ texto, ancla }) => {
-    const el = document.createElement('div')
-    el.className = 'pildora'
-    el.textContent = texto
-    contenedor.append(el)
-    return { el, ancla }
-  })
-  const proyectado = new THREE.Vector3()
-  function ubicarPildoras(activo: number) {
-    pildoras.forEach(({ el, ancla }, i) => {
-      proyectado.copy(ancla).project(camera)
-      el.style.left = `${(proyectado.x * 0.5 + 0.5) * contenedor.clientWidth}px`
-      el.style.top = `${(-proyectado.y * 0.5 + 0.5) * contenedor.clientHeight}px`
-      el.classList.toggle('activa', i === activo)
-    })
-  }
+  // Etiquetas: primero los tramos del tubo, después los anexos.
+  const iPancreas = TRAMOS.length + 2
+  const rotulos = crearRotulos(contenedor, camera, [
+    ...TRAMOS.map((t, i) => ({ texto: nombres[i], ancla: t.ancla, desp: DESP_TRAMO[i] })),
+    { texto: 'Hígado', ancla: new THREE.Vector3(-2.35, 2.55, 0), desp: DESP_HIGADO },
+    { texto: 'Vesícula · tocala', ancla: new THREE.Vector3(-1.75, 1.45, 0.3), desp: DESP_HIGADO },
+    { texto: 'Páncreas', ancla: new THREE.Vector3(2.2, 0.35, -0.3), desp: DESP_PANCREAS },
+  ], MAX_BOCADOS)
 
   // Click sobre la vesícula (sin confundirlo con arrastrar la cámara).
   const rayo = new THREE.Raycaster()
@@ -155,7 +90,7 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
   const tocaVesicula = (e: PointerEvent) => {
     puntero.set((e.offsetX / contenedor.clientWidth) * 2 - 1, -(e.offsetY / contenedor.clientHeight) * 2 + 1)
     rayo.setFromCamera(puntero, camera)
-    return rayo.intersectObject(vesicula).length > 0
+    return rayo.intersectObject(organos.vesicula).length > 0
   }
   renderer.domElement.addEventListener('pointerdown', (e) => (inicio = { x: e.clientX, y: e.clientY }))
   renderer.domElement.addEventListener('pointerup', (e) => {
@@ -165,17 +100,88 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
     renderer.domElement.style.cursor = tocaVesicula(e) ? 'pointer' : ''
   })
 
+  // Vista explotada: `f` va de 0 (normal) a 1 (explotada) con suavizado exponencial.
+  let f = 0
+  let objetivo = 0
+  let alejado = 1
+  let relojPrevio = performance.now()
+  let brillo = 0.05
+  let primerCuadro = true
+  let gramos: Record<Macro, number> = { carbos: 1, proteinas: 1, grasas: 1 }
+  const destino = new THREE.Color()
+  const base = new THREE.Vector3()
+  const fin = new THREE.Vector3()
+
+  function ubicarUniones() {
+    const a = uniones.geometry.getAttribute('position') as THREE.BufferAttribute
+    for (let i = 0; i < TRAMOS.length - 1; i++) {
+      TRAMOS[i].curva.getPointAt(1, base).addScaledVector(DESP_TRAMO[i], f)
+      TRAMOS[i + 1].curva.getPointAt(0, fin).addScaledVector(DESP_TRAMO[i + 1], f)
+      a.setXYZ(i * 2, base.x, base.y, base.z)
+      a.setXYZ(i * 2 + 1, fin.x, fin.y, fin.z)
+    }
+    a.needsUpdate = true
+    ;(uniones.material as THREE.LineBasicMaterial).opacity = 0.5 * f
+    uniones.visible = f > 0.01
+  }
+
   return {
-    setComida,
+    setComida(g: Record<Macro, number>, cantidad: number) {
+      gramos = g
+      particulas.setComida(g, cantidad)
+      vellosidades.setComida(g)
+    },
+    setVista: (explotada: boolean) => (objetivo = explotada ? 1 : 0),
     onVesicula: (cb: () => void) => (alTocarVesicula = cb),
-    dibujar(estado: Estado, config: Config, ahora: number) {
+    /** `estados[i]` es el bocado i (solo los que ya entraron). `ahora` es el reloj de animación (se frena en pausa). */
+    dibujar(estados: Estado[], config: Config, ahora: number) {
+      const dt = Math.min((performance.now() - relojPrevio) / 1000, 0.1)
+      relojPrevio += dt * 1000
+      f += (objetivo - f) * suavizar(dt, 5)
+      if (Math.abs(objetivo - f) < 0.001) f = objetivo
+      const k = 1 + ALEJAR_EXPLOTADA * f
+      camera.position.sub(controles.target).multiplyScalar(k / alejado).add(controles.target)
+      alejado = k
+
+      const viajando = estados.filter((e) => !e.terminado)
+      const activos = new Set(viajando.map((e) => e.segmento))
+      const enDelgado = activos.has(DELGADO)
       tubos.forEach((t, i) => {
-        t.material.emissiveIntensity = i === estado.segmento && !estado.terminado ? 0.12 : 0
+        t.position.copy(DESP_TRAMO[i]).multiplyScalar(f)
+        colorPh(phSegmento(i, config), destino).lerp(VIDRIO, 1 - FUERZA_PH)
+        // Los colores oscuros (rojo, azul) necesitan más emisión que el verde neutro para leerse igual de claros.
+        const luminancia = destino.r * 0.3 + destino.g * 0.59 + destino.b * 0.11
+        t.material.emissiveIntensity = BRILLO_PH - 0.22 * luminancia + (activos.has(i) ? BRILLO_ACTIVO : 0)
+        const paso = primerCuadro ? 1 : suavizar(dt, 4)
+        t.material.color.lerp(destino, paso)
+        t.material.emissive.lerp(destino, paso)
       })
-      vesicula.material.emissiveIntensity = config.bilis ? 0.45 : 0.02
-      vesicula.material.color.set(config.bilis ? 0x4fd67a : 0x2a3a30)
-      ubicarParticulas(estado.nutrientes, posicionEnTubo(estado), ahora)
-      ubicarPildoras(estado.segmento)
+      primerCuadro = false
+      ubicarUniones()
+
+      organos.actualizar(f)
+      organos.vesicula.material.emissiveIntensity = config.bilis ? 0.45 : 0.02
+      organos.vesicula.material.color.set(config.bilis ? 0x4fd67a : 0x2a3a30)
+      brillo += ((enDelgado ? 0.5 : 0.05) - brillo) * suavizar(dt, 4)
+      organos.materialPancreas.emissiveIntensity = brillo
+
+      particulas.ubicar(estados, f, ahora)
+      rotulos.etiquetas(new Set<number>([...activos, ...(enDelgado ? [iPancreas] : [])]), f)
+      rotulos.enzimas(
+        Array.from({ length: MAX_BOCADOS }, (_, i) => {
+          const e = estados[i]
+          if (!e || e.terminado) return null
+          const posicion = posicionEnTubo(e)
+          return { segmento: e.segmento, punto: puntoEnTubo(posicion).add(despEnTubo(posicion, f)) }
+        }),
+        config,
+      )
+      const actividad = {} as Record<Macro, number>
+      for (const m of MACROS) {
+        const digerido = estados.reduce((s, e) => s + e.nutrientes[m].digerido, 0)
+        actividad[m] = Math.min(1, (digerido / gramos[m]) * 4)
+      }
+      vellosidades.actualizar(enDelgado, actividad, ahora)
       controles.update()
       render()
     },

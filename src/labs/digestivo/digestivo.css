@@ -1,0 +1,47 @@
+/* Estilos propios del lab digestivo (lo que el kit no cubre). */
+
+/* Píldora de enzima activa: sigue al bocado y sale del modelo. */
+.pildora.enzima {
+  display: flex; flex-direction: column; gap: 1px; border-radius: 12px; transform: translate(22px, -50%);
+  color: var(--texto); border-color: var(--marca); font-size: 11px;
+}
+.pildora.enzima[hidden] { display: none; }
+.pildora.enzima::before {
+  content: ''; position: absolute; left: -14px; top: 50%; width: 12px; height: 1px; background: var(--marca); opacity: 0.6;
+}
+
+/* Escala de pH */
+.ph-leyenda { padding: 8px 14px 7px; display: grid; gap: 6px; }
+.ph-barra { position: relative; height: 8px; border-radius: 99px; }
+.ph-marca {
+  position: absolute; top: -4px; width: 4px; height: 16px; margin-left: -2px; border-radius: 2px;
+  background: var(--texto); box-shadow: 0 0 0 2px rgba(7, 16, 15, 0.8); transition: left 0.3s;
+}
+.ph-ticks { display: flex; justify-content: space-between; font: 600 10px/1 var(--mono); color: var(--apagado); }
+
+/* Burbuja de zoom a las vellosidades */
+.zoom {
+  position: absolute; z-index: 1; right: 372px; bottom: 56px; width: 230px;
+  opacity: 0; transform: scale(0.85); transform-origin: 50% 100%; pointer-events: none;
+  transition: opacity 0.35s, transform 0.35s;
+}
+.zoom.visible { opacity: 1; transform: none; }
+.zoom .lente {
+  width: 230px; height: 230px; border-radius: 50%; overflow: hidden;
+  border: 2px solid var(--marca); box-shadow: 0 0 0 6px rgba(198, 243, 94, 0.12), 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+.zoom canvas { display: block; width: 100%; height: 100%; }
+.zoom .rotulo {
+  position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); white-space: nowrap;
+  padding: 3px 10px; border-radius: 99px; background: rgba(7, 16, 15, 0.85); border: 1px solid var(--marca);
+  font: 600 10.5px/1.4 var(--mono); color: var(--marca);
+}
+.zoom .rotulo span { color: var(--apagado); }
+
+/* Atajos en el modal */
+.atajos { list-style: none; padding: 0; display: grid; gap: 4px; }
+.atajos li { display: flex; align-items: center; gap: 10px; }
+.atajos kbd {
+  min-width: 74px; padding: 2px 8px; border-radius: 6px; text-align: center;
+  font: 600 12px/1.6 var(--mono); color: var(--marca); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--borde);
+}

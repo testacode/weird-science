@@ -2,6 +2,7 @@
 
 import { av } from '../../ui/avanzado'
 import type { Config, Estado, Segmento } from './model'
+import { ATAJOS } from './teclado'
 
 export interface Comida {
   id: 'pan' | 'milanesa' | 'papas'
@@ -42,6 +43,8 @@ export function relatoFinal(kcal: number, kcalTotal: number, grasasPerdidas: num
   return `<strong>Fin del tránsito.</strong> Absorbidas <span class="c-marca">${kcal.toFixed(0)} kcal</span> de ${kcalTotal.toFixed(0)} ingeridas.${perdida} El resto se elimina con las heces.`
 }
 
+const FILAS_ATAJOS = ATAJOS.map((a) => `<li><kbd>${a.tecla}</kbd> ${a.texto}</li>`).join('')
+
 export const COMO_FUNCIONA = `
   <h2>¿Cómo funciona?</h2>
   <p>Comer no alcanza: el cuerpo tiene que romper la comida en moléculas tan chicas que puedan pasar a la sangre. Cada tramo del tubo trabaja distinto${av(', como un reactor con su pH y sus enzimas')}.${av(' En cada paso de 0,01 h, una fracción de cada nutriente intacto se hidroliza (cinética de primer orden) y, en el intestino delgado, una fracción de lo digerido se absorbe.')}</p>
@@ -50,17 +53,26 @@ export const COMO_FUNCIONA = `
     <li>Las bolitas <span class="c-ambar">amarillas</span> son carbohidratos (pan, papa), las <span class="c-magenta">rosas</span> proteínas (carne, huevo) y las <span class="c-cielo">celestes</span> grasas (aceite, manteca).</li>
     <li>Cuando una bolita se achica, se digirió. Cuando vuela hacia el hígado, se absorbió y pasó a la sangre.</li>
     <li>El gráfico muestra cuántos gramos de cada nutriente pasaron a la sangre, hora a hora del tránsito.</li>
+    <li>Cuando la comida llega al intestino delgado, aparece una burbuja con un zoom a las <b>vellosidades</b>: son pliegues diminutos que agrandan la superficie de absorción. Los nutrientes digeridos entran por ellas a los capilares (en rojo) y siguen hacia la sangre.</li>
+    <li class="avanzado">El vidrio se tiñe según el pH de cada tramo (rojo ácido, verde neutro, azul básico). Si apagás el ácido gástrico, el estómago pierde el rojo.</li>
+    <li class="avanzado">La píldora que acompaña a la comida nombra las enzimas que están actuando en ese tramo. Si algo del modelo las frena, se nota: sin ácido desaparece la pepsina y sin bilis la lipasa queda frenada.</li>
   </ul>
+  <h3>El páncreas</h3>
+  <p>El <b>páncreas</b> (la maqueta amarilla, a la derecha del estómago) no deja pasar la comida, pero es clave: manda por su conducto al duodeno, el principio del intestino delgado, <b>enzimas</b> que cortan carbohidratos, proteínas y grasas, y <b>bicarbonato</b> que neutraliza el ácido que viene del estómago${av(' (por eso el pH sube de 2 a casi 7,5)')}. Brilla mientras la comida está en el intestino delgado.</p>
   <h3>Controles</h3>
   <ul>
     <li><b>Comida:</b> cambia los gramos de cada macronutriente.</li>
+    <li><b>Bocados:</b> con 3, la porción se reparte en tres bocados que entran uno detrás del otro. Cada uno hace su propio recorrido; las métricas y el gráfico suman todos.</li>
+    <li><b>Vista:</b> "Explotada" separa los órganos para verlos por separado, con una línea tenue que marca cómo se conectan. Podés girar la cámara en ambas vistas.</li>
     <li><b>Bilis:</b> sin bilis las grasas se aprovechan mucho menos${av(' (sin emulsión, la lipasa trabaja al 20%)')}. También podés tocar la vesícula (la bolita verde bajo el hígado).</li>
     <li><b>Ácido gástrico:</b> con antiácido el estómago pierde acidez y casi no corta proteínas${av(' (sube a pH 5 y la pepsina se apaga)')}.</li>
     <li><b>Velocidad:</b> el reloj se acelera distinto en cada órgano para que todos se vean; el valor ×N indica cuánto.</li>
     <li><b>Info avanzada:</b> muestra u oculta los nombres de enzimas, el pH y los detalles del modelo.</li>
   </ul>
+  <h3>Atajos de teclado</h3>
+  <ul class="atajos">${FILAS_ATAJOS}</ul>
   <h3>Predecí antes de correr</h3>
   <p>Cuando rompés la bilis o el ácido, el lab te pregunta qué va a pasar antes de empezar. Elegí, dejá correr el tránsito y al final se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> ${av('el pH por tramo, qué enzima actúa dónde, ')}los tiempos de tránsito típicos (estómago ~3 h, delgado ~4 h, grueso 12-36 h) y las kcal por gramo (4/4/9).</p>
-  <p><b>Simplificado:</b> las tasas son aproximadas, no hay fibra ni agua, un solo bolo en vez de flujo continuo, y el páncreas no se muestra aparte. Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> las tasas son aproximadas y no hay fibra ni agua. Los bocados no se mezclan entre sí: cada uno viaja solo, y con 3 la porción se reparte en partes iguales. El tamaño, la forma y el lugar del páncreas y del hígado son de maqueta, y la vista explotada no respeta distancias reales. El zoom a las vellosidades es una ilustración: no está a escala y las posiciones de los nutrientes son inventadas, aunque cuántos se ven sale del modelo. Modelo educativo: verificá los datos con tu docente o manual.</p>`

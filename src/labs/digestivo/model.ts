@@ -68,7 +68,7 @@ export function phSegmento(indice: number, config: Config): number {
   return s.id === 'estomago' && !config.acidoGastrico ? PH_CON_ANTIACIDO : s.ph
 }
 
-function tasaDigestion(s: Segmento, m: Macro, config: Config): number {
+export function tasaDigestion(s: Segmento, m: Macro, config: Config): number {
   if (s.id === 'estomago' && m === 'proteinas' && !config.acidoGastrico) return 0
   if (s.id === 'delgado' && m === 'grasas' && !config.bilis) return s.digestion[m] * FACTOR_SIN_BILIS
   return s.digestion[m]
