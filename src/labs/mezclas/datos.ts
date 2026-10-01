@@ -1,5 +1,5 @@
-// Datos del lab: componentes, mezclas y métodos. Valores de libro de texto, redondeados; los que no
-// están verificados se marcan en el comentario.
+// Datos del lab: componentes, mezclas y métodos. Valores de libro de texto, redondeados y verificados
+// en docs/fuentes.md.
 
 export type EspecieId = 'agua' | 'arena' | 'aceite' | 'sal' | 'alcohol' | 'hierro'
 export type MezclaId = 'arena-agua' | 'agua-aceite' | 'agua-sal' | 'agua-alcohol' | 'hierro-arena'
@@ -15,8 +15,10 @@ export interface Especie {
   densidad: number
   /** Tamaño del grano o del cristal. Un líquido no tiene grano: 0. */
   tamanoMm: number
-  /** °C a 1 atm. Los sólidos y el aceite no hierven en el rango del mechero. */
+  /** °C a 1 atm. Los sólidos no hierven en el rango del mechero; `Infinity`: no llega a hervir (ver `humo`). */
   tEbullicion: number
+  /** °C a los que humea y se descompone antes de hervir (punto de humo). */
+  humo?: number
   magnetico: boolean
   /** g cada 100 mL de agua a 20 °C. `Infinity`: se mezcla en cualquier proporción. */
   solubilidad: number
@@ -24,15 +26,15 @@ export interface Especie {
 
 export const ESPECIES: Record<EspecieId, Especie> = {
   agua: { id: 'agua', nombre: 'Agua', color: '#5ec8ff', estado: 'liquido', densidad: 1.0, tamanoMm: 0, tEbullicion: 100, magnetico: false, solubilidad: Infinity },
-  // Aceite vegetal: ~0,92 g/mL (no verificado: varía con el aceite). Se descompone antes de hervir (~300 °C, no verificado).
-  aceite: { id: 'aceite', nombre: 'Aceite', color: '#ffc857', estado: 'liquido', densidad: 0.92, tamanoMm: 0, tEbullicion: 300, magnetico: false, solubilidad: 0 },
+  // Aceite vegetal: 0,92 g/mL. No hierve: humea y se descompone (punto de humo de soja y maíz ≈ 230 °C).
+  aceite: { id: 'aceite', nombre: 'Aceite', color: '#ffc857', estado: 'liquido', densidad: 0.92, tamanoMm: 0, tEbullicion: Infinity, humo: 230, magnetico: false, solubilidad: 0 },
   // Etanol: 0,789 g/mL y 78,4 °C (valores de libro).
   alcohol: { id: 'alcohol', nombre: 'Alcohol', color: '#ff5fa2', estado: 'liquido', densidad: 0.789, tamanoMm: 0, tEbullicion: 78.4, magnetico: false, solubilidad: Infinity },
-  // NaCl: 2,16 g/cm³, 36 g/100 mL a 20 °C y 1413 °C de ebullición. Cristal de sal fina ~0,4 mm (no verificado).
+  // NaCl: 2,16 g/cm³, 36 g/100 mL a 20 °C y 1413 °C de ebullición. Sal fina de mesa: 0,3–0,6 mm.
   sal: { id: 'sal', nombre: 'Sal', color: '#f1f4f2', estado: 'solido', densidad: 2.16, tamanoMm: 0.4, tEbullicion: 1413, magnetico: false, solubilidad: 36 },
-  // Cuarzo: 2,65 g/cm³. Arena gruesa ~0,8 mm (no verificado: la fina ronda 0,2 mm). Ebullición del SiO2 ~2230 °C (no verificado).
-  arena: { id: 'arena', nombre: 'Arena', color: '#b98b5e', estado: 'solido', densidad: 2.65, tamanoMm: 0.8, tEbullicion: 2230, magnetico: false, solubilidad: 0 },
-  // Hierro: 7,87 g/cm³ y 2862 °C. Limaduras ~0,15 mm (no verificado).
+  // Cuarzo: 2,65 g/cm³. Arena gruesa: 0,5–1 mm (escala de Wentworth). Ebullición del SiO2: 2950 °C.
+  arena: { id: 'arena', nombre: 'Arena', color: '#b98b5e', estado: 'solido', densidad: 2.65, tamanoMm: 0.8, tEbullicion: 2950, magnetico: false, solubilidad: 0 },
+  // Hierro: 7,87 g/cm³ y 2862 °C. Limaduras finas ~0,15 mm (malla 100; las escolares suelen ser malla 40, ≤ 0,42 mm).
   hierro: { id: 'hierro', nombre: 'Hierro', color: '#8c9bab', estado: 'solido', densidad: 7.87, tamanoMm: 0.15, tEbullicion: 2862, magnetico: true, solubilidad: 0 },
 }
 

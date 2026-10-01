@@ -181,6 +181,8 @@ body.sin-avanzado .avanzado { display: none; }
 .modal h2 { margin-top: 0; }
 .modal h3 { margin-bottom: 4px; color: var(--marca); font-size: 15px; }
 .modal p, .modal li { color: #cfdcd6; font-size: 14px; }
+.modal .fuentes li { font-size: 13px; }
+.modal .fuentes a { color: var(--marca); text-decoration: none; }
 
 /* --- Atajos de teclado --- */
 kbd {

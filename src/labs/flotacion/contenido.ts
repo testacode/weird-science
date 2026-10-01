@@ -2,6 +2,7 @@
 // Colores con significado: magenta = peso, cielo = empuje, lima = lo sumergido, ámbar = aceite.
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import { OBJETOS, PLANETAS, nombreLiquido, type Config, type Derivados, type Estado } from './model'
 
@@ -79,4 +80,12 @@ export const COMO_FUNCIONA = `
   <p>Cuando elegís el barquito, lo agujereás o cambiás de planeta con un objeto que flota, el lab te pregunta qué va a pasar. Elegí una opción y se suelta el objeto: al quedar quieto se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> el principio de Arquímedes, que la fracción sumergida es ρ_objeto / ρ_líquido, que el hielo flota en agua pero se hunde en alcohol, que un barco de acero flota porque su densidad media (metal + aire) es menor que la del agua, que la sal sube la densidad y que el peso y el empuje dependen de g de la misma manera.</p>
-  <p><b>Simplificado:</b> el objeto solo sube y baja, sin dar vueltas ni volcarse (un barco real puede zozobrar aunque flote); el nivel del líquido no sube al meter el objeto; el hielo no se derrite; el roce es una amortiguación inventada y el tiempo corre en cámara lenta; el casco es una caja y el agujero un orificio chico por donde entra con la fórmula de Torricelli (solo entra por ahí: aunque el borde quede bajo el agua, no se inunda por arriba); el empuje se dibuja desde el centro del objeto y no desde el centro de la parte sumergida. Las densidades son de tabla y algunas aproximadas: la del huevo varía con la frescura, la del hielo es a 0 °C y el ajuste de la sal es lineal. Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> el objeto solo sube y baja, sin dar vueltas ni volcarse (un barco real puede zozobrar aunque flote); el nivel del líquido no sube al meter el objeto; el hielo no se derrite; el roce es una amortiguación inventada y el tiempo corre en cámara lenta; el casco es una caja y el agujero un orificio chico por donde entra con la fórmula de Torricelli (solo entra por ahí: aunque el borde quede bajo el agua, no se inunda por arriba); el empuje se dibuja desde el centro del objeto y no desde el centro de la parte sumergida. Las densidades son de tabla y algunas aproximadas: la del huevo varía con la frescura, la del hielo es a 0 °C y el ajuste de la sal es lineal. Modelo educativo: verificá los datos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: '<i>CRC Handbook of Chemistry and Physics</i>, 86.ª ed. (2005), vía «Sodium chloride (data page)», Wikipedia: densidad del agua salada.', url: 'https://en.wikipedia.org/wiki/Sodium_chloride_(data_page)' },
+  { texto: 'The Engineering ToolBox, «Liquids - Densities»: agua, aceite y alcohol.', url: 'https://www.engineeringtoolbox.com/liquids-densities-d_743.html' },
+  { texto: 'The Engineering ToolBox, «Densities of Solids»: hielo, granito y acero.', url: 'https://www.engineeringtoolbox.com/density-solids-d_1265.html' },
+  { texto: 'The Engineering ToolBox, «Wood Species - Densities»: madera de pino.', url: 'https://www.engineeringtoolbox.com/wood-density-d_40.html' },
+  { texto: '«Polyethylene», Wikipedia: densidad del plástico de las tapitas.', url: 'https://en.wikipedia.org/wiki/Polyethylene' },
+  { texto: '«Physical quality of eggs of four strains of poultry», Redalyc: densidad del huevo.', url: 'https://www.redalyc.org/journal/3031/303168054052/html/' },
+  ])}`

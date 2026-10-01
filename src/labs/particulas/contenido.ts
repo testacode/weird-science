@@ -2,6 +2,7 @@
 // salen del modelo.
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import { MASA_G, P_VALVULA_ATM, T_TOPE_CALOR, T_TOPE_FRIO, umbrales, velocidadMedia, type Config, type Lectura, type Sustancia } from './model'
 
@@ -136,4 +137,9 @@ export const COMO_FUNCIONA = `
   <p>Cada vez que empezás de nuevo, el lab te pregunta qué va a pasar con la temperatura. Elegí, dejá correr el experimento y se revela si acertaste, con los números del modelo.</p>
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> los puntos de fusión y de ebullición a 1 atm, el orden de magnitud de los calores específicos y latentes${av(' (valores de tablas, redondeados)')}, las mesetas, y que la velocidad media de las partículas crece con la raíz de la temperatura${av(' (v = √(8·R·T / π·M), unos 590 m/s en el agua a 20 °C)')}. También que la presión corre el punto de ebullición${av(' (Clausius-Clapeyron)')}.</p>
-  <p><b>Simplificado:</b> 450 partículas dibujadas representan unas 10<sup>24</sup> reales y se mueven mucho más lento que las verdaderas. La vibración del sólido está exagerada para que se note. No hay fuerzas reales entre partículas, solo choques blandos. El hielo real flota (es menos denso); acá todos los sólidos se hunden. La placa es ideal, no hay pérdidas de calor al ambiente y la temperatura es pareja en todo el recipiente. La tapa es una olla a presión con válvula a ${P_VALVULA_ATM} atm y no cuenta el aire de adentro. "Sin calor latente" no existe en la naturaleza: es un experimento mental. Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> 450 partículas dibujadas representan unas 10<sup>24</sup> reales y se mueven mucho más lento que las verdaderas. La vibración del sólido está exagerada para que se note. No hay fuerzas reales entre partículas, solo choques blandos. El hielo real flota (es menos denso); acá todos los sólidos se hunden. La placa es ideal, no hay pérdidas de calor al ambiente y la temperatura es pareja en todo el recipiente. La tapa es una olla a presión con válvula a ${P_VALVULA_ATM} atm y no cuenta el aire de adentro. "Sin calor latente" no existe en la naturaleza: es un experimento mental. Modelo educativo: verificá los datos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: '<i>NIST Chemistry WebBook</i> (SRD 69): fusión, ebullición y calores latentes y específicos del etanol y la acetona.', url: 'https://webbook.nist.gov/chemistry/' },
+  { texto: '<i>CRC Handbook of Chemistry and Physics</i>, vía «Water (data page)», Wikipedia: calores latentes y específicos del agua.', url: 'https://en.wikipedia.org/wiki/Water_(data_page)' },
+  { texto: 'Brown, LeMay y otros, <i>Chemistry: The Central Science</i>, 13.ª ed., Pearson: calor específico del etanol sólido.' },
+  ])}`

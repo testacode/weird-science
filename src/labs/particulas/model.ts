@@ -47,15 +47,15 @@ export interface Sustancia {
   calorVaporizacion: number
 }
 
-// Valores redondeados de tablas (CRC Handbook of Chemistry and Physics, NIST Chemistry WebBook).
-// Los calores específicos del sólido y del gas son los menos precisos.
+// Valores redondeados de tablas (CRC Handbook of Chemistry and Physics, NIST Chemistry WebBook), verificados
+// en docs/fuentes.md. El c del etanol sólido sale de un libro de texto (NIST no lo tiene); el del gas, cerca de la ebullición.
 export const SUSTANCIAS: readonly Sustancia[] = [
   { id: 'agua', nombre: 'Agua', solido: 'el hielo', liquido: 'el agua', masaMolar: 18.015, tFusion: 0, tEbullicion: 100,
     cSolido: 2.09, cLiquido: 4.18, cGas: 2.01, calorFusion: 334, calorVaporizacion: 2257 },
   { id: 'alcohol', nombre: 'Alcohol', solido: 'el alcohol congelado', liquido: 'el alcohol', masaMolar: 46.07, tFusion: -114.1, tEbullicion: 78.4,
-    cSolido: 1.9, cLiquido: 2.44, cGas: 1.5, calorFusion: 108, calorVaporizacion: 840 },
+    cSolido: 0.97, cLiquido: 2.44, cGas: 1.6, calorFusion: 108, calorVaporizacion: 840 },
   { id: 'acetona', nombre: 'Acetona', solido: 'la acetona congelada', liquido: 'la acetona', masaMolar: 58.08, tFusion: -94.7, tEbullicion: 56.1,
-    cSolido: 1.6, cLiquido: 2.15, cGas: 1.3, calorFusion: 98, calorVaporizacion: 501 },
+    cSolido: 1.6, cLiquido: 2.15, cGas: 1.4, calorFusion: 98, calorVaporizacion: 501 },
 ]
 
 export interface Config {
