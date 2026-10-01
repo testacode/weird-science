@@ -8,5 +8,5 @@ export const meta: Lab = {
   nap: 'Primaria 6° · modelo corpuscular',
   temas: ['materia', 'energia'],
   orden: 1,
-  listo: false,
+  listo: true,
 }
