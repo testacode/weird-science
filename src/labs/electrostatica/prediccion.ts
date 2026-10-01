@@ -5,7 +5,7 @@
 import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
 import { cargaTexto, cientifica, conSigno, de, fuerzaTexto, mayus, neg, nombreDe, num, pos } from './contenido'
-import { DIST_PREGUNTA_PAPEL, RANGOS, electrones, polaridad, resolver, type Config } from './model'
+import { DIST_PREGUNTA_PAPEL, MASA_RELATIVA, RANGOS, electrones, polaridad, resolver, type Config } from './model'
 
 export type Respuesta = 'opuestas' | 'solo-uno' | 'mismas' | 'mitad' | 'cuarto' | 'octavo' | 'nada' | 'saltan' | 'se-alejan'
 export type Intencion = 'frotar' | 'duplicar' | 'acercar'
@@ -91,7 +91,7 @@ export function preguntaPara(c: Config, intencion: Intencion, papelesPegados: bo
   if (intencion === 'frotar') return c.frote === 0 ? preguntaFrotar(c) : null
   if (c.frote === 0) return null
   if (intencion === 'duplicar') return c.experimento === 'cargas' && c.dist.cargas * 2 <= RANGOS.cargas.max ? preguntaDuplicar(c) : null
-  // Papelitos en reposo (con margen: la atracción bien por debajo del peso) y objeto lejos.
-  const quietos = !papelesPegados && resolver(c).vecesPeso < 0.5 && c.dist.papelitos > DIST_PREGUNTA_PAPEL
+  // Papelitos en reposo: la atracción queda por debajo de lo que necesita el más liviano para despegar (con margen), y el objeto está lejos.
+  const quietos = !papelesPegados && resolver(c).vecesPeso < MASA_RELATIVA.min * 0.75 && c.dist.papelitos > DIST_PREGUNTA_PAPEL
   return c.experimento === 'papelitos' && quietos ? preguntaPapelito(c) : null
 }

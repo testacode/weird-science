@@ -99,11 +99,13 @@ export const electrones = (q: number) => Math.abs(q) / E_CARGA
 /** Ley de Coulomb entre cargas puntuales (N): positiva si se repelen, negativa si se atraen. `d` es la distancia entre centros, en cm. */
 export const coulomb = (q1: number, q2: number, d: number) => (K * q1 * q2) / (d / 100) ** 2
 
-/** Papelito de prueba (parámetros del modelo): ~1,4 cm de lado, papel de seda, tratado como una esfera polarizable de radio `radio`. */
+/** Papelito de prueba (parámetros del modelo): ~1,4 cm de lado, papel de seda, tratado como una esfera de radio efectivo `radio`. */
 export const PAPEL = { masa: 3e-6, radio: 0.007 }
+/** Los papelitos no pesan todos lo mismo: de 0,8 a 1,25 veces la masa de `PAPEL`. El más liviano despega con una atracción de 0,8 veces el peso. */
+export const MASA_RELATIVA = { min: 0.8, max: 1.25 }
 export const PESO_PAPEL = PAPEL.masa * G
 
-/** Fuerza de atracción (N) sobre un papelito neutro a `d` cm de una carga puntual `q`: el campo (kq/d²) induce un dipolo y el dipolo siente la variación del campo, F = 2·k·a³·q²/d⁵. */
+/** Fuerza de atracción (N) sobre un papelito neutro a `d` cm de una carga puntual `q`: el campo (kq/d²) induce un dipolo y el dipolo siente la variación del campo. Es la de una esfera conductora, F = 2·k·a³·q²/d⁵; en un dieléctrico se multiplica por (εr−1)/(εr+2) < 1, un factor que acá absorbe el radio efectivo. */
 export const polarizacion = (q: number, d: number) => (2 * K * PAPEL.radio ** 3 * q * q) / (d / 100) ** 5
 
 /** Distancia (cm, entre centros) a la que se hace la pregunta del papelito: la atracción es varias veces el peso con cualquier par. */

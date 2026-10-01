@@ -1,6 +1,6 @@
 // Papelitos neutros sobre la mesa. Cada uno siente la atracción por polarización (modelo) contra su propio peso.
 import * as THREE from 'three'
-import { PESO_PAPEL, polarizacion } from './model'
+import { MASA_RELATIVA, PESO_PAPEL, polarizacion } from './model'
 
 const CANTIDAD = 10
 /** Los papelitos se mueven con velocidad ilustrativa (cm/s de pantalla), en cámara lenta respecto de la física real. */
@@ -15,7 +15,9 @@ interface Papel {
   /** Posición respecto del objeto una vez pegado. */
   rel: THREE.Vector3
   pegado: boolean
-  /** Masa relativa (0,8 a 1,25): no todos despegan a la vez. */
+  /** Se despegó y cae hacia la mesa: no siente la atracción hasta apoyarse. */
+  cae: boolean
+  /** Masa relativa (`MASA_RELATIVA`): no todos despegan a la vez. */
   masa: number
   giro: number
   base: number
@@ -26,7 +28,7 @@ export function crearPapelitos(scene: THREE.Scene) {
   malla.frustumCulled = false
   scene.add(malla)
   const papeles: Papel[] = Array.from({ length: CANTIDAD }, (_, i) => ({
-    pos: new THREE.Vector3(), rel: new THREE.Vector3(), pegado: false, masa: 0.8 + 0.45 * NO_ALEATORIO(i + 3), giro: NO_ALEATORIO(i) * Math.PI, base: 0.03 + i * 0.045,
+    pos: new THREE.Vector3(), rel: new THREE.Vector3(), pegado: false, cae: false, masa: MASA_RELATIVA.min + (MASA_RELATIVA.max - MASA_RELATIVA.min) * NO_ALEATORIO(i + 3), giro: NO_ALEATORIO(i) * Math.PI, base: 0.03 + i * 0.045,
   }))
   const m = new THREE.Object3D()
 
@@ -37,6 +39,7 @@ export function crearPapelitos(scene: THREE.Scene) {
       const r = 1.5 * Math.sqrt((i + 0.5) / CANTIDAD)
       p.pos.set(Math.cos(ang) * r, p.base, Math.sin(ang) * r)
       p.pegado = false
+      p.cae = false
     })
   }
   reponer()
@@ -57,7 +60,9 @@ export function crearPapelitos(scene: THREE.Scene) {
     malla,
     reponer,
     get pegados() {
-      return papeles.filter((p) => p.pegado).length
+      let n = 0
+      for (const p of papeles) if (p.pegado) n++
+      return n
     },
     get total() {
       return CANTIDAD
@@ -66,7 +71,17 @@ export function crearPapelitos(scene: THREE.Scene) {
     actualizar(dt: number, tiempo: number, q: number, centro: THREE.Vector3, bajo: number) {
       for (const p of papeles) {
         if (p.pegado) {
-          p.pos.copy(centro).add(p.rel)
+          // Sigue pegado mientras la atracción a la altura del objeto le gane a su peso (el mismo criterio con que despegó); si no, se suelta.
+          if (polarizacion(q, centro.y) / (PESO_PAPEL * p.masa) > 1) {
+            p.pos.copy(centro).add(p.rel)
+            continue
+          }
+          p.pegado = false
+          p.cae = true
+        }
+        if (p.cae) {
+          p.pos.y = Math.max(p.base, p.pos.y - CAIDA * dt)
+          p.cae = p.pos.y > p.base
           continue
         }
         hacia.copy(centro).sub(p.pos)

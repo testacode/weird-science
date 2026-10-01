@@ -3,7 +3,7 @@
 import { av } from '../../ui/avanzado'
 import { numero } from '../../ui/formato'
 import { fuentes } from '../../ui/fuentes'
-import { MATERIALES, PAPEL, Q_PUESTO, materialDe, polaridad, type Config, type Lado, type Resultado } from './model'
+import { MASA_RELATIVA, MATERIALES, PAPEL, Q_PUESTO, materialDe, polaridad, type Config, type Lado, type Resultado } from './model'
 
 export const num = numero
 
@@ -80,14 +80,17 @@ function relatoCargas(c: Config, r: Resultado): string {
   return `${base} A <b>${num(c.dist.cargas, 1)} cm</b> la fuerza es ${marca(fuerzaTexto(r.fuerza))}: la misma sobre cada uno, aunque empujen en sentidos contrarios.${av(' Es F = k·q₁·q₂ / d²: depende del producto de las cargas y del cuadrado de la distancia entre centros.')}`
 }
 
+/** Atracción (veces el peso) desde la que despegan todos, también el más pesado (1,25) y el más descentrado (a ~1,5 cm de lado, a 2,4 cm de altura la fuerza es ~0,44 de la de justo debajo). */
+const TODOS_DESPEGAN = 3
+
 function relatoPapelitos(c: Config, r: Resultado, pegados: number): string {
   const sonda = nombreDe(c, c.cual)
   const d = num(c.dist.papelitos, 1)
   const fuerza = `${marca(fuerzaTexto(r.fuerzaPapel))} (${num(r.vecesPeso, r.vecesPeso >= 10 ? 0 : 1)} veces su peso)`
   const causa = ` Los papelitos están neutros, pero el campo ${de(sonda)} separa un poco sus cargas${av(' (polarización)')}: el lado cercano queda con carga de signo opuesto y el lejano con el mismo. El cercano está más cerca, así que la atracción le gana a la repulsión.`
-  if (pegados > 0) return `<strong>Un papelito neutro sí es atraído.</strong> A ${d} cm la fuerza es ${fuerza}.${causa}`
-  if (r.vecesPeso >= 1.5) return `<strong>Los papelitos saltan.</strong> A ${d} cm la atracción es ${fuerza}.${causa}`
-  if (r.vecesPeso >= 0.7) return `<strong>Justo en el borde.</strong> A ${d} cm la atracción (${fuerza}) casi iguala el peso: los papelitos más livianos empiezan a despegar.`
+  if (pegados > 0) return `<strong>Un papelito neutro sí es atraído.</strong> A ${d} cm la fuerza es ${fuerza}.${causa} Si alejás el objeto hasta que la atracción no le gane al peso, se despegan y caen.`
+  if (r.vecesPeso >= TODOS_DESPEGAN) return `<strong>Los papelitos saltan.</strong> A ${d} cm la atracción es ${fuerza}.${causa}`
+  if (r.vecesPeso >= MASA_RELATIVA.min) return `<strong>Justo en el borde.</strong> A ${d} cm la atracción (${fuerza}) ya alcanza para los más livianos y los más cercanos al objeto: despegan algunos, el resto no.`
   return `<strong>Todavía no se mueven.</strong> A ${d} cm hay atracción, pero de ${fuerza}: no alcanza para levantarlos.${av(' La fuerza cae como 1/d⁵: a la mitad de distancia es 32 veces mayor.')} Bajá ${sonda}.`
 }
 
@@ -130,7 +133,7 @@ export const COMO_FUNCIONA = `
     <li>La serie triboeléctrica es una lista empírica y <b>el orden cambia entre fuentes</b> (en una de las listas de la Universidad de Iowa la lana está más arriba que el nailon y el vidrio; en la de Wesleyan es al revés). Acá se usa la de los kits de clase de Carolina (${SERIE}; el número es el puesto en esa lista, y el plástico es vinilo, PVC). El globo de látex no figura en todas: Carolina lo pone como "rubber balloon" entre el ámbar y la goma dura.</li>
     <li>La cantidad de carga es un <b>parámetro del modelo</b>: ${num(Q_PUESTO * 1e9, 0)} nC por cada puesto de diferencia entre los dos materiales. La fuente solo dice que la electricidad estática común va de nC a µC. En la realidad depende de la humedad (con aire húmedo la carga se escapa), de la presión y del roce, y dos frotadas distintas dan cargas distintas. Acá el frotado es siempre completo.</li>
     <li>El papelito (${num(PAPEL.masa * 1e6, 0)} mg, de ${num(PAPEL.radio * 200, 1)} cm de lado) y el electroscopio (fracción de carga que llega a las hojas, su atenuación con la distancia y la masa de las hojas) son <b>parámetros de ajuste</b>, no datos medidos: se eligieron para que un papelito salte a pocos centímetros y las hojas se abran decenas de grados, como en una demostración de clase. Los papelitos se mueven en cámara lenta.</li>
-    <li>El papelito se trata como una esfera polarizable (F = 2·k·a³·q²/d⁵). Un papel real es más complicado: tiene fibras, absorbe humedad y, una vez pegado, puede cargarse y salir despedido.</li>
+    <li>El papelito se trata como una <b>esfera conductora</b> polarizable (F = 2·k·a³·q²/d⁵). Un papel real es un dieléctrico: su fuerza llevaría además el factor (εr−1)/(εr+2), menor que 1, que acá queda absorbido en el radio efectivo de 0,7 cm (otro parámetro de ajuste). Tiene también fibras y humedad y, una vez pegado, puede cargarse por contacto y salir despedido: acá se despega solo cuando la atracción deja de ganarle al peso.</li>
     <li>No hay descargas por el aire, chispas ni pérdida de carga con el tiempo.</li>
   </ul>
   ${fuentes([

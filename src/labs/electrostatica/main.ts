@@ -8,10 +8,10 @@ import { hud } from '../../ui/hud'
 import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, cargaPartes, cientificaPartes, fuerzaPartes, mayus, num, relato } from './contenido'
 import { crearCurva } from './curva'
-import { crearEscena } from './escena'
+import { crearEscena, type Vista } from './escena'
 import {
   CONFIG_INICIAL, DIST_PREGUNTA_PAPEL, MATERIALES, PARES, RANGOS, electrones, materialDe, resolver,
-  type Config, type Experimento, type Lado, type ParId,
+  type Config, type Experimento, type Lado, type ParId, type Resultado,
 } from './model'
 import { preguntaPara, type Intencion, type Pregunta, type Respuesta } from './prediccion'
 
@@ -103,6 +103,8 @@ function revelar() {
 const descartarPendiente = () => (pred.pendiente || pred.enCurso) && pred.ocultar()
 
 function pedir(intencion: Intencion) {
+  // Durante el frotado la carga todavía crece: una pregunta congelaría un valor que no es el final.
+  if (frote && intencion !== 'frotar') return
   terminarAnimacion()
   descartarPendiente()
   const pregunta = preguntaPara(config, intencion, escena.papeles.pegados > 0)
@@ -140,6 +142,7 @@ function cambiarDistancia(exp: Experimento, v: number) {
   terminarAnimacion()
   descartarPendiente()
   aplicar({ ...config, dist: { ...config.dist, [exp]: v } })
+  habilitarBotones()
 }
 function animarDistancia(hasta: number) {
   const exp = config.experimento
@@ -154,13 +157,22 @@ function terminarAnimacion() {
 function reiniciar() {
   frote = null
   animacion = null
-  descartarPendiente()
+  pred.ocultar()
   escena.papeles.reponer()
   aplicar(copiar(CONFIG_INICIAL))
   sincronizar()
 }
 
 // --- Estado -> pantalla ---
+/** Qué botones se pueden apretar según la config (también al mover un deslizador). */
+function habilitarBotones() {
+  const frotando = frote !== null
+  botonFrotar.toggleAttribute('disabled', config.frote > 0 || frotando)
+  botonDescargar.toggleAttribute('disabled', config.frote === 0 && !frotando)
+  botonDoble.toggleAttribute('disabled', frotando || config.dist.cargas * 2 > RANGOS.cargas.max)
+  botonAcercar.toggleAttribute('disabled', frotando || config.dist.papelitos <= DIST_PREGUNTA_PAPEL)
+}
+
 /** Controles: se actualizan cuando cambia algo discreto, no en cada cuadro. */
 function sincronizar() {
   paresA.set(config.par)
@@ -173,11 +185,19 @@ function sincronizar() {
   otro.el.children[0].textContent = `Con ${MATERIALES[opuesto].det}`
   for (const exp of Object.keys(porExperimento) as Experimento[]) porExperimento[exp].forEach((el) => (el.hidden = exp !== config.experimento))
   for (const exp of Object.keys(distancias) as Experimento[]) distancias[exp].set(config.dist[exp])
-  botonFrotar.toggleAttribute('disabled', config.frote > 0 || frote !== null)
-  botonDescargar.toggleAttribute('disabled', config.frote === 0 && frote === null)
-  botonDoble.toggleAttribute('disabled', config.dist.cargas * 2 > RANGOS.cargas.max)
-  botonAcercar.toggleAttribute('disabled', config.dist.papelitos <= DIST_PREGUNTA_PAPEL)
+  habilitarBotones()
   refrescar()
+}
+
+/** `resolver` es una bisección: se calcula una vez por config (cada cambio crea una config nueva). */
+let configResuelta: Config | null = null
+let resultadoActual: Resultado
+function resultado(): Resultado {
+  if (configResuelta !== config) {
+    configResuelta = config
+    resultadoActual = resolver(config)
+  }
+  return resultadoActual
 }
 
 let relatoPrevio = ''
@@ -185,7 +205,7 @@ let ultimaCurva = 0
 let clavePrevia = ''
 /** Lo que se lee: métricas, relato y curva. Va en cada cambio y en cada cuadro de una animación. */
 function refrescar(animando = false) {
-  const r = resolver(config)
+  const r = resultado()
   const exp = config.experimento
   const [carga, unidadCarga] = cargaPartes(r.q)
   mCarga.el.classList.toggle('c-ambar', r.q > 0)
@@ -231,6 +251,8 @@ lab.append(
 sincronizar()
 
 let pegadosPrevio = 0
+/** Lo que se le pasa a la escena: se reutiliza en cada cuadro. */
+const vista: Vista = { c: config, r: resultado(), frote: null }
 function cuadro(t: number) {
   const ahoraMs = performance.now()
   if (frote) {
@@ -256,7 +278,10 @@ function cuadro(t: number) {
     pegadosPrevio = escena.papeles.pegados
     refrescar()
   }
-  escena.aplicar({ c: config, r: resolver(config), frote: frote ? Math.min((ahoraMs - frote.t0) / FROTE_MS, 1) : null })
+  vista.c = config
+  vista.r = resultado()
+  vista.frote = frote ? Math.min((ahoraMs - frote.t0) / FROTE_MS, 1) : null
+  escena.aplicar(vista)
   escena.dibujar(t)
   requestAnimationFrame(cuadro)
 }

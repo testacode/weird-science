@@ -123,27 +123,48 @@ export function crearEscena(contenedor: HTMLElement) {
 
   const medidas = crearMedidas(scene, contenedor, camera)
 
-  // --- Estado ---
+  // --- Estado (todo se reutiliza entre cuadros: el loop no crea objetos) ---
   let vista: Vista | null = null
+  let sondaPrevia: Objeto | null = null
   const posiciones = new Map<Objeto, THREE.Vector3>()
   const obj = (id: MatId, copia: 0 | 1) => objetos.get(`${id}:${copia}`)!
   let previo = 0
   const tmp = new THREE.Vector3()
+  const extremo = new THREE.Vector3()
+  const matriz = new THREE.Object3D()
+  /** Un objeto con el lugar al que va y la carga que muestra. */
+  interface Puesto {
+    o: Objeto | null
+    pos: THREE.Vector3
+    q: number
+  }
+  const puesto = (): Puesto => ({ o: null, pos: new THREE.Vector3(), q: 0 })
+  /** Dónde va cada objeto en el experimento activo, y dónde en el frotado. */
+  const planta = [puesto(), puesto()]
+  const frotado = [puesto(), puesto()]
+  const buscar = (lista: Puesto[], n: number, o: Objeto): Puesto | undefined => {
+    for (let i = 0; i < n; i++) if (lista[i].o === o) return lista[i]
+    return undefined
+  }
+  let textoDist = ''
+  let distPrevia = NaN
 
-  /** Dónde va cada objeto visible (en el experimento activo, sin el frotado) y la carga que muestra. */
-  function planta(v: Vista): { o: Objeto; pos: THREE.Vector3; q: number }[] {
-    const { c, r } = v
+  /** Llena `planta` con los objetos visibles del experimento (sin el frotado); devuelve cuántos son. */
+  function armarPlanta({ c, r }: Vista): number {
     const sonda = obj(materialDe(c, c.cual), 0)
     const d = c.dist[c.experimento]
+    planta[0].o = sonda
+    planta[0].q = r.q
     if (c.experimento === 'cargas') {
-      const otro = c.otro === 'opuesto' ? obj(materialDe(c, c.cual === 'a' ? 'b' : 'a'), 0) : obj(materialDe(c, c.cual), 1)
-      return [
-        { o: sonda, pos: new THREE.Vector3(-d / 2, Y_COLGADO, 0), q: r.q },
-        { o: otro, pos: new THREE.Vector3(d / 2, Y_COLGADO, 0), q: r.q2 },
-      ]
+      planta[0].pos.set(-d / 2, Y_COLGADO, 0)
+      planta[1].o = c.otro === 'opuesto' ? obj(materialDe(c, c.cual === 'a' ? 'b' : 'a'), 0) : obj(materialDe(c, c.cual), 1)
+      planta[1].q = r.q2
+      planta[1].pos.set(d / 2, Y_COLGADO, 0)
+      return 2
     }
-    if (c.experimento === 'papelitos') return [{ o: sonda, pos: new THREE.Vector3(0, d, 0), q: r.q }]
-    return [{ o: sonda, pos: new THREE.Vector3(PERILLA.x + d, PERILLA.y, 0), q: r.q }]
+    if (c.experimento === 'papelitos') planta[0].pos.set(0, d, 0)
+    else planta[0].pos.set(PERILLA.x + d, PERILLA.y, 0)
+    return 1
   }
 
   function actualizar(dt: number, t: number) {
@@ -151,23 +172,27 @@ export function crearEscena(contenedor: HTMLElement) {
     const { c, r, frote } = vista
     const p = frote ?? 0
     const w = frote === null ? 0 : suave(p / 0.14) * (1 - suave((p - 0.86) / 0.14))
-    const lista = planta(vista)
-    const objetivo = new Map(lista.map((x) => [x.o, x]))
+    const nPlanta = armarPlanta(vista)
     // Frotado: a y b se juntan en el centro y b se desliza contra a.
-    const rub = new Map<Objeto, { pos: THREE.Vector3; q: number }>()
-    if (w > 0.01) {
+    const nFrotado = w > 0.01 ? 2 : 0
+    if (nFrotado) {
       const a = obj(materialDe(c, 'a'), 0)
       const b = obj(materialDe(c, 'b'), 0)
-      const osc = Math.sin(p * VUELTAS * Math.PI * 2) * AMPLITUD * w
-      rub.set(a, { pos: new THREE.Vector3(0, Y_COLGADO, -a.pieza.semiZ), q: r.qa })
-      rub.set(b, { pos: new THREE.Vector3(osc, Y_COLGADO, b.pieza.semiZ), q: r.qb })
+      frotado[0].o = a
+      frotado[0].q = r.qa
+      frotado[1].o = b
+      frotado[1].q = r.qb
+      frotado[0].pos.set(0, Y_COLGADO, -a.pieza.semiZ)
+      frotado[1].pos.set(Math.sin(p * VUELTAS * Math.PI * 2) * AMPLITUD * w, Y_COLGADO, b.pieza.semiZ)
     }
+    // Con el frotado en marcha solo se ven los dos que se frotan.
+    const activos = nFrotado ? frotado : planta
+    const nActivos = nFrotado || nPlanta
 
     const facil = 1 - Math.exp(-dt * 14)
-    const mostrados: { o: Objeto; q: number }[] = []
     for (const o of objetos.values()) {
-      const dest = objetivo.get(o)
-      const frotando = rub.get(o)
+      const dest = buscar(planta, nPlanta, o)
+      const frotando = buscar(frotado, nFrotado, o)
       const nuevo = !posiciones.has(o)
       const pos = (posiciones.get(o) ?? posiciones.set(o, new THREE.Vector3(0, Y_COLGADO, 0)).get(o))!
       if (nuevo && dest) pos.copy(dest.pos)
@@ -176,8 +201,7 @@ export function crearEscena(contenedor: HTMLElement) {
         if (!dest && o.vis < 0.05) pos.copy(frotando.pos)
         pos.lerp(dest ? tmp.copy(dest.pos).lerp(frotando.pos, w) : frotando.pos, facil)
       } else if (dest) pos.lerp(dest.pos, facil)
-      // Con el frotado en marcha solo se ven los dos que se frotan.
-      const visible = rub.size > 0 ? Boolean(frotando) : Boolean(dest)
+      const visible = Boolean(buscar(activos, nActivos, o))
       o.vis += ((visible ? 1 : 0) - o.vis) * facil
       const { grupo, bajo } = o.pieza
       grupo.position.copy(pos)
@@ -185,63 +209,65 @@ export function crearEscena(contenedor: HTMLElement) {
       grupo.visible = o.hilo.visible = o.vis > 0.02
       o.hilo.position.set(pos.x, pos.y + bajo, pos.z)
       o.hilo.scale.y = Math.max(Y_BARRA - (pos.y + bajo), 0.1)
-      if (visible) mostrados.push({ o, q: (frotando ?? dest)!.q })
     }
 
     // Electrones en el frotado: del que pierde al que gana.
     electrones.visible = w > 0.3
     if (electrones.visible) {
       const { positivo, negativo } = polaridad(c)
-      const dona = rub.get(obj(materialDe(c, positivo), 0))!.pos
-      const recibe = rub.get(obj(materialDe(c, negativo), 0))!.pos
-      const m = new THREE.Object3D()
+      const dona = buscar(frotado, nFrotado, obj(materialDe(c, positivo), 0))!.pos
+      const recibe = buscar(frotado, nFrotado, obj(materialDe(c, negativo), 0))!.pos
       semillas.forEach((s, i) => {
         const u = (t * 0.8 + s.fase) % 1
-        m.position.lerpVectors(dona, recibe, u)
-        m.position.x += s.x
-        m.position.y += s.y + Math.sin(u * Math.PI) * 0.7
-        m.scale.setScalar(w > 0.9 ? 1 : 0.3)
-        m.updateMatrix()
-        electrones.setMatrixAt(i, m.matrix)
+        matriz.position.lerpVectors(dona, recibe, u)
+        matriz.position.x += s.x
+        matriz.position.y += s.y + Math.sin(u * Math.PI) * 0.7
+        matriz.scale.setScalar(w > 0.9 ? 1 : 0.3)
+        matriz.updateMatrix()
+        electrones.setMatrixAt(i, matriz.matrix)
       })
       electrones.instanceMatrix.needsUpdate = true
     }
 
     // Flechas de fuerza entre dos objetos cargados.
     const fuerza = Math.abs(r.fuerza)
-    const conFlechas = c.experimento === 'cargas' && frote === null && c.frote > 0 && lista.length === 2 && fuerza > 0
     medidas.ocultarFlechas()
-    if (conFlechas) {
-      const [izq, der] = lista
+    if (c.experimento === 'cargas' && frote === null && c.frote > 0 && fuerza > 0) {
+      const [izq, der] = planta
       const hueco = (der.pos.x - izq.pos.x) / 2 - 2.1
       const largo = Math.min(Math.max(0.9 + 1.15 * (Math.log10(fuerza) + 4.2), 0.9), 6)
       const atrae = r.fuerza < 0
       const l = atrae ? Math.min(largo, Math.max(hueco, 0.8)) : largo
       medidas.flecha(0, tmp.set(izq.pos.x + (atrae ? 1.8 : -1.8), Y_COLGADO, 0), atrae ? 1 : -1, l)
-      medidas.flecha(1, new THREE.Vector3(der.pos.x + (atrae ? -1.8 : 1.8), Y_COLGADO, 0), atrae ? -1 : 1, l)
+      medidas.flecha(1, tmp.set(der.pos.x + (atrae ? -1.8 : 1.8), Y_COLGADO, 0), atrae ? -1 : 1, l)
     }
 
     // Papelitos y electroscopio, solo en su experimento.
     const enPapelitos = c.experimento === 'papelitos'
     papelitos.malla.visible = enPapelitos
-    if (enPapelitos && lista[0]) papelitos.actualizar(dt, t, frote === null ? r.q : 0, posiciones.get(lista[0].o)!, lista[0].o.pieza.bajo)
+    if (enPapelitos) papelitos.actualizar(dt, t, frote === null ? r.q : 0, posiciones.get(planta[0].o!)!, planta[0].o!.pieza.bajo)
     const enElectro = c.experimento === 'electroscopio'
     electroscopio.grupo.visible = enElectro
     electroscopio.actualizar(enElectro && frote === null ? r.angulo : 0, dt)
 
     // Cota.
-    const d = numero(c.dist[c.experimento], 1)
-    if (frote !== null || !lista[0]) medidas.cota(null)
-    else if (c.experimento === 'cargas') medidas.cota(new THREE.Vector3(lista[0].pos.x, Y_COLGADO - 2.7, 0), new THREE.Vector3(lista[1].pos.x, Y_COLGADO - 2.7, 0), `${d} cm`)
-    else if (c.experimento === 'papelitos') medidas.cota(new THREE.Vector3(2.4, 0, 0), new THREE.Vector3(2.4, lista[0].pos.y, 0), `${d} cm`)
-    else medidas.cota(new THREE.Vector3(PERILLA.x, PERILLA.y - 2.4, 0), new THREE.Vector3(lista[0].pos.x, PERILLA.y - 2.4, 0), `${d} cm`)
+    const dist = c.dist[c.experimento]
+    if (dist !== distPrevia) {
+      distPrevia = dist
+      textoDist = `${numero(dist, 1)} cm`
+    }
+    if (frote !== null) medidas.cota(null)
+    else if (c.experimento === 'cargas') medidas.cota(tmp.set(planta[0].pos.x, Y_COLGADO - 2.7, 0), extremo.set(planta[1].pos.x, Y_COLGADO - 2.7, 0), textoDist)
+    else if (c.experimento === 'papelitos') medidas.cota(tmp.set(2.4, 0, 0), extremo.set(2.4, planta[0].pos.y, 0), textoDist)
+    else medidas.cota(tmp.set(PERILLA.x, PERILLA.y - 2.4, 0), extremo.set(planta[0].pos.x, PERILLA.y - 2.4, 0), textoDist)
     medidas.ubicar()
 
     // Signos de carga.
     marcas.empezar()
-    for (const { o, q } of mostrados) {
-      const centro = o.pieza.grupo.position
-      for (const e of ESFERAS[cantidadMarcas(q)]) marcas.poner(tmp.copy(e).multiplyScalar(o.pieza.cascara).add(centro), q, o.vis)
+    for (let i = 0; i < nActivos; i++) {
+      const { o, q } = activos[i]
+      const { pieza, vis } = o!
+      for (const e of ESFERAS[cantidadMarcas(q)]) marcas.poner(tmp.copy(e).multiplyScalar(pieza.cascara).add(pieza.grupo.position), q, vis)
     }
     if (enElectro && frote === null && r.q !== 0) {
       const signo = Math.sign(r.q)
@@ -261,6 +287,12 @@ export function crearEscena(contenedor: HTMLElement) {
         posiciones.clear()
         papelitos.reponer()
       }
+      // La sonda nueva (otro objeto de prueba u otro par) aparece en su lugar, no desde donde estaba: si no, cruza la mesa cargada y levanta los papelitos.
+      const sonda = obj(materialDe(v.c, v.c.cual), 0)
+      if (sonda !== sondaPrevia) {
+        sondaPrevia = sonda
+        if (v.frote === null) posiciones.delete(sonda)
+      }
       vista = v
     },
     dibujar(ahora: number) {
@@ -274,7 +306,9 @@ export function crearEscena(contenedor: HTMLElement) {
     /** Los objetos ya llegaron a su lugar. */
     asentada(): boolean {
       if (!vista) return true
-      return planta(vista).every(({ o, pos }) => (posiciones.get(o)?.distanceTo(pos) ?? 0) < 0.05)
+      const n = armarPlanta(vista)
+      for (let i = 0; i < n; i++) if ((posiciones.get(planta[i].o!)?.distanceTo(planta[i].pos) ?? 0) >= 0.05) return false
+      return true
     },
     papeles: papelitos,
   }
