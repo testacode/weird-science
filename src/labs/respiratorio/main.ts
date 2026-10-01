@@ -82,10 +82,7 @@ const pred = prediccion<Respuesta, { cambio: Partial<Config>; pregunta: Pregunta
   enCurso = { pregunta, antes, t0: estado.t }
 }, {
   // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
-  saltar: () => {
-    const cambio = pred.datos?.cambio
-    if (cambio) aplicar({ ...config, ...cambio })
-  },
+  saltar: (d) => d && aplicarSaltado(d.cambio),
   // La pregunta inicial no cambia nada: ahí no hay qué "hacer igual".
   textoSaltar: (d) => (d && Object.keys(d.cambio).length ? 'Saltar y hacerlo igual' : null),
 })
@@ -105,15 +102,24 @@ function preguntarInicial() {
   pred.preguntar(PREGUNTA_INICIAL.texto, PREGUNTA_INICIAL.opciones, { cambio: {}, pregunta: PREGUNTA_INICIAL })
 }
 
+/** Con el CO₂ así de alto el cerebro no deja empezar a aguantar. */
+function imposible(nueva: Config): boolean {
+  if (config.aguanta || !nueva.aguanta || estado.paco2 < QUIEBRE_CO2) return false
+  motivo = { tipo: 'imposible', co2: estado.paco2 }
+  controles.sincronizar(config, corriendo)
+  return true
+}
+/** Un cambio que se hace sin predecir (saltar o modo libre): sobre la config de ahora, y solo si todavía se puede. */
+function aplicarSaltado(cambio: Partial<Config>) {
+  const nueva = { ...config, ...cambio }
+  if (!imposible(nueva)) aplicar(nueva)
+}
+
 /** Todo cambio de los controles pasa por acá: si corresponde una predicción, primero se pregunta; si no, se aplica. */
 function pedir(cambio: Partial<Config>) {
   descartarPendiente()
   const nueva = { ...config, ...cambio }
-  if (!config.aguanta && nueva.aguanta && estado.paco2 >= QUIEBRE_CO2) {
-    // Con el CO₂ así de alto el cerebro no deja empezar a aguantar.
-    motivo = { tipo: 'imposible', co2: estado.paco2 }
-    return controles.sincronizar(config, corriendo)
-  }
+  if (imposible(nueva)) return
   const pregunta = preguntaPara(config, nueva)
   if (!pregunta) {
     if (enCurso) {
@@ -123,8 +129,7 @@ function pedir(cambio: Partial<Config>) {
     return aplicar(nueva)
   }
   enCurso = null
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })) return aplicar(nueva)
-  controles.sincronizar(config, corriendo)
+  if (pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })) controles.sincronizar(config, corriendo)
 }
 
 function aplicar(nueva: Config) {

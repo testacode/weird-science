@@ -115,7 +115,7 @@ function seguir(va: boolean) {
 }
 function predecir() {
   const pregunta = preguntaPara(config)
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -131,10 +131,7 @@ function revisarPrediccion(desdeElJuego: boolean) {
   pred.revelar(r.correcta, r.explicacion)
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 function reiniciar() {

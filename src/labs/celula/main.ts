@@ -41,7 +41,7 @@ function seguir(va: boolean) {
 }
 function predecir() {
   const pregunta = preguntaPara(ent)
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ent })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ent })) return
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
 }
@@ -53,10 +53,7 @@ function revelar() {
 }
 
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 /** Célula nueva en reposo, en la solución y con la membrana de `ent`. */

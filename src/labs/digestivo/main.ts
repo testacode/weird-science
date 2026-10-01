@@ -48,7 +48,7 @@ function seguir(va: boolean) {
 function predecir() {
   const pregunta = preguntaPara(config)
   if (!pregunta) return pred.ocultar()
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ref: referencia(comida.gramos) })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ref: referencia(comida.gramos) })) return
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
 }
@@ -60,10 +60,7 @@ function revelar() {
 }
 
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   if (todosTerminaron(flujo)) return reiniciar()
   seguir(!corriendo)
 }

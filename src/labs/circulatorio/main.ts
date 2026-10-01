@@ -80,12 +80,13 @@ const pred = prediccion<Respuesta, { cambio: Partial<Config>; pregunta: Pregunta
   enCurso = { pregunta, antes, t0: estado.t }
 }, {
   // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción. La pregunta inicial no cambia nada.
-  saltar: () => {
-    const cambio = pred.datos?.cambio
-    if (cambio) aplicar({ ...config, ...cambio })
-  },
+  saltar: (d) => d && aplicarSaltado(d.cambio),
   textoSaltar: (d) => (d && Object.keys(d.cambio).length ? 'Saltar y hacerlo igual' : null),
 })
+/** Un cambio que se hace sin predecir (saltar o modo libre), sobre la config de ahora. */
+function aplicarSaltado(cambio: Partial<Config>) {
+  aplicar({ ...config, ...cambio })
+}
 function descartarPendiente() {
   if (pred.pendiente) pred.ocultar()
 }
@@ -114,8 +115,7 @@ function pedir(cambio: Partial<Config>) {
     return aplicar(nueva)
   }
   enCurso = null
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })) return aplicar(nueva)
-  controles.sincronizar(config, corriendo)
+  if (pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })) controles.sincronizar(config, corriendo)
 }
 
 function aplicar(nueva: Config) {

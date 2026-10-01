@@ -75,7 +75,7 @@ lab.append(
 
 // --- Predecí antes de correr: al elegir algo para romper, el objeto espera la respuesta antes de soltarse ---
 const ayuda = modal()
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => soltar() })
 
 function seguir(va: boolean) {
   corriendo = va
@@ -98,10 +98,7 @@ function revelar() {
   pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 
@@ -121,8 +118,8 @@ function aplicar(parcial: Partial<Config>) {
   const nueva = preguntaPara(config)
   const yaPreguntada = nueva?.id === preguntaPara(antes)?.id || (nueva?.id === 'barco' && antes.objeto === 'barco')
   if (nueva && !yaPreguntada) {
-    // Con las preguntas apagadas, se suelta directo.
-    if (!pred.preguntar(nueva.texto, nueva.opciones, { pregunta: nueva, config })) return soltar()
+    // Con las preguntas apagadas, el kit suelta directo (vía `saltar`).
+    if (!pred.preguntar(nueva.texto, nueva.opciones, { pregunta: nueva, config })) return
     soltar(true)
     return pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }

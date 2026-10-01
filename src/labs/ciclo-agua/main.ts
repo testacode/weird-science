@@ -116,7 +116,7 @@ function reiniciar(desde: Estado) {
   seguir(true)
 }
 function preguntar(pregunta: Pregunta) {
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config, arranque })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config, arranque })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -133,10 +133,7 @@ function empezar() {
   preguntar(rota ?? AGUA)
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 

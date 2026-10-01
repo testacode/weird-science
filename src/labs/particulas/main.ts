@@ -97,7 +97,7 @@ function seguir(va: boolean) {
 }
 function predecir() {
   const pregunta = preguntaPara(sus, config)
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, sus, config })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, sus, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -110,10 +110,7 @@ function revelar(l: Lectura) {
 }
 
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 

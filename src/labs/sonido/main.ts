@@ -80,10 +80,7 @@ const pred = prediccion<Respuesta, { pregunta: Pregunta; datos: Datos }>(() => {
   if (d) hacer(d.pregunta.tipo)
 }, {
   // Saltar (o apagar las preguntas): se hace igual, sin predicción.
-  saltar: () => {
-    const d = pred.datos
-    if (d) hacer(d.pregunta.tipo)
-  },
+  saltar: (d) => d && hacer(d.pregunta.tipo),
   textoSaltar: 'Saltar y hacerlo igual',
 })
 function descartarPendiente() {
@@ -98,10 +95,10 @@ function hacer(tipo: Pregunta['tipo']) {
     seguir(true)
   }
 }
-/** Pregunta antes de hacer `tipo`; con las preguntas apagadas lo hace directo. */
+/** Pregunta antes de hacer `tipo` (con las preguntas apagadas, el kit lo hace directo vía `saltar`). */
 function preguntar(tipo: Pregunta['tipo']) {
   const p = preguntaPara(tipo)
-  if (!pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud, frecuencia: frecuenciaOida(config) } })) hacer(tipo)
+  pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud, frecuencia: frecuenciaOida(config) } })
 }
 function revelar() {
   const d = pred.datos
@@ -161,7 +158,6 @@ function golpe() {
   preguntar('golpe')
 }
 function reiniciar() {
-  descartarPendiente()
   pred.ocultar()
   preguntadas.clear()
   config = { ...CONFIG_INICIAL }

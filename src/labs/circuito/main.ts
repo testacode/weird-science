@@ -92,10 +92,7 @@ const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => 
   pred.revelarEn(ESPERA_REVELAR_MS, () => pred.revelar(resultado.correcta, resultado.explicacion))
 }, {
   // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
-  saltar: () => {
-    const nueva = pred.datos?.nueva
-    if (nueva) aplicar(nueva)
-  },
+  saltar: (d) => d && aplicar(d.nueva),
   textoSaltar: 'Saltar y hacerlo igual',
 })
 
@@ -106,8 +103,8 @@ function pedir(cambio: Partial<Config>) {
   let nueva = { ...copia(config), ...cambio }
   if (cambio.cantidad !== undefined && cambio.cantidad !== config.cantidad) nueva = { ...nueva, sacadas: [false, false, false] }
   const pregunta = preguntaPara(config, nueva)
-  if (!pregunta || !pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })) return aplicar(nueva)
-  sincronizar()
+  if (!pregunta) return aplicar(nueva)
+  if (pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })) sincronizar()
 }
 function sacarUna() {
   const i = config.sacadas.slice(0, config.cantidad).lastIndexOf(false)

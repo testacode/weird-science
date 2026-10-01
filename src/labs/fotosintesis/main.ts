@@ -108,7 +108,7 @@ function reiniciar() {
 }
 function preguntar(pregunta: Pregunta | null) {
   if (!pregunta) return pred.ocultar()
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -124,10 +124,7 @@ function otraVez() {
   preguntar(preguntaPara(config))
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   corriendo = !corriendo
   botonPlay.textContent = corriendo ? '⏸ Pausa' : '▶ Seguir'
 }

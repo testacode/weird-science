@@ -90,10 +90,7 @@ const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => 
   pred.revelarEn(ESPERA_REVELAR_MS, () => pred.revelar(resultado.correcta, resultado.explicacion))
 }, {
   // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
-  saltar: () => {
-    const nueva = pred.datos?.nueva
-    if (nueva) aplicar(nueva)
-  },
+  saltar: (d) => d && aplicar(d.nueva),
   textoSaltar: 'Saltar y hacerlo igual',
 })
 
@@ -106,8 +103,8 @@ function pedir(cambio: Partial<Config>) {
   // El ojo no puede mirar tan de costado que la luz salga por afuera de la pecera.
   if (nueva.escena === 'lapiz') nueva = { ...nueva, ojo: Math.min(nueva.ojo, ojoMax(nueva)) }
   const pregunta = preguntaPara(config, nueva)
-  if (!pregunta || !pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })) return aplicar(nueva)
-  consola.sincronizar(config)
+  if (!pregunta) return aplicar(nueva)
+  if (pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })) consola.sincronizar(config)
 }
 function reiniciar() {
   pred.ocultar()

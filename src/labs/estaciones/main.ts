@@ -133,7 +133,7 @@ function predecir() {
   const pregunta = preguntaPara(eps, idea)
   t = pregunta.inicio
   tRevela = pregunta.revela >= pregunta.inicio ? pregunta.revela : pregunta.revela + YEAR
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, eps })) return seguir(true)
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, eps })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -160,10 +160,7 @@ function descartarPregunta() {
   seguir(corriendo)
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 function reiniciar() {

@@ -82,10 +82,7 @@ const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => 
   pred.revelarEn(ESPERA_REVELAR_MS, () => pred.revelar(resultado.correcta, resultado.explicacion))
 }, {
   // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción.
-  saltar: () => {
-    const nueva = pred.datos?.nueva
-    if (nueva) aplicarSuave(nueva)
-  },
+  saltar: (d) => d && aplicarSuave(d.nueva),
   textoSaltar: 'Saltar y hacerlo igual',
 })
 /** Si la config cambia, la pregunta abierta (o ya respondida y sin revelar) deja de valer: se oculta (y se cancela el reveal). */
@@ -114,8 +111,7 @@ function pedir(cambio: Partial<Config>, intencion?: Intencion) {
   const pregunta = preguntaPara(config, nueva, intencion)
   if (!pregunta) return intencion ? aplicarSuave(nueva) : aplicar(nueva)
   const conAjuste = { ...nueva, ...pregunta.ajuste }
-  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { nueva: conAjuste, pregunta })) return aplicarSuave(conAjuste)
-  sincronizar()
+  if (pred.preguntar(pregunta.texto, pregunta.opciones, { nueva: conAjuste, pregunta })) sincronizar()
 }
 function reiniciar() {
   animacion = null
