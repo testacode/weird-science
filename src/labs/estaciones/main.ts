@@ -37,6 +37,16 @@ const MARGEN_GRAFICO = { izq: 34, der: 8, arriba: 6, abajo: 18 }
 /** Cada cuántos días se toma una muestra de la curva. */
 const MUESTREO_DIAS = 4
 
+function valoresCurva(x: number) {
+  const r = resumen(x, ciudad, eps)
+  return modoGrafico === 'luz' ? { obs: r.horas } : { obs: r.energiaVsPromedio, ...(idea && { idea: ideaDistancia(x) }) }
+}
+/** Dibuja el año completo con la escala de la ciudad y la inclinación actuales. */
+function llenarCurva(g: ReturnType<typeof grafico>) {
+  g.limpiar({ yMax: rangoAnual(ciudad.lat, eps, modoGrafico === 'luz' ? 'horas' : 'energia').max })
+  for (let x = 0; x < YEAR; x += MUESTREO_DIAS) g.agregar(x, valoresCurva(x))
+  g.agregar(YEAR, valoresCurva(YEAR))
+}
 function crearCurva() {
   const luz = modoGrafico === 'luz'
   const series = luz
@@ -44,20 +54,15 @@ function crearCurva() {
     : [{ id: 'obs', nombre: ciudad.nombre, color: 'ambar' }, ...(idea ? [{ id: 'idea', nombre: 'Idea: distancia', color: 'magenta' }] : [])]
   const g = grafico(series, {
     titulo: luz ? 'Horas de luz según el día del año' : 'Energía por m² (% del promedio anual)',
-    unidadX: ' d', unidadY: luz ? ' h' : ' %', xMax: YEAR, yMax: rangoAnual(ciudad.lat, eps, luz ? 'horas' : 'energia').max, alto: 104,
+    unidadX: ' d', unidadY: luz ? ' h' : ' %', xMax: YEAR, yMax: 0, alto: 104,
   })
-  const valores = (x: number) => {
-    const r = resumen(x, ciudad, eps)
-    return luz ? { obs: r.horas } : { obs: r.energiaVsPromedio, ...(idea && { idea: ideaDistancia(x) }) }
-  }
-  for (let x = 0; x < YEAR; x += MUESTREO_DIAS) g.agregar(x, valores(x))
-  g.agregar(YEAR, valores(YEAR))
+  llenarCurva(g)
   g.el.append(marcaHoy)
   return g
 }
 const marcaHoy = h('span', { class: 'marca-hoy' })
 let curva = crearCurva()
-/** Cambió la ciudad, la inclinación o el tipo de gráfico: se arma de nuevo. */
+/** Cambió la ciudad o el tipo de gráfico (cambian las series): se arma de nuevo. */
 function rehacerCurva() {
   const vieja = curva.el
   curva = crearCurva()
@@ -107,7 +112,12 @@ function irAlDia(dia: number) {
   t = dia + YEAR * Math.round((t - dia) / YEAR)
   revisarPrediccion(false)
 }
-const tiempo = lineaDeTiempo(irAlDia)
+/** Las marcas de fecha van hacia adelante: a la próxima vez que llega ese día, sin volver al año anterior. */
+function irALaFecha(dia: number) {
+  t = dia + YEAR * Math.ceil((t - dia) / YEAR - 1e-9)
+  revisarPrediccion(false)
+}
+const tiempo = lineaDeTiempo(irAlDia, irALaFecha)
 lab.append(h('div', { class: 'hud-linea' }, tiempo.el))
 
 // --- Predecí antes de correr: arranca pausado hasta que el usuario elige (o salta la pregunta) ---
@@ -140,7 +150,15 @@ function revisarPrediccion(desdeElJuego: boolean) {
   // En pantallas bajas la tarjeta queda debajo de la consola: se desplaza solo el HUD (con scrollIntoView se movería toda la página).
   const columna = pred.el.parentElement!
   const { offsetTop: arriba, offsetHeight: alto } = pred.el
-  columna.scrollTo({ top: Math.min(arriba + alto - columna.clientHeight + 56, arriba - 10), behavior: 'smooth' })
+  const entra = arriba >= columna.scrollTop && arriba + alto <= columna.scrollTop + columna.clientHeight
+  if (!entra) columna.scrollTo({ top: Math.max(0, Math.min(arriba + alto - columna.clientHeight + 56, arriba - 10)), behavior: 'smooth' })
+}
+/** La pregunta se armó para otra inclinación: se retira (la respuesta no coincidiría con lo que se vio). */
+function descartarPregunta() {
+  if (!pregunta || !(pred.pendiente || pred.enCurso)) return
+  pred.ocultar()
+  pregunta = null
+  seguir(corriendo)
 }
 function alternar() {
   if (pred.pendiente) {
@@ -174,7 +192,8 @@ const inclinacion = deslizador({
   alCambiar: (v) => {
     eps = v
     ejeDerecho.set(v === 0)
-    rehacerCurva()
+    descartarPregunta()
+    llenarCurva(curva)
   },
 })
 const ideaDistanciaSwitch = interruptor('¿Y si fuera por la distancia al Sol?', false, (v) => {
@@ -196,7 +215,8 @@ new MutationObserver(() => {
   if (!avanzadoActivo() && eps !== 0 && eps !== INCLINACION) {
     eps = INCLINACION
     inclinacion.set(eps)
-    rehacerCurva()
+    descartarPregunta()
+    llenarCurva(curva)
   }
 }).observe(document.body, { attributes: true, attributeFilter: ['class'] })
 

@@ -4,7 +4,7 @@ import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
 import { num } from './contenido'
 import {
-  CIUDADES, D_PERIHELIO, NOMBRE_ESTACION, diaClave, fecha, hayEstaciones, orbita, resumen, type Resumen,
+  CIUDADES, D_PERIHELIO, NOMBRE_ESTACION, diaClave, fecha, orbita, resumen, type Resumen,
 } from './model'
 
 export type Respuesta = 'cerca' | 'alto' | 'emite' | 'verano' | 'invierno' | 'misma' | 'iguales' | 'sin' | 'distancia'
@@ -44,9 +44,12 @@ const PREGUNTA_VERANO: Pregunta = {
     const factorSol = sol(dic) / sol(jun)
     const factorDistancia = (jun.distancia / dic.distancia) ** 2
     const correcta: Respuesta = factorSol > factorDistancia ? 'alto' : 'cerca'
+    const comparacion = `En diciembre ${detalle(dic)}; en junio, ${detalle(jun)}. Eso hace que cada m² reciba <b>×${num(factorSol, 1)}</b> más energía. La distancia (${num(dic.distancia, 1)} M km en diciembre contra ${num(jun.distancia, 1)} en junio) suma <b>×${num(factorDistancia, 2)}</b>.`
     return {
       correcta,
-      explicacion: `En diciembre ${detalle(dic)}; en junio, ${detalle(jun)}. Eso hace que cada m² reciba <b>×${num(factorSol, 1)}</b> más energía. La distancia casi no cuenta: ${num(dic.distancia, 1)} M km en diciembre contra ${num(jun.distancia, 1)} en junio suman apenas <b>×${num(factorDistancia, 2)}</b>. Y en Madrid, el mismo diciembre es invierno: la distancia no puede ser la causa.${av(' El Sol no cambia: su energía es la misma todo el año.')}`,
+      explicacion: correcta === 'alto'
+        ? `${comparacion} La distancia casi no cuenta. Y en Madrid, el mismo diciembre es invierno: no puede ser la causa.${av(' El Sol no cambia: su energía es la misma todo el año.')}`
+        : `${comparacion} Con un eje tan poco inclinado, la distancia pesa más que la altura del Sol.`,
     }
   },
 }
@@ -65,6 +68,12 @@ const PREGUNTA_ENERO: Pregunta = {
     const bsas = B(D_PERIHELIO, eps)
     const correcta: Respuesta = mad.estacion === bsas.estacion ? 'misma' : mad.estacion === 'verano' ? 'verano' : 'invierno'
     const nombre = (r: Resumen) => (r.estacion === 'sin' ? 'sin estaciones' : NOMBRE_ESTACION[r.estacion].toLowerCase())
+    if (bsas.estacion === 'sin') {
+      return {
+        correcta,
+        explicacion: `El ${fecha(D_PERIHELIO).larga} la Tierra está en el perihelio (<b>${num(orbita(D_PERIHELIO).distancia, 1)} M km</b>), pero con el eje casi derecho no hay estaciones marcadas: en Madrid ${detalle(mad)} y en Buenos Aires, ${detalle(bsas)}.`,
+      }
+    }
     return {
       correcta,
       explicacion: `El ${fecha(D_PERIHELIO).larga} la Tierra está en el perihelio: a <b>${num(orbita(D_PERIHELIO).distancia, 1)} M km</b>, lo más cerca del año. Y en Madrid es <b>${nombre(mad)}</b> (${detalle(mad)}), mientras que en Buenos Aires es <b>${nombre(bsas)}</b> (${detalle(bsas)}). Si las estaciones dependieran de la distancia, los dos estarían igual.`,
@@ -81,23 +90,19 @@ const PREGUNTA_SIN_EJE: Pregunta = {
   ],
   inicio: SOLSTICIO_JUNIO,
   revela: SOLSTICIO_DICIEMBRE,
+  // Solo se hace con el eje exactamente derecho (interruptor "Eje sin inclinación"): ahí no hay estaciones.
   resolver: (eps) => {
     const jun = B(SOLSTICIO_JUNIO, eps)
     const dic = B(SOLSTICIO_DICIEMBRE, eps)
-    const correcta: Respuesta = hayEstaciones(BSAS.lat, eps) ? 'iguales' : 'sin'
     return {
-      correcta,
-      explicacion: `Con este eje, en Buenos Aires en junio ${detalle(jun)}, y en diciembre, ${detalle(dic)}. ${
-        correcta === 'sin'
-          ? `No cambia nada: no hay estaciones. Lo único que sigue cambiando es la distancia (de ${num(dic.distancia, 1)} a ${num(jun.distancia, 1)} M km), que mueve la energía solo un ${num(pctDistancia(jun.distancia, dic.distancia), 0)} %: no alcanza para hacer estaciones.`
-          : 'Con esa inclinación todavía hay estaciones.'
-      }`,
+      correcta: 'sin',
+      explicacion: `Con el eje derecho, en Buenos Aires en junio ${detalle(jun)}, y en diciembre, ${detalle(dic)}. No cambia nada: no hay estaciones. Lo único que sigue cambiando es la distancia (de ${num(dic.distancia, 1)} a ${num(jun.distancia, 1)} M km), que mueve la energía solo un ${num(pctDistancia(jun.distancia, dic.distancia), 0)} %: no alcanza para hacer estaciones.`,
     }
   },
 }
 
 /** La pregunta que corresponde a lo que el usuario rompió. */
 export function preguntaPara(eps: number, idea: boolean): Pregunta {
-  if (!hayEstaciones(BSAS.lat, eps)) return PREGUNTA_SIN_EJE
+  if (eps === 0) return PREGUNTA_SIN_EJE
   return idea ? PREGUNTA_ENERO : PREGUNTA_VERANO
 }

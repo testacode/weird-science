@@ -7,20 +7,23 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
 const INICIO_MES = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 const pct = (d: number) => `${(d / YEAR) * 100}%`
 
-export function lineaDeTiempo(alElegir: (dia: number) => void) {
+export function lineaDeTiempo(alArrastrar: (dia: number) => void, alElegirFecha: (dia: number) => void) {
   const fechaTexto = h('b', {}, '')
   const rango = h('input', {
     type: 'range', min: '0', max: String(YEAR), step: '0.05', value: '0', 'aria-label': 'Día del año',
   })
   let arrastrando = false
-  rango.addEventListener('input', () => alElegir(Number(rango.value)))
+  rango.addEventListener('input', () => alArrastrar(Number(rango.value)))
   rango.addEventListener('pointerdown', () => (arrastrando = true))
-  window.addEventListener('pointerup', () => (arrastrando = false))
+  const soltar = () => (arrastrando = false)
+  window.addEventListener('pointerup', soltar)
+  window.addEventListener('pointercancel', soltar)
+  rango.addEventListener('lostpointercapture', soltar)
 
   const marcas = FECHAS_CLAVE.map((f) => {
     const boton = h('button', {
       type: 'button', class: 'marca-dia', 'aria-label': `Ir al ${fecha(f.dia).larga} (${f.tipo})`,
-      onclick: () => alElegir(f.dia),
+      onclick: () => alElegirFecha(f.dia),
     }, h('b', {}, fecha(f.dia).corta), h('small', {}, f.tipo))
     boton.style.left = pct(f.dia)
     return boton
@@ -29,7 +32,7 @@ export function lineaDeTiempo(alElegir: (dia: number) => void) {
   const extremos = [{ d: D_PERIHELIO, texto: 'perihelio' }, { d: D_AFELIO, texto: 'afelio' }].map(({ d, texto }) => {
     const boton = h('button', {
       type: 'button', class: 'marca-extremo avanzado', 'aria-label': `Ir al ${texto}, ${fecha(d).larga}`,
-      onclick: () => alElegir(d),
+      onclick: () => alElegirFecha(d),
     }, texto)
     boton.style.left = pct(d)
     return boton

@@ -47,23 +47,25 @@ const PORQUE: Record<string, string> = {
   primavera: 'Los días se alargan y el Sol sube cada vez más.',
 }
 
+/** Por qué no hay estaciones marcadas: eje derecho, eje casi derecho (1° a ~3°) o ciudad en el ecuador. */
+function sinEstaciones(ciudad: Ciudad, eps: number): string {
+  if (eps === 0) return 'Con el eje derecho el Sol pasa siempre a la misma altura y el día dura lo mismo todo el año.'
+  if (ciudad.lat === 0) return 'En el ecuador el día dura 12 h todo el año y el Sol siempre sube muy alto.'
+  return `Con el eje casi derecho (${num(eps, 2)}°) la altura del Sol y las horas de luz casi no cambian en el año: las estaciones casi no se notan.`
+}
+
 function relatoNormal(s: Situacion): string {
   const { r, ciudad, eps } = s
   const f = fecha(s.d).larga
   const titulo =
-    r.estacion === 'sin' ? (eps < 1 ? 'Sin estaciones' : `Casi sin estaciones en ${ciudad.nombre}`) : `${NOMBRE_ESTACION[r.estacion]} en ${ciudad.nombre}`
+    r.estacion === 'sin' ? (eps === 0 ? 'Sin estaciones' : `Casi sin estaciones en ${ciudad.nombre}`) : `${NOMBRE_ESTACION[r.estacion]} en ${ciudad.nombre}`
   const sol =
     r.altura <= 0
       ? `el ${SOL} no llega a salir en todo el día (noche polar)`
       : `el ${SOL} llega al mediodía a <b class="c-ambar">${grados(r.altura)}</b> de altura, ${haciaDonde(r)}${av(` (90° − |${grados(ciudad.lat)} − (${grados(r.declinacion)})|, con δ = ${grados(r.declinacion)} la declinación solar)`)}`
   const dia = r.horas >= 23.99 ? 'el Sol no se pone (sol de medianoche)' : r.horas <= 0.01 ? 'la noche dura las 24 h' : `el día dura <b>${num(r.horas, 1)} h</b>`
   const energia = r.altura > 0 ? ` Cada m² recibe el <b>${num(r.energiaVsPromedio)} %</b> de la energía de un día promedio${av(` (sen ${grados(r.altura)} × ${num(r.horas, 1)} h, con la distancia de ${num(r.distancia, 1)} M km)`)}.` : ''
-  const causa =
-    r.estacion === 'sin'
-      ? eps < 1
-        ? ' Con el eje derecho el Sol pasa siempre a la misma altura y el día dura lo mismo todo el año.'
-        : ' En el ecuador el día dura 12 h todo el año y el Sol siempre sube muy alto.'
-      : ` ${PORQUE[r.estacion]}`
+  const causa = r.estacion === 'sin' ? ` ${sinEstaciones(ciudad, eps)}` : ` ${PORQUE[r.estacion]}`
   return `<strong>${titulo}.</strong> El ${f}, ${sol}, y ${dia}.${energia}${causa}`
 }
 
@@ -77,7 +79,7 @@ function relatoIdea(s: Situacion): string {
   const opuestas = bsas.estacion !== 'sin' && bsas.estacion !== madrid.estacion
   const cierre = opuestas
     ? 'No coincide: con esa idea los dos hemisferios tendrían la misma estación a la vez, y se observan opuestas.'
-    : 'Con el eje derecho no hay estaciones en ningún lado, aunque la distancia siga cambiando.'
+    : `${s.eps === 0 ? 'Con el eje derecho' : `Con el eje casi derecho (${num(s.eps, 2)}°)`} no hay estaciones marcadas en ningún lado, aunque la distancia siga cambiando.`
   const rango = rangoAnual(s.ciudad.lat, s.eps, 'energia')
   return `${IDEA('<strong>Idea: “las estaciones son por la distancia al Sol”.</strong>')} Hoy la ${TIERRA} está a <b>${num(r.distancia, 1)} M km</b>, ${cerca ? 'más cerca' : 'más lejos'} que el promedio (${num(DIST_MEDIA, 1)}). Con esa idea sería ${cerca ? '<b>verano</b>' : '<b>invierno</b>'} en <b>todo</b> el planeta.<span class="comparar">${fila('Buenos Aires', bsas)}${fila('Madrid', madrid)}</span>${cierre}${av(` Además, la distancia mueve la energía solo ±${num(AMPLITUD_DISTANCIA, 1)} %; en ${s.ciudad.nombre} la altura del Sol y las horas de luz la mueven entre ${num(rango.min)} % y ${num(rango.max)} % del promedio.`)}`
 }
