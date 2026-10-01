@@ -2,7 +2,7 @@
 // Cada método usa UNA propiedad (tamaño, densidad, punto de ebullición o magnetismo) y la regla se
 // evalúa sobre los datos de cada componente; no hay una tabla "mezcla × método" escrita a mano.
 
-import { ESPECIES, METODOS, mezclaDe, type EspecieId, type MetodoId, type MezclaId } from './datos'
+import { ESPECIES, METODOS, METODO_PROPIO, mezclaDe, type EspecieId, type MetodoId, type MezclaId } from './datos'
 import { destilar } from './destilacion'
 import { TAMANO_DISUELTO_MM, porciones as armarPorciones, tipoDeMezcla, type Porcion, type TipoMezcla } from './porciones'
 
@@ -116,8 +116,9 @@ function reglaSimple(c: Config, lista: Porcion[]) {
     const retenida = masa(lista, (_, i) => fSale[i] < 0.5, lista.map((p) => p.masa))
     duracion = metodo === 'tamiz' ? 6 : hayLiquido(lista) ? 20 + 0.4 * retenida : 8
   } else if (metodo === 'iman') {
+    const hayMagnetico = lista.some((p) => !p.disuelta && ESPECIES[p.especie].magnetico)
     lista.forEach((p, i) => {
-      if (p.disuelta || ESPECIES[p.especie].estado !== 'solido') return
+      if (p.disuelta || ESPECIES[p.especie].estado !== 'solido' || !hayMagnetico) return
       fSale[i] = ESPECIES[p.especie].magnetico ? EFICIENCIA_IMAN : ARRASTRE_IMAN
     })
     duracion = 8
@@ -193,6 +194,11 @@ export function leer(corrida: Corrida, t: number): Lectura {
   const pS = mSale > 0 ? masa(lista, (p) => p.especie === sale, salida) / mSale : 0
   const pQ = mQueda > 0 ? masa(lista, (p) => p.especie === ideaQueda, queda) / mQueda : 0
   const hayDos = mSale >= MIN_PRODUCTO_G && mQueda >= MIN_PRODUCTO_G
+  // Lo que queda en el origen no está "recuperado" hasta que se separó: se cuenta lo que quedará al final, a medida que sale lo otro.
+  const final = filas[filas.length - 1]
+  const salidaFinal = final.reduce((s, g) => s + g, 0)
+  const avance = salidaFinal >= MIN_PRODUCTO_G ? Math.min(1, mSale / salidaFinal) : 0
+  const quedaFinal = masa(lista, (p) => p.especie === ideaQueda, lista.map((p, i) => p.masa - final[i]))
   const totalDe = (e: EspecieId) => lista.filter((p) => p.especie === e).reduce((s, p) => s + p.masa, 0)
   const temp = corrida.temp.length ? corrida.temp[k] + (corrida.temp[k + 1] - corrida.temp[k]) * Math.min(f, 1) : null
   return {
@@ -206,7 +212,7 @@ export function leer(corrida: Corrida, t: number): Lectura {
     // Mientras no haya salido nada del origen no se separó nada, y no hay nada "recuperado".
     recuperado: [
       { especie: sale, g: masa(lista, (p) => p.especie === sale, salida), total: totalDe(sale) },
-      { especie: ideaQueda, g: mSale >= MIN_PRODUCTO_G ? masa(lista, (p) => p.especie === ideaQueda, queda) : 0, total: totalDe(ideaQueda) },
+      { especie: ideaQueda, g: quedaFinal * avance, total: totalDe(ideaQueda) },
     ],
     asentado: corrida.tAsentado > 0 ? Math.min(1, tt / corrida.tAsentado) : 1,
     temp,
@@ -223,8 +229,27 @@ export function resultadoFinal(c: Config) {
 }
 
 /** Qué métodos separan bien esta mezcla (para sugerir uno cuando el elegido no sirve). */
-export function metodosQueSirven(mezcla: MezclaId, sobresaturar: boolean): MetodoId[] {
-  return METODOS.map((m) => m.id).filter((metodo) => resultadoFinal({ mezcla, metodo, sobresaturar, tMechero: T_MECHERO.inicial }).veredicto === 'funciona')
+const sugerencias = new Map<string, Sugerencia>()
+
+export interface Sugerencia {
+  metodos: MetodoId[]
+  /** Ninguno separa del todo: se sugiere el que más separa. */
+  parcial: boolean
+}
+
+/** Qué métodos separan bien esta mezcla; si ninguno, el que más separa. El método propio de la mezcla va primero. */
+export function sugerirMetodos(mezcla: MezclaId, sobresaturar: boolean): Sugerencia {
+  const clave = `${mezcla}|${sobresaturar}`
+  let s = sugerencias.get(clave)
+  if (!s) {
+    const res = METODOS.map(({ id }) => ({ id, pureza: resultadoFinal({ mezcla, metodo: id, sobresaturar, tMechero: T_MECHERO.inicial }).lectura.pureza ?? 0 }))
+    const buenos = res.filter((r) => veredictoDe(r.pureza) === 'funciona')
+    const mejor = res.filter((r) => veredictoDe(r.pureza) === 'parcial').sort((a, b) => b.pureza - a.pureza).slice(0, 1)
+    const elegidos = (buenos.length ? buenos : mejor).map((r) => r.id).sort((a, b) => Number(b === METODO_PROPIO[mezcla]) - Number(a === METODO_PROPIO[mezcla]))
+    s = { metodos: elegidos, parcial: !buenos.length }
+    sugerencias.set(clave, s)
+  }
+  return s
 }
 
 /** Segundos del experimento por segundo real, para que cada método dure unos segundos en pantalla. */

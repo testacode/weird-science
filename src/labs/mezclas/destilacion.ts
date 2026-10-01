@@ -21,8 +21,9 @@ const T_AZEOTROPO = 78.2
 const RITMO_LIMPIO = 0.06
 /** Con alcohol se corta cuando el balón pasa de esta temperatura: de ahí en adelante sale casi solo agua. */
 const T_CORTE_ALCOHOL = 95
-const MAX_S = 4 * 3600
-const MUESTREO_S = 5
+/** Paso de integración (y de muestreo), s. La corrida termina por física; el tope es solo una red de seguridad. */
+const DT = 5
+const MAX_S = 24 * 3600
 const SOLUBILIDAD_SAL = 36 // g/100 g de agua
 const M_NACL = 58.44
 const KB_AGUA = 0.512
@@ -67,7 +68,7 @@ export function destilar(porciones: Porcion[], tMechero: number): Destilado {
   let estancado = 0
   let fin = false
 
-  for (let t = 1; t <= MAX_S; t++) {
+  for (let t = DT; t <= MAX_S; t += DT) {
     const agua = iAgua >= 0 ? flask[iAgua] : 0
     const alc = iAlc >= 0 ? flask[iAlc] : 0
     const salDis = Math.min(sal, (SOLUBILIDAD_SAL * agua) / 100)
@@ -76,7 +77,7 @@ export function destilar(porciones: Porcion[], tMechero: number): Destilado {
     const tb = agua + alc > 0.01 ? tEbullicionMezcla(xAlc, salDis, agua) : Infinity
 
     const calor = porciones.reduce((s, p, i) => s + (esSal(p) ? 0 : flask[i] * (CP[p.especie] ?? 1)), C_VIDRIO + sal * CP.sal)
-    tf += (U * (tMechero - tf)) / calor
+    tf += (U * (tMechero - tf) * DT) / calor
     let hierve = false
     if (tf >= tb) {
       tf = tb
@@ -89,26 +90,34 @@ export function destilar(porciones: Porcion[], tMechero: number): Destilado {
       const yMasa = (yMol * M_ALCOHOL) / (yMol * M_ALCOHOL + (1 - yMol) * M_AGUA)
       const ritmo = (U * (tMechero - tb)) / (yMasa * DH_ALCOHOL + (1 - yMasa) * DH_AGUA)
       const arrastre = Math.min(0.4, Math.max(0, 0.04 * (ritmo / RITMO_LIMPIO - 1)))
-      const vapor = ritmo * (1 - arrastre)
-      const gotas = (ritmo * arrastre) / Math.max(agua + alc + salDis, 1e-9)
+      const vapor = ritmo * DT * (1 - arrastre)
+      const gotas = (ritmo * DT * arrastre) / Math.max(agua + alc + salDis, 1e-9)
       const dAlc = Math.min(alc, vapor * yMasa + gotas * alc)
       const dAgua = Math.min(agua, vapor * (1 - yMasa) + gotas * agua)
       const dSal = Math.min(salDis, gotas * salDis)
       if (iAlc >= 0) { flask[iAlc] -= dAlc; salida[iAlc] += dAlc }
       if (iAgua >= 0) { flask[iAgua] -= dAgua; salida[iAgua] += dAgua }
       if (iSal >= 0) { sal -= dSal; salida[iSal] += dSal }
-      estancado = ritmo < 0.002 ? estancado + 1 : 0
+      estancado = ritmo < 0.002 ? estancado + DT : 0
     } else if (tMechero - tf < 0.3 && tf > T_AMBIENTE + 1) {
-      estancado++
+      estancado += DT
     }
 
     const corte = hierve && (alc > 0 ? tb >= T_CORTE_ALCOHOL : agua <= 0.01 * agua0)
     if (corte || estancado > 240) fin = true
-    if (t % MUESTREO_S === 0) {
-      filas.push([...salida])
-      temps.push(tf)
-      if (fin) break
-    }
+    filas.push([...salida])
+    temps.push(tf)
+    if (fin) break
   }
-  return { muestreo: MUESTREO_S, salida: filas, temp: temps, hirvio }
+  return { muestreo: DT, salida: filas, temp: temps, hirvio }
+}
+
+/** °C a los que empieza a hervir la mezcla tal como está en el balón (el alcohol y el agua, juntos, hierven en el medio). */
+export function tEbullicionInicial(porciones: Porcion[]): number {
+  const masaDe = (id: string) => porciones.find((p) => p.id === id)?.masa ?? 0
+  const agua = masaDe('agua')
+  const alc = masaDe('alcohol')
+  const sal = porciones.filter((p) => p.especie === 'sal').reduce((s, p) => s + p.masa, 0)
+  const xAlc = alc > 0 ? alc / M_ALCOHOL / (alc / M_ALCOHOL + agua / M_AGUA) : 0
+  return tEbullicionMezcla(xAlc, Math.min(sal, (SOLUBILIDAD_SAL * agua) / 100), agua)
 }

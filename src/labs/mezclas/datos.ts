@@ -69,5 +69,8 @@ export const METODOS: Metodo[] = [
   { id: 'iman', nombre: 'Imán', propiedad: 'Magnetismo' },
 ]
 
+/** El método que usa justo lo que distingue a los componentes, cuando hay uno claro. */
+export const METODO_PROPIO: Partial<Record<MezclaId, MetodoId>> = { 'hierro-arena': 'iman' }
+
 export const mezclaDe = (id: MezclaId) => MEZCLAS.find((m) => m.id === id)!
 export const metodoDe = (id: MetodoId) => METODOS.find((m) => m.id === id)!

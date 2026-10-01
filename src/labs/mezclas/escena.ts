@@ -117,7 +117,7 @@ export function crearEscena(contenedor: HTMLElement) {
   }
 
   function dibujar({ lectura, iniciado, ahora }: CuadroEscena, tMechero: number) {
-    const dt = Math.min((ahora - ultimo) / 1000, 0.1)
+    const dt = Math.min(Math.max(0, ahora - ultimo) / 1000, 0.1)
     ultimo = ahora
     const e = estaciones[metodo]
     if (acomodando > 0) {

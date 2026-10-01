@@ -9,7 +9,7 @@ import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, num, relato } from './contenido'
-import { ESPECIES, MEZCLAS, METODOS, metodoDe, type MetodoId, type MezclaId } from './datos'
+import { ESPECIES, MEZCLAS, METODOS, mezclaDe, metodoDe, type MetodoId, type MezclaId } from './datos'
 import { crearEscena } from './escena'
 import { T_MECHERO, leer, relojPara, simular, veredictoDe, type Config, type Corrida, type Lectura } from './model'
 import { preguntaPara, type Pregunta, type Respuesta } from './prediccion'
@@ -49,24 +49,34 @@ const textoAhora = h('div')
 const ahora = h('div', { class: 'panel ahora' }, h('div', { class: 'recuperados' }, ...filas.map((f) => f.el)), textoAhora)
 const huecoGrafico = h('div')
 
-/** El gráfico se arma con las dos especies de la mezcla y la escala de tiempo del método (series fijas al crearse). */
+/**
+ * Las series (una por componente) y la unidad del tiempo quedan fijas al crear el gráfico: se crea uno nuevo solo
+ * cuando cambia la mezcla o la unidad. Para todo lo demás (método, mechero, sal) alcanza con `limpiar()`.
+ */
 let curva = grafico([])
+let claveCurva = ''
 let ultimoPunto = 0
+/** La destilación dura minutos u horas: su eje va en minutos. */
+const escalaTiempo = () => (config.metodo === 'destilacion' ? 1 / 60 : 1)
 function armarGrafico() {
-  const unidadX = corrida.duracion > 180 ? ' min' : ' s'
-  const escalaT = corrida.duracion > 180 ? 1 / 60 : 1
+  const escalaT = escalaTiempo()
+  const especies = mezclaDe(config.mezcla).partes.map((p) => p.especie)
   const total = (e: string) => corrida.porciones.filter((p) => p.especie === e).reduce((s, p) => s + p.masa, 0)
-  const especies = [corrida.ideal.sale, corrida.ideal.queda]
-  curva = grafico(especies.map((e) => ({ id: e, nombre: ESPECIES[e].nombre, color: ESPECIES[e].color })), {
-    titulo: 'Gramos recuperados', unidadX, unidadY: 'g', alto: 110, xMax: corrida.duracion * escalaT, yMax: Math.max(...especies.map(total)),
-  })
-  huecoGrafico.replaceChildren(curva.el)
+  const escala = { xMax: corrida.duracion * escalaT, yMax: Math.max(...especies.map(total)) }
+  const clave = `${config.mezcla}|${escalaT}`
+  if (clave === claveCurva) curva.limpiar(escala)
+  else {
+    claveCurva = clave
+    curva = grafico(especies.map((e) => ({ id: e, nombre: ESPECIES[e].nombre, color: ESPECIES[e].color })), {
+      titulo: 'Gramos recuperados', unidadX: escalaT < 1 ? ' min' : ' s', unidadY: 'g', alto: 110, ...escala,
+    })
+    huecoGrafico.replaceChildren(curva.el)
+  }
   ultimoPunto = -1
   agregarPunto(leer(corrida, 0))
 }
 function agregarPunto(l: Lectura) {
-  const escalaT = corrida.duracion > 180 ? 1 / 60 : 1
-  curva.agregar(l.t * escalaT, Object.fromEntries(l.recuperado.map((r) => [r.especie, r.g])))
+  curva.agregar(l.t * escalaTiempo(), Object.fromEntries(l.recuperado.map((r) => [r.especie, r.g])))
   ultimoPunto = l.t
 }
 
@@ -182,7 +192,7 @@ function actualizarHud(l: Lectura) {
 
 let anterior = performance.now()
 function cuadro(ahoraMs: number) {
-  const dt = Math.min((ahoraMs - anterior) / 1000, 0.1)
+  const dt = Math.min(Math.max(0, ahoraMs - anterior) / 1000, 0.1)
   anterior = ahoraMs
   if (fase === 'espera') {
     espera -= dt

@@ -2,8 +2,9 @@
 
 import { av } from '../../ui/avanzado'
 import { numero } from '../../ui/formato'
-import { ESPECIES, METODOS, mezclaDe, metodoDe, type EspecieId, type MetodoId } from './datos'
-import { LUZ_TAMIZ_MM, PORO_FILTRO_MM, metodosQueSirven, veredictoDe, type Corrida, type Lectura } from './model'
+import { ESPECIES, METODOS, METODO_PROPIO, mezclaDe, metodoDe, type EspecieId } from './datos'
+import { tEbullicionInicial } from './destilacion'
+import { LUZ_TAMIZ_MM, PORO_FILTRO_MM, sugerirMetodos, veredictoDe, type Corrida, type Lectura } from './model'
 
 export const num = numero
 
@@ -15,7 +16,7 @@ const con = (e: EspecieId) => esp(e, ART[e])
 const FEMENINO: Record<EspecieId, boolean> = { agua: true, arena: true, sal: true, aceite: false, alcohol: false, hierro: false }
 const fem = (e: EspecieId) => FEMENINO[e]
 const Con = (e: EspecieId) => esp(e, ART[e][0].toUpperCase() + ART[e].slice(1))
-const mm = (v: number) => `${numero(v, v < 0.1 ? 2 : 1)} mm`
+const mm = (v: number) => `${numero(v, Number.isInteger(Math.round(v * 100) / 10) ? 1 : 2)} mm`
 const gramos = (g: number) => `${numero(g, g < 10 ? 1 : 0)} g`
 
 export const GANCHO = `Una mezcla se separa aprovechando algo en lo que sus componentes son <em>distintos</em>${av(' (el tamaño, la densidad, el punto de ebullición, el magnetismo)')}. Pero ¿qué pasa si filtrás ${con('agua')} con ${con('sal')}?`
@@ -58,8 +59,14 @@ function porqueDecantacion(c: Corrida, l: Lectura): string {
       ? `Es <b>una sola fase</b>: ${con(disuelta.especie)} está ${fem(disuelta.especie) ? 'disuelta' : 'disuelto'}${disuelta.especie === 'alcohol' ? ' (se mezcla con el agua en cualquier proporción)' : ''} y no hay una capa que separar. Al abrir la llave sale todo junto.`
       : 'No hay un líquido que sostenga las capas: al abrir la llave sale todo junto, sin separarse.'
   }
+  const cristal = c.porciones.find((p) => p.id.endsWith('-cristal'))
+  if (cristal) {
+    const i = c.porciones.indexOf(cristal)
+    const disuelta = c.porciones.filter((p) => p.disuelta && p.especie === cristal.especie).reduce((s, p) => s + p.masa, 0)
+    return `Los ${gramos(l.salida[i])} de cristales que no se pudieron disolver son más densos que la solución (${num(ESPECIES[cristal.especie].densidad, 2)} g/mL contra ~${num(ESPECIES.agua.densidad, 2)} g/mL) y se hunden en ${num(c.tAsentado, 0)} s: salen por la llave. Los ${gramos(disuelta)} de ${ESPECIES[cristal.especie].nombre.toLowerCase()} disuelta <b>se quedan con el agua</b>: lo disuelto no se decanta.`
+  }
   const solido = ESPECIES[sale].estado === 'solido'
-  return `${Con(sale)} (${num(ESPECIES[sale].densidad, 2)} g/mL) es más ${fem(sale) ? 'densa' : 'denso'} que ${con(queda)} (${num(ESPECIES[queda].densidad, 2)} g/mL) y no ${solido ? 'se disuelve' : 'se mezcla'}: ${solido ? 'se hunde' : 'queda abajo'} en ${num(c.tAsentado, 0)} s${av(' (la velocidad sale de la ley de Stokes: depende de la diferencia de densidad y del tamaño)')}. Al abrir la llave sale la fase de abajo.${solido ? '' : ` En la interfase siempre se cuela un poquito (${gramos(l.salida.reduce((s, g, i) => s + (c.porciones[i].especie === queda ? g : 0), 0))} de ${ESPECIES[queda].nombre.toLowerCase()}).`}${c.porciones.some((p) => p.id.endsWith('-cristal')) ? ' La sal disuelta no se separa del agua: baja con ella.' : ''}`
+  return `${Con(sale)} (${num(ESPECIES[sale].densidad, 2)} g/mL) es más ${fem(sale) ? 'densa' : 'denso'} que ${con(queda)} (${num(ESPECIES[queda].densidad, 2)} g/mL) y no ${solido ? 'se disuelve' : 'se mezcla'}: ${solido ? 'se hunde' : 'queda abajo'} en ${num(c.tAsentado, 0)} s${av(' (la velocidad sale de la ley de Stokes: depende de la diferencia de densidad y del tamaño)')}. Al abrir la llave sale la fase de abajo.${solido ? '' : ` En la interfase siempre se cuela un poquito (${gramos(l.salida.reduce((s, g, i) => s + (c.porciones[i].especie === queda ? g : 0), 0))} de ${ESPECIES[queda].nombre.toLowerCase()}).`}`
 }
 
 function porqueDestilacion(c: Corrida, l: Lectura): string {
@@ -68,15 +75,16 @@ function porqueDestilacion(c: Corrida, l: Lectura): string {
   if (!c.hirvio) {
     return mezcla === 'hierro-arena'
       ? 'No hay nada que hierva: el hierro y la arena hierven a más de 2000 °C. El balón solo se calienta.'
-      : `El mechero (${num(tMechero, 0)} °C) no alcanza para que algo hierva: el balón llegó a ${num(tTop)} °C y se quedó ahí. Hace falta que el mechero esté más caliente que el punto de ebullición.`
+      : `El mechero (${num(tMechero, 0)} °C) no alcanza: ${mezcla === 'agua-alcohol' ? `el alcohol puro hierve a ${num(ESPECIES.alcohol.tEbullicion)} °C, pero mezclado con agua` : 'esta mezcla'} hierve a ~${num(tEbullicionInicial(c.porciones), 0)} °C. El balón llegó a ${num(tTop)} °C y se quedó ahí. Hace falta que el mechero esté más caliente que el punto de ebullición.`
   }
+  const lento = c.duracion > 3600 ? ` El mechero apenas supera la ebullición: hierve despacio y tarda ${num(c.duracion / 3600, 1)} h.` : ''
   if (mezcla === 'agua-alcohol') {
     const alc = l.salida[c.porciones.findIndex((p) => p.especie === 'alcohol')]
-    return `${Con('alcohol')} hierve a ${num(ESPECIES.alcohol.tEbullicion)} °C y ${con('agua')} a ${num(ESPECIES.agua.tEbullicion, 0)} °C, pero se parecen tanto que el vapor sale <b>rico en alcohol, no puro</b>: el destilado tiene ${gramos(alc)} de alcohol y ${gramos(l.salida.reduce((s, g) => s + g, 0) - alc)} de agua. Con el mechero más bajo sale más puro pero recuperás menos${av(' (para pasar de ahí hace falta destilación fraccionada; el azeótropo etanol-agua, ~96 %, no se rompe destilando)')}.`
+    return `${Con('alcohol')} hierve a ${num(ESPECIES.alcohol.tEbullicion)} °C y ${con('agua')} a ${num(ESPECIES.agua.tEbullicion, 0)} °C, pero se parecen tanto que el vapor sale <b>rico en alcohol, no puro</b>: el destilado tiene ${gramos(alc)} de alcohol y ${gramos(l.salida.reduce((s, g) => s + g, 0) - alc)} de agua. Con el mechero más bajo sale más puro pero recuperás menos. Para separarlos mejor hace falta una destilación fraccionada${av(' (y aun así el azeótropo etanol-agua, ~96 %, no se rompe destilando)')}.${lento}`
   }
   const volatil = c.ideal.sale
   const resto = c.ideal.queda
-  return `Solo ${con(volatil)} hierve (${num(tTop)} °C): sale como vapor, se condensa en el refrigerante y cae al colector (${gramos(l.salida[c.porciones.findIndex((p) => p.especie === volatil)])}). ${Con(resto)} no hierve a esa temperatura y se queda en el balón${mezcla === 'agua-sal' ? `${av(`. La sal hierve a ${num(ESPECIES.sal.tEbullicion, 0)} °C. Con sal disuelta el agua hierve un poco arriba de 100 °C (ascenso ebulloscópico)`)}` : ''}.${tMechero > 200 ? ' Con el mechero tan fuerte el vapor sube a los chorros y arrastra gotitas del balón: el destilado sale menos puro.' : ''}`
+  return `Solo ${con(volatil)} hierve (${num(tTop)} °C): sale como vapor, se condensa en el refrigerante y cae al colector (${gramos(l.salida[c.porciones.findIndex((p) => p.especie === volatil)])}). ${Con(resto)} no hierve a esa temperatura y se queda en el balón${mezcla === 'agua-sal' ? `${av(`. La sal hierve a ${num(ESPECIES.sal.tEbullicion, 0)} °C. Con sal disuelta el agua hierve un poco arriba de 100 °C (ascenso ebulloscópico)`)}` : ''}.${tMechero > 200 ? ' Con el mechero tan fuerte el vapor sube a los chorros y arrastra gotitas del balón: el destilado sale menos puro.' : ''}${lento}`
 }
 
 function porqueIman(c: Corrida): string {
@@ -106,15 +114,19 @@ export function relato(c: Corrida, l: Lectura, iniciado: boolean, tMechero: numb
     : tipo.homogenea ? '' : ` Se distinguen ${tipo.fases} fases.`
   const encabezado = `<strong>${mezclaDe(mezcla).nombre}: mezcla ${tipo.homogenea ? 'homogénea' : 'heterogénea'}.</strong>${detalleTipo}`
   const sat = sobresaturar && mezcla === 'agua-sal' ? ` Hay más sal de la que el agua puede disolver (${num(ESPECIES.sal.solubilidad, 0)} g cada 100 mL a 20 °C): lo que sobra queda como <b>cristales</b> en el fondo.` : ''
-  if (!iniciado) return `${encabezado}${sat} ${presentar(c)}${metodo === 'destilacion' ? ` Mechero a ${num(tMechero, 0)} °C.` : ''}`
+  const propio = METODO_PROPIO[mezcla]
+  const nota = propio && propio !== metodo ? ` Para esta mezcla el método propio es el <b>${metodoDe(propio).nombre.toLowerCase()}</b>.` : ''
+  if (!iniciado) return `${encabezado}${sat} ${presentar(c)}${metodo === 'destilacion' ? ` Mechero a ${num(tMechero, 0)} °C.` : ''}${nota}`
   if (!l.terminado) {
     const sale = l.salida.reduce((s, g) => s + g, 0)
     const hacia = metodo === 'decantacion' && l.asentado < 1 ? ' Las fases se están separando…' : ''
     return `<strong>${metodoDe(metodo).nombre} en marcha.</strong> Ya salieron ${gramos(sale)} del origen.${hacia}${metodo === 'destilacion' && l.temp != null ? ` El balón está a ${num(l.temp)} °C.` : ''}`
   }
   const v = veredictoDe(l.pureza ?? 0)
-  const pista = v === 'funciona' ? '' : metodosQueSirven(mezcla, sobresaturar).filter((m) => m !== metodo)
-  const sugerencia = pista && pista.length ? ` Probá con: ${pista.map((m: MetodoId) => `<b>${metodoDe(m).nombre.toLowerCase()}</b>`).join(', ')}.` : ''
+  const { metodos, parcial } = sugerirMetodos(mezcla, sobresaturar)
+  const pista = v === 'funciona' ? [] : metodos.filter((m) => m !== metodo)
+  const nombres = pista.map((m) => `<b>${metodoDe(m).nombre.toLowerCase()}</b>`).join(', ')
+  const sugerencia = pista.length ? ` Probá con: ${nombres}${parcial ? ` (es ${metodos[0] === 'decantacion' || metodos[0] === 'destilacion' ? 'la' : 'el'} que más separa, aunque no del todo)` : ''}.` : ''
   return `<strong class="${COLOR_VEREDICTO[v]}">${NOMBRE_VEREDICTO[v]}: pureza ${num(l.pureza ?? 0, 0)} %.</strong> ${explicacion(c, l)}${sugerencia}`
 }
 
