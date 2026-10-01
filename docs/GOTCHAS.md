@@ -18,3 +18,7 @@
 - **`PointLight(color, intensidad, 0, 2)`** ya decae con el inverso del cuadrado: no escalar la intensidad a mano según la distancia.
 - **Sombras de eclipse en el lab de la Luna**: con la escala didáctica, un shadow map haría eclipse todos los meses (justo la idea errónea que el lab desmiente). La sombra se calcula con ángulos reales en el shader de la Luna.
 - **`layers` de three.js no se heredan a los hijos**: para ocultar un grupo en un render secundario hay que hacer `traverse`.
+- **`agent-browser press <tecla>` (0.27.0)** dispara miles de `keydown` por una sola tecla y puede colgar la página. Para probar atajos: `eval` con `document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }))`. Si el CLI se cuelga: matar el pid de `~/.agent-browser/<sesión>.pid`.
+- **`eval` de agent-browser comparte el scope global**: un `const` repetido entre llamadas falla con "already declared"; envolver en `(() => { ... })()`.
+- **Tinte de vidrio con `transmission: 1`**: casi no muestra el `color`; el tinte necesita `emissive` del mismo color, compensando la luminancia (rojo y azul piden más intensidad que el verde).
+- **Inset circular** (zoom del digestivo, vista desde la Tierra): un segundo `WebGLRenderer` en su propio canvas con `border-radius: 50%` es más simple que scissor sobre el `EffectComposer`.
