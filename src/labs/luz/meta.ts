@@ -8,5 +8,5 @@ export const meta: Lab = {
   nap: 'Primaria 5° · fenómenos de la luz: reflexión y refracción',
   temas: ['energia'],
   orden: 3,
-  listo: false,
+  listo: true,
 }
