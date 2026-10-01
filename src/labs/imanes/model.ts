@@ -3,7 +3,7 @@
 //
 // Un imán de barra se modela con el "modelo de polos": una carga magnética +q en el extremo N y −q en el S,
 // con q = M · A = (Br / μ0) · A (Wikipedia, "Force between magnets"). Es un truco de cálculo que usan quienes
-// diseñan imanes: los polos sueltos no existen. De ahí salen, con la misma fórmula:
+// diseñan imanes: los polos sueltos no existen, y un polo real es una cara, no un punto (ver `SUAVIZADO`). De ahí salen, con la misma fórmula:
 //   campo      B = (μ0/4π) · Σ q · r / (r² + a²)^(3/2)                 (brújulas y limaduras)
 //   fuerza     F = (μ0/4π) · Σ qi · qj · d / (d² + a²)^(3/2)           (entre dos imanes, sumando los 4 pares de polos)
 // Con a = 0 es la ley de Coulomb magnética (F = μ0 q1 q2 / 4π r²) y la suma de 4 pares reproduce la fórmula
@@ -22,8 +22,11 @@ export type CampoVista = 'brujulas' | 'limaduras' | 'nada'
 export const LARGO = 5
 export const LADO = 1.6
 const AREA = (LADO * 1e-2) ** 2
-/** Parámetro de ajuste (no es un dato): radio del "polo suavizado". Evita que la fuerza se dispare al tocarse los imanes. */
-const SUAVIZADO = 0.5e-2
+/** El polo no es un punto: es una cara de LADO × LADO. El "suavizado" (radio, en m) lo reparte y hace que, cerca, la fuerza caiga más
+ *  despacio que 1/d² (con polos puntuales caería siempre más rápido). Parámetro ajustado, no un dato: se eligió para que la forma de F(d)
+ *  coincida (error medio ~10 %) con la fuerza entre dos caras cuadradas de 1,6 cm con carga superficial uniforme, calculada por
+ *  integración numérica propia entre 0,5 y 12 cm. A 0,5 cm da ~5 N para la ferrita, contra ~4,5 N de las caras. */
+const SUAVIZADO = 0.65e-2
 
 export const GAP_MIN = 0.5
 export const GAP_MAX = 12
@@ -46,7 +49,7 @@ export interface Tipo {
   usoMax?: number
 }
 
-/** Ferrita: B máximo ≈ 0,35 T, Curie 450 °C (ferrita de estroncio). Neodimio: Br 1–1,5 T (1,3 elegido), Curie 310–400 °C (340 elegido), uso hasta 80 °C. */
+/** Ferrita: B máximo ≈ 0,35 T, Curie 450 °C (ferrita de estroncio). Neodimio: Br 1–1,5 T (1,3 elegido), Curie 310–370 °C en la página del neodimio (310–400 °C en la tabla de Curie temperature; 340 elegido, dentro de las dos), uso hasta 80 °C. */
 export const TIPOS: Record<TipoId, Tipo> = {
   ferrita: { nombre: 'Ferrita (heladera)', br: 0.35, curie: 450 },
   neodimio: { nombre: 'Neodimio (potente)', br: 1.3, curie: 340, usoMax: 80 },
@@ -69,8 +72,9 @@ export interface Material {
   color: number
 }
 
-/** χ: Fe 200.000, Ni 600, Al +2,2×10⁻⁵, Cu −9,63×10⁻⁶, PVC −1,071×10⁻⁵ (Wikipedia, "Magnetic susceptibility"). Cobalto y acero: sin dato
- *  verificado; el modelo usa un valor ≫ 3 y el resultado no cambia (la forma limita la respuesta, ver `chiEfectivo`). */
+/** χ: Fe 200.000, Ni 600, Al +2,2×10⁻⁵, Cu −9,63×10⁻⁶, PVC −1,071×10⁻⁵ (Wikipedia, "Magnetic susceptibility").
+ *  Densidades: Fe, Al, Cu, Ni y PVC de la misma tabla; cobalto 8,834 (Wikipedia, "Cobalt", 20 °C); acero 7,85 (docs/fuentes.md, Flotación).
+ *  Cobalto y acero: sin χ verificado; el modelo usa un valor ≫ 3 y el resultado no cambia (la forma limita la respuesta, ver `chiEfectivo`). */
 export const MATERIALES: Record<MaterialId, Material> = {
   hierro: { nombre: 'Hierro', ejemplo: 'un clavo', ferro: true, chi: 2e5, densidad: 7.874, color: 0x6b6f72 },
   acero: { nombre: 'Acero', ejemplo: 'una lata de conserva', ferro: true, chi: 1e3, densidad: 7.85, color: 0x9aa3a8 },

@@ -14,3 +14,9 @@ export const ALTO_IMAN = LADO * ESC
 export const COLOR_N = 0xff5fa2
 export const COLOR_S = 0x5ec8ff
 export const GRIS_SIN_IMAN = 0x59645f
+
+/** Interpolación suave (smoothstep): 0 hasta `a`, 1 desde `b`. */
+export const smooth = (a: number, b: number, x: number) => {
+  const t = Math.min(Math.max((x - a) / (b - a), 0), 1)
+  return t * t * (3 - 2 * t)
+}

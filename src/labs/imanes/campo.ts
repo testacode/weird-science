@@ -1,7 +1,7 @@
 // El campo magnético hecho visible: brújulas (apuntan al campo local, incluido el terrestre) y limaduras de hierro
 // (solo se ordenan donde el campo supera a su rozamiento con el papel). Las dos salen de `campoEn` del modelo.
 import * as THREE from 'three'
-import { COLOR_N, COLOR_S, ESC, aX, aZ } from './geometria'
+import { COLOR_N, COLOR_S, ESC, aX, aZ, smooth } from './geometria'
 import { LADO, LADO_MUESTRA, campoEn, piezaB, piezasA, polosTodos, type Config } from './model'
 
 const PASO = 2
@@ -15,10 +15,6 @@ const B_LIMADURAS = 1e-3
 /** Tramo de mesada (cm) en el que se esparcen las limaduras: de x0 a x1 y de −y a y. */
 const MESA = { x0: -13, x1: 19, y: 7.5 }
 
-const smooth = (a: number, b: number, x: number) => {
-  const t = Math.min(Math.max((x - a) / (b - a), 0), 1)
-  return t * t * (3 - 2 * t)
-}
 const dentro = (x: number, y: number, r: { x0: number; x1: number; semi: number }, margen: number) =>
   x > r.x0 - margen && x < r.x1 + margen && Math.abs(y) < r.semi + margen
 

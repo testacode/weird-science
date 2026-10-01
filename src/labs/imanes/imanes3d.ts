@@ -1,13 +1,8 @@
 // Los imanes de barra de la maqueta: cada parte tiene una mitad N (magenta) y una mitad S (cielo).
 import * as THREE from 'three'
 import type { Pildora } from '../../escena/pildoras'
-import { ALTO_IMAN, COLOR_N, COLOR_S, ESC, GRIS_SIN_IMAN, aX } from './geometria'
+import { ALTO_IMAN, COLOR_N, COLOR_S, ESC, GRIS_SIN_IMAN, aX, smooth } from './geometria'
 import { MAX_PIEZAS, LADO, TIPOS, magnetizacion, piezaB, piezasA, type Config, type Pieza } from './model'
-
-const smooth = (a: number, b: number, x: number) => {
-  const t = Math.min(Math.max((x - a) / (b - a), 0), 1)
-  return t * t * (3 - 2 * t)
-}
 
 const GRIS = new THREE.Color(GRIS_SIN_IMAN)
 /** Los colores del kit son claros: sobre la mesada, con la luz de la escena, se lavan. */

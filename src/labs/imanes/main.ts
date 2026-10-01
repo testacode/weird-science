@@ -9,6 +9,7 @@ import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, campoPartes, fuerzaPartes, num, relato } from './contenido'
 import { crearEscena } from './escena'
+import { smooth } from './geometria'
 import {
   CONFIG_INICIAL, GAP_MAX, GAP_MIN, MATERIALES, SEP_MAX, TEMP_MAX, TEMP_MIN, TIPOS, magnetizacion, resolver,
   type CampoVista, type Config, type MaterialId, type Modo, type Polo, type TipoId,
@@ -19,6 +20,10 @@ import { preguntaPara, type Intencion, type Pregunta, type Respuesta } from './p
 const ESPERA_REVELAR_MS = 2400
 const DURACION_MS = 650
 const PUNTOS_CURVA = 36
+/** Tope (veces el rozamiento) del gráfico de materiales: sin él, la atracción cerca del imán (cientos de veces) aplasta el umbral en 1. */
+const TECHO_UMBRAL = 10
+/** Mínimo entre repintados de la curva y el relato mientras algo se mueve (ms). */
+const REFRESCO_MS = 80
 
 let config: Config = { ...CONFIG_INICIAL }
 const lab = document.querySelector<HTMLElement>('#lab')!
@@ -83,15 +88,26 @@ const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => 
   const resultado = pregunta.resolver(nueva)
   temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
 })
+/** Si la config cambia, la pregunta abierta (o ya respondida y sin revelar) deja de valer: se oculta y se cancela el reveal. */
 function descartarPendiente() {
-  if (!pred.pendiente) return
+  if (!pred.pendiente && !pred.enCurso) return
+  window.clearTimeout(temporizador)
   saltar.hidden = true
   pred.ocultar()
 }
 
+/** Corta la animación llevando gap y sep a su valor final: lo que se pida después parte de ahí, no de un punto a mitad de camino. */
+function terminarAnimacion() {
+  if (!animacion) return
+  config = { ...config, ...animacion.hasta }
+  animacion = null
+}
+
 /** Todo cambio pasa por acá: si corresponde una predicción, primero se pregunta; si no, se aplica. */
 function pedir(cambio: Partial<Config>, intencion?: Intencion) {
-  animacion = null
+  // Cambiar solo lo que se mira no toca la pregunta ni la animación.
+  if (Object.keys(cambio).every((k) => k === 'vista')) return aplicar({ ...config, ...cambio })
+  terminarAnimacion()
   descartarPendiente()
   let nueva: Config = { ...config, ...cambio }
   if (cambio.tipo && cambio.tipo !== config.tipo) nueva = { ...nueva, temp: TEMP_MIN, tMax: TEMP_MIN, piezas: 1, sep: 0 }
@@ -99,8 +115,7 @@ function pedir(cambio: Partial<Config>, intencion?: Intencion) {
   if (nueva.piezas === 1) nueva.sep = 0
   if (nueva.modo === 'dos') nueva.gap = Math.max(nueva.gap, GAP_MIN)
   const pregunta = preguntaPara(config, nueva, intencion)
-  if (!pregunta) return aplicar(nueva)
-  window.clearTimeout(temporizador)
+  if (!pregunta) return intencion ? aplicarSuave(nueva) : aplicar(nueva)
   const conAjuste = { ...nueva, ...pregunta.ajuste }
   pred.preguntar(pregunta.texto, pregunta.opciones, { nueva: conAjuste, pregunta })
   saltar.hidden = false
@@ -108,9 +123,7 @@ function pedir(cambio: Partial<Config>, intencion?: Intencion) {
 }
 function reiniciar() {
   animacion = null
-  window.clearTimeout(temporizador)
   descartarPendiente()
-  pred.ocultar()
   aplicar({ ...CONFIG_INICIAL })
 }
 
@@ -156,7 +169,7 @@ function pintarCurva() {
     : [{ id: 'fuerza', nombre: 'Fuerza ÷ rozamiento', color: 'ambar' }, { id: 'roz', nombre: 'Rozamiento', color: 'var(--apagado)' }]
   if (clave !== claveCurva) {
     claveCurva = clave
-    curva.cambiar(series, { titulo: dos ? 'Fuerza según la distancia' : 'Atracción según la distancia', unidadX: ' cm', unidadY: unidad, xMax: GAP_MAX, yMax: dos ? 1e-9 : 4 })
+    curva.cambiar(series, { titulo: dos ? 'Fuerza según la distancia' : 'Atracción según la distancia', unidadX: ' cm', unidadY: unidad, xMax: GAP_MAX, yMax: dos ? 1e-9 : 4, yTecho: dos ? undefined : TECHO_UMBRAL })
   }
   curva.limpiar({ xMax: GAP_MAX, yMax: dos ? Math.max(tope * factor, 1e-9) : 4 })
   const hasta = Math.max(config.gap, xMin + 0.01)
@@ -168,15 +181,24 @@ function pintarCurva() {
 }
 
 let relatoPrevio = ''
-function aplicar(nueva: Config) {
+let ultimoRefresco = 0
+/** `animando`: solo cambian gap y sep (tween o deslizamiento); camino liviano: sin sincronizar todos los controles y con curva y relato espaciados. */
+function aplicar(nueva: Config, animando = false) {
   config = nueva
-  sincronizar()
+  if (animando) {
+    distanciaDos.set(config.gap)
+    distanciaMat.set(config.gap)
+    separacion.set(config.sep)
+  } else sincronizar()
   escena.aplicar(config)
   const r = resolver(config)
   mFuerza.set(...fuerzaPartes(r.fuerza))
   mCampo.set(...campoPartes(r.campo))
   mDistancia.set(num(config.gap, 1), 'cm')
   mMagnetizacion.set(num(r.magnetizacion * 100, 0), '%')
+  const t = performance.now()
+  if (animando && t - ultimoRefresco < REFRESCO_MS) return
+  ultimoRefresco = t
   const texto = relato(config)
   if (texto !== relatoPrevio) ahora.innerHTML = relatoPrevio = texto
   pintarCurva()
@@ -214,14 +236,17 @@ function cuadro(t: number) {
   anterior = t
   if (animacion) {
     const p = Math.min((performance.now() - animacion.t0) / DURACION_MS, 1)
-    const e = p * p * (3 - 2 * p)
+    const e = smooth(0, 1, p)
     const { desde, hasta } = animacion
     if (p >= 1) animacion = null
-    aplicar({ ...config, gap: desde.gap + (hasta.gap - desde.gap) * e, sep: desde.sep + (hasta.sep - desde.sep) * e })
+    aplicar({ ...config, gap: desde.gap + (hasta.gap - desde.gap) * e, sep: desde.sep + (hasta.sep - desde.sep) * e }, p < 1)
   } else if (config.modo === 'material' && config.gap > 0) {
     // La muestra se desliza hacia el imán mientras la atracción le gane al rozamiento (velocidad ilustrativa, no real).
     const { relativa } = resolver(config)
-    if (relativa >= 1) aplicar({ ...config, gap: Math.max(0, config.gap - (2 + 3 * Math.log10(1 + relativa)) * dt) })
+    if (relativa >= 1) {
+      const gap = Math.max(0, config.gap - (2 + 3 * Math.log10(1 + relativa)) * dt)
+      aplicar({ ...config, gap }, gap > 0)
+    }
   }
   escena.dibujar(t / 1000)
   requestAnimationFrame(cuadro)
