@@ -26,15 +26,10 @@
 .pildora.p-angulo { color: var(--texto); }
 .pildora.p-idea { color: var(--magenta); border-color: var(--magenta); }
 
-/* Línea de tiempo */
-.hud-linea { position: absolute; z-index: 2; bottom: 16px; left: 410px; right: 360px; }
-.linea { padding: 10px 22px 8px; display: grid; gap: 6px; }
-.linea-cabecera { display: flex; justify-content: space-between; align-items: baseline; }
-.linea-valor { font: 600 12px/1 var(--mono); color: var(--apagado); }
-.linea-valor b { font-size: 15px; color: var(--marca); }
-/* El estilo del range sale del kit; acá solo lo propio de la línea de tiempo. */
-.linea input[type='range'] { margin-top: 6px; cursor: grab; }
-.linea input[type='range']:active { cursor: grabbing; }
+/* Línea de tiempo: la base sale del kit; acá lo propio (más aire para los íconos de fase). */
+.linea { gap: 6px; }
+.linea-valor b { font-size: 15px; }
+.linea input[type='range'] { margin-top: 6px; }
 .marcas { position: relative; height: 28px; margin: 0 9px; }
 .marca-fase {
   position: absolute; top: 0; transform: translateX(-50%); padding: 2px; border: 0; border-radius: 50%;

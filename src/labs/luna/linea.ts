@@ -1,6 +1,7 @@
 // Línea de tiempo arrastrable: el día del ciclo lunar, con un ícono por fase para saltar directo.
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
+import { lineaDeTiempo as linea } from '../../ui/linea'
 import { NOTA_MES } from './contenido'
 import { MES_SINODICO, esCreciente, elongacion, type Hemisferio } from './model'
 
@@ -38,13 +39,6 @@ const MARCAS = [0, 45, 90, 135, 180, 225, 270, 315, 360]
 export function lineaDeTiempo(inicial: Hemisferio, alElegir: (dia: number) => void) {
   const dia = h('b', {}, '0')
   const ciclo = h('span', { class: 'avanzado' })
-  const rango = h('input', {
-    type: 'range', min: '0', max: String(MES_SINODICO), step: '0.01', value: '0', 'aria-label': 'Día del ciclo lunar',
-  })
-  let arrastrando = false
-  rango.addEventListener('input', () => alElegir(Number(rango.value)))
-  rango.addEventListener('pointerdown', () => (arrastrando = true))
-  window.addEventListener('pointerup', () => (arrastrando = false))
   const iconos = MARCAS.map((g) => {
     const canvas = h('canvas', { class: 'icono-fase' })
     const boton = h('button', {
@@ -59,22 +53,20 @@ export function lineaDeTiempo(inicial: Hemisferio, alElegir: (dia: number) => vo
   const poner = (hem: Hemisferio) => iconos.forEach((i) => dibujarIcono(i.canvas, i.g, hem))
   poner(inicial)
 
-  const el = h('div', { class: 'panel linea' },
-    h('div', { class: 'linea-cabecera' },
-      h('span', { class: 'etiqueta' }, 'Día del ciclo · arrastralo'),
-      h('span', { class: 'linea-valor' }, dia, ` de ${numero(MES_SINODICO)} `, ciclo),
-    ),
-    rango,
+  const l = linea(
+    {
+      etiqueta: 'Día del ciclo · arrastralo', valor: [dia, ` de ${numero(MES_SINODICO)} `, ciclo],
+      max: MES_SINODICO, paso: 0.01, aria: 'Día del ciclo lunar', alArrastrar: alElegir,
+    },
     h('div', { class: 'marcas' }, ...iconos.map((i) => i.boton)),
     nota,
   )
   return {
-    el,
+    el: l.el,
     setHemisferio: poner,
     /** Actualiza el control sin pisar el arrastre del usuario. */
     set(valor: number, numeroCiclo: number) {
-      if (!arrastrando) rango.value = String(valor)
-      rango.style.setProperty('--p', `${(valor / MES_SINODICO) * 100}%`)
+      l.set(valor)
       dia.textContent = numero(valor)
       ciclo.textContent = `· ciclo ${numeroCiclo}`
     },
