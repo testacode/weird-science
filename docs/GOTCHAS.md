@@ -12,3 +12,5 @@
 - **Worktrees dentro del repo**: eslint y vitest escanean `.worktrees/` si no se excluyen, y el check de `main` termina corriendo el código a medio hacer de otros agentes. Excluidos en `eslint.config.js` y en el script `test`.
 - **`PointLight` con `visible = false`** la saca de la escena y recompila los shaders (tirón). Para apagar una luz, bajar la intensidad a 0.
 - **Niebla del escenario** (`scene.fog` empieza en 16): con la cámara más lejos, la maqueta se apaga. El lab puede ajustar `scene.fog` localmente.
+- **Vidrio con `transmission` + partículas adentro**: la transmisión las desenfoca y una red se vuelve una mancha. Para recipientes con partículas, mejor `MeshPhysicalMaterial` transparente (opacity ~0,1, `depthWrite: false`).
+- **Encuadre con HUDs de distinto ancho**: `camera.setViewOffset(w, h, -(izq - der) / 2, 0, w, h)` centra la maqueta en el hueco libre; reaplicar en cada resize.
