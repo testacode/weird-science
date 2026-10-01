@@ -14,3 +14,7 @@
 - **Niebla del escenario** (`scene.fog` empieza en 16): con la cámara más lejos, la maqueta se apaga. El lab puede ajustar `scene.fog` localmente.
 - **Vidrio con `transmission` + partículas adentro**: la transmisión las desenfoca y una red se vuelve una mancha. Para recipientes con partículas, mejor `MeshPhysicalMaterial` transparente (opacity ~0,1, `depthWrite: false`).
 - **Encuadre con HUDs de distinto ancho**: `camera.setViewOffset(w, h, -(izq - der) / 2, 0, w, h)` centra la maqueta en el hueco libre; reaplicar en cada resize.
+- **Transmission no ve otros objetos con transmission**: agua dentro de un vaso, ambos con `transmission`, hace desaparecer el agua. Uno de los dos va con `transparent` + `depthWrite: false`.
+- **`PointLight(color, intensidad, 0, 2)`** ya decae con el inverso del cuadrado: no escalar la intensidad a mano según la distancia.
+- **Sombras de eclipse en el lab de la Luna**: con la escala didáctica, un shadow map haría eclipse todos los meses (justo la idea errónea que el lab desmiente). La sombra se calcula con ángulos reales en el shader de la Luna.
+- **`layers` de three.js no se heredan a los hijos**: para ocultar un grupo en un render secundario hay que hacer `traverse`.
