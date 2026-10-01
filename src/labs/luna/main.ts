@@ -108,32 +108,31 @@ const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', oncl
 const reloj = h('span', { class: 'etiqueta' })
 
 // --- Predecí antes de correr: arranca pausado hasta que el usuario elige (o salta la pregunta) ---
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
-  pregunta = preguntaPara(config)
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  const pregunta = preguntaPara(config)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
 /** Al llegar a la primera Luna llena se revela la respuesta, calculada con el modelo. */
 function revisarPrediccion(desdeElJuego: boolean) {
-  if (!pregunta || !(pred.enCurso || pred.pendiente) || t < T_REVELAR) return
+  const datos = pred.datos
+  if (!datos || t < T_REVELAR) return
   if (desdeElJuego) {
     t = T_REVELAR
     seguir(false)
   }
-  const r = pregunta.resolver(config)
+  const r = datos.pregunta.resolver(datos.config)
   pred.revelar(r.correcta, r.explicacion)
 }
 function alternar() {
   if (pred.pendiente) {
     pred.ocultar()
-    pregunta = null
     return seguir(true)
   }
   seguir(!corriendo)

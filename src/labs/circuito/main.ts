@@ -83,17 +83,15 @@ const botonPoner = h('button', { class: 'boton', type: 'button', onclick: () => 
 
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---
-let pendiente: { nueva: Config; pregunta: Pregunta } | null = null
 let temporizador = 0
 const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const nueva = pendiente?.nueva
+  const nueva = pred.datos?.nueva
   descartarPendiente()
   if (nueva) aplicar(nueva)
 } }, 'Saltar y hacerlo igual')
-const pred = prediccion<Respuesta>(() => {
-  if (!pendiente) return
-  const { nueva, pregunta } = pendiente
-  pendiente = null
+const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => {
+  if (!pred.datos) return
+  const { nueva, pregunta } = pred.datos
   saltar.hidden = true
   const antes = r
   aplicar(nueva)
@@ -101,8 +99,7 @@ const pred = prediccion<Respuesta>(() => {
   temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
 })
 function descartarPendiente() {
-  if (!pendiente) return
-  pendiente = null
+  if (!pred.pendiente) return
   saltar.hidden = true
   pred.ocultar()
 }
@@ -115,8 +112,7 @@ function pedir(cambio: Partial<Config>) {
   const pregunta = preguntaPara(config, nueva)
   if (!pregunta) return aplicar(nueva)
   window.clearTimeout(temporizador)
-  pendiente = { nueva, pregunta }
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })
   saltar.hidden = false
   sincronizar()
 }

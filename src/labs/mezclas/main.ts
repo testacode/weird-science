@@ -93,8 +93,7 @@ lab.append(
 const ayuda = modal()
 const botonSeparar = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => separar() }, 'Separar')
 const reloj = h('span', { class: 'etiqueta' })
-let pregunta: Pregunta = preguntaPara(config)
-const pred = prediccion<Respuesta>(() => separar())
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => separar())
 
 const selectorMezcla = segmentado<MezclaId>(MEZCLAS.map((m) => ({ valor: m.id, texto: m.nombre })), config.mezcla, (m) =>
   cambiar({ mezcla: m, sobresaturar: m === 'agua-sal' ? config.sobresaturar : false }))
@@ -128,8 +127,8 @@ function reiniciar() {
   t = 0
   escena.preparar(corrida)
   armarGrafico()
-  pregunta = preguntaPara(config)
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  const pregunta = preguntaPara(config)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
   mostrarControles()
 }
 function separar() {
@@ -205,8 +204,9 @@ function cuadro(ahoraMs: number) {
   const lectura = leer(corrida, t)
   if (fase !== 'listo' && lectura.t - ultimoPunto >= corrida.duracion / PUNTOS_GRAFICO) agregarPunto(lectura)
   if (fase === 'terminado' && ultimoPunto < corrida.duracion) agregarPunto(lectura)
-  if (fase !== 'listo' && lectura.progreso >= 0.5 && (pred.pendiente || pred.enCurso)) {
-    const r = pregunta.resolver(config)
+  const datos = pred.datos
+  if (fase !== 'listo' && lectura.progreso >= 0.5 && datos) {
+    const r = datos.pregunta.resolver(datos.config)
     pred.revelar(r.correcta, r.explicacion)
   }
   actualizarHud(lectura)

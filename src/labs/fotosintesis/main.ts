@@ -94,8 +94,7 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
 
 function seguir(va: boolean) {
   corriendo = va
@@ -107,30 +106,26 @@ function reiniciar() {
   reiniciarCurva()
   seguir(true)
 }
-function preguntar() {
+function preguntar(pregunta: Pregunta | null) {
   if (!pregunta) return pred.ocultar()
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
-function cancelarPregunta() {
-  pregunta = null
-  pred.ocultar()
-}
 function revelar() {
-  if (!pregunta || !pred.enCurso) return
-  const r = pregunta.resolver(config)
+  const datos = pred.datos
+  if (!datos || !pred.enCurso) return
+  const r = datos.pregunta.resolver(datos.config)
   pred.revelar(r.correcta, r.explicacion)
 }
 /** Repite el experimento con los mismos controles; si hay algo roto, vuelve a preguntar. */
 function otraVez() {
   reiniciar()
-  pregunta = preguntaPara(config)
-  preguntar()
+  preguntar(preguntaPara(config))
 }
 function alternar() {
   if (pred.pendiente) {
-    cancelarPregunta()
+    pred.ocultar()
     return seguir(true)
   }
   corriendo = !corriendo
@@ -147,11 +142,10 @@ function aplicar(parcial: Partial<Config>) {
   const despues = preguntaPara(config)
   sincronizar()
   if (despues && despues.id !== antes) {
-    pregunta = despues
     reiniciar()
-    return preguntar()
+    return preguntar(despues)
   }
-  if (pregunta) cancelarPregunta()
+  pred.ocultar()
   muestrear()
 }
 
