@@ -27,6 +27,8 @@ const lab = document.querySelector<HTMLElement>('#lab')!
 let sus = SUSTANCIAS[0]
 let config: Config = { tapa: false, latente: true }
 let estado = estadoInicial(sus)
+/** Lo que muestra la pantalla en este cuadro: decide cuándo se puede revelar. */
+let lectura: Lectura = leer(estado, sus, config)
 let modo: Modo = 'calentar'
 let magnitud = POTENCIA_INICIAL_W
 let velocidad = '1'
@@ -69,7 +71,8 @@ let ultimoPunto = 0
 /** El eje Y va del tope de frío al de calor de la placa: queda fijo durante toda la corrida. */
 function reiniciarCurva() {
   curva.limpiar({ yMin: sus.tFusion - T_TOPE_FRIO, yMax: sus.tEbullicion + T_TOPE_CALOR })
-  curva.agregar(0, { temp: leer(estado, sus, config).temp })
+  lectura = leer(estado, sus, config)
+  curva.agregar(0, { temp: lectura.temp })
   ultimoPunto = 0
 }
 
@@ -90,7 +93,10 @@ const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', oncl
 const reloj = h('span', { class: 'etiqueta' })
 
 // --- Predecí antes de correr: cada vez que se empieza de nuevo, la simulación espera la predicción ---
-const pred = prediccion<Respuesta, { pregunta: Pregunta; sus: Sustancia; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; sus: Sustancia; config: Config }>(() => seguir(true), {
+  saltar: () => seguir(true),
+  listo: (d) => d.pregunta.listo(lectura),
+})
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
@@ -101,9 +107,9 @@ function predecir() {
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
-function revelar(l: Lectura) {
+function revelar() {
   const datos = pred.datos
-  if (!datos || !pred.enCurso || !datos.pregunta.listo(l)) return
+  if (!pred.listo || !datos) return
   // La potencia solo cambia los segundos de la explicación: se usa la de ahora.
   const r = datos.pregunta.resolver({ sus: datos.sus, config: datos.config, potencia: potencia() > 0 ? potencia() : POTENCIA_INICIAL_W })
   pred.revelar(r.correcta, r.explicacion)
@@ -214,12 +220,12 @@ function cuadro(t: number) {
       restante -= dt
     }
   }
-  const lectura = leer(estado, sus, config)
+  lectura = leer(estado, sus, config)
   if (estado.t - ultimoPunto >= Math.max(MUESTREO_S, estado.t / PUNTOS_APROX)) {
     curva.agregar(estado.t, { temp: lectura.temp })
     ultimoPunto = estado.t
   }
-  revelar(lectura)
+  revelar()
   actualizarHud(lectura, t)
   escena.dibujar(lectura, sus, config, potencia(), t)
   requestAnimationFrame(cuadro)

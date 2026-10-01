@@ -8,9 +8,6 @@
 .pildora.aparente { color: var(--cielo); border-color: var(--cielo); }
 .pildora.multilinea span:first-child { color: var(--texto); }
 
-/* Los controles que no corresponden a la escena se esconden. */
-.consola [hidden] { display: none; }
-
 /* Botones de medio en grilla, cada uno con una muestra de su color */
 .medios { flex-wrap: wrap; }
 .medios button { flex: 1 1 28%; white-space: nowrap; padding: 6px 4px; font-size: 12.5px; }

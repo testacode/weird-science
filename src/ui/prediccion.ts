@@ -49,6 +49,8 @@ export interface OpcionesPrediccion<D> {
   saltar?: (datos: D | null) => void
   /** Si se da, la tarjeta muestra un botón con este texto que llama a `saltar` (función: según la pregunta; `null` = sin botón). */
   textoSaltar?: string | ((datos: D | null) => string | null)
+  /** Si lo que se ve ya coincide con lo que se va a corregir (llegó al equilibrio, terminó el golpe…). Ver `pred.listo`. */
+  listo?: (datos: D) => boolean
 }
 
 /**
@@ -60,8 +62,9 @@ export interface OpcionesPrediccion<D> {
  * Se guarda por referencia: el lab no debe mutar lo que pasa (reemplazar la config, no editarla).
  * Con las preguntas apagadas (`interruptorPreguntas`), `preguntar` no muestra nada, llama a `saltar` y devuelve `false`.
  * `revelarEn` deja el reveal en manos de la tarjeta: `ocultar` o una pregunta nueva lo cancelan.
+ * Labs que revelan desde el loop: el `revelar` del lab arranca con `if (!pred.listo) return` (criterio en la opción `listo`); así `resolver` corre una sola vez.
  */
-export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) => void, { saltar, textoSaltar }: OpcionesPrediccion<D> = {}) {
+export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) => void, { saltar, textoSaltar, listo: criterio }: OpcionesPrediccion<D> = {}) {
   let elegida: T | null = null
   let respondida = false
   let datos: D | null = null
@@ -85,6 +88,7 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
   let lista: Opcion<T>[] = []
 
   const pendiente = () => !el.hidden && elegida === null && !respondida
+  const enCurso = () => !el.hidden && elegida !== null && !respondida
   function ocultar() {
     window.clearTimeout(timer)
     elegida = null
@@ -164,7 +168,11 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
     },
     /** Hay una predicción hecha y todavía sin revelar. */
     get enCurso() {
-      return !el.hidden && elegida !== null && !respondida
+      return enCurso()
+    },
+    /** Hay una predicción en curso y la pantalla ya muestra lo que se va a corregir (opción `listo`; sin ella, en cuanto está en curso). */
+    get listo() {
+      return enCurso() && (!criterio || criterio(datos as D))
     },
   }
 }

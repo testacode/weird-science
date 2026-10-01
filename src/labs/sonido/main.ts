@@ -82,6 +82,7 @@ const pred = prediccion<Respuesta, { pregunta: Pregunta; datos: Datos }>(() => {
   // Saltar (o apagar las preguntas): se hace igual, sin predicción.
   saltar: (d) => d && hacer(d.pregunta.tipo),
   textoSaltar: 'Saltar y hacerlo igual',
+  listo: (d) => d.pregunta.listo(config, estado),
 })
 function descartarPendiente() {
   if (pred.pendiente) pred.ocultar()
@@ -102,7 +103,7 @@ function preguntar(tipo: Pregunta['tipo']) {
 }
 function revelar() {
   const d = pred.datos
-  if (!d || !pred.enCurso || !d.pregunta.listo(config, estado)) return
+  if (!pred.listo || !d) return
   const r = d.pregunta.resolver(d.datos)
   pred.revelar(r.correcta, r.explicacion)
 }

@@ -7,7 +7,6 @@
 /* Vista desde la Tierra: círculos al pie del HUD izquierdo, lejos de la maqueta. */
 .vistas { display: flex; justify-content: center; gap: 14px; }
 .vista { display: grid; align-content: start; justify-items: center; gap: 6px; flex: 1; text-align: center; }
-.vista[hidden] { display: none; }
 .vista .disco {
   border-radius: 50%; overflow: hidden; line-height: 0;
   border: 2px solid rgba(190, 255, 220, 0.28); box-shadow: 0 0 0 5px rgba(7, 16, 15, 0.55), 0 10px 40px rgba(0, 0, 0, 0.5);

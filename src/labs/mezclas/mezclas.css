@@ -15,11 +15,8 @@ body.sin-avanzado .metricas { grid-template-columns: 0.8fr 1fr 1.4fr; }
 .hud-der .interruptor .segmentado { min-width: 120px; flex-wrap: nowrap; }
 .hud-der .interruptor .segmentado button { flex: 1; }
 
-/* El mechero solo cuenta en la destilación: en los otros métodos se esconde. */
-.mechero[hidden] { display: none; }
 .mechero .cabeza b { color: var(--acento); }
 
 .boton:disabled { opacity: 0.45; cursor: default; }
 .pildora.salida.activa { color: var(--cielo); border-color: var(--cielo); }
 .pildora.temp { color: var(--ambar); border-color: var(--ambar); }
-.pildora.temp[hidden] { display: none; }

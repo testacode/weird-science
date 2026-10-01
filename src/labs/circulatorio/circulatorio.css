@@ -13,5 +13,4 @@
 .grupo.romper.sin-defecto .deslizador { opacity: 0.4; }
 
 .aviso { padding: 12px 14px; font-size: 13px; border-color: var(--magenta); }
-.aviso[hidden] { display: none; }
 .aviso strong { color: var(--magenta); }
