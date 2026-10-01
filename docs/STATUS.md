@@ -9,7 +9,7 @@
 
 ## Backlog
 
-1. **Fuentes en los otros 6 labs** (digestivo, luna, estaciones, circuito, fotosíntesis, ciclo del agua): verificar sus datos en navegador, anotarlos en `docs/fuentes.md` y sumar `fuentes(...)` al "Cómo funciona". En los 4 ya hechos faltan: gravedad de los planetas (flotación) y P50, Hill, 47 mmHg y 21/16/4 % (respiratorio).
+1. **Datos sin verificar** (detalle en `docs/fuentes.md`): P50 y 16 % de O₂ exhalado, atmósfera estándar (respiratorio); comidas del digestivo; absorción de Elodea (fotosíntesis, estimada). Buscar fuente en navegador o declararlos como aproximados en "Qué es real y qué no".
 2. **Próxima ola de labs** (temas en `temario.md`): sistema circulatorio, la célula, imanes y electricidad estática, luz (reflexión y refracción), sonido, volcanes y placas.
 3. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
 4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
@@ -23,6 +23,7 @@
 
 ## Hecho reciente
 
+- 2026-10-01 — Fuentes en luna, estaciones, circuito, digestivo y fotosíntesis, más gravedades (flotación) y gases (respiratorio). Fotosíntesis corregida: la hoja absorbe ~70 % del verde (antes 12 %, el mito del "verde rebotado"). Ciclo del agua sin fuentes: todo son parámetros del modelo.
 - 2026-10-01 — Kit: `fila` e `interruptor` (6 copias), `grafico.cambiar()` y `yTecho` (luna, estaciones y mezclas ya no recrean el gráfico; eje de 24 h), pastillas con `origen: 'derecha'`, línea de tiempo en `src/ui/linea.ts` (luna gana `pointercancel`), y los 10 labs con la pregunta en `pred.datos`. Descartado: `yMin` positivo (ningún lab lo usa). El "bug" de luna con `sombraTierra` no existía: la respuesta no depende de esa opción.
 - 2026-10-01 — Constantes de partículas, flotación, mezclas y respiratorio verificadas contra la fuente (`docs/fuentes.md`): Cp del etanol sólido 1,9 → 0,97, Cp del gas del etanol 1,5 → 1,6 y de la acetona 1,3 → 1,4, ebullición del SiO₂ 2230 → 2950 °C y el aceite "no hierve". Sección "Fuentes" (helper `fuentes` del kit) en esos 4 labs.
 - 2026-10-01 — Kit: `prediccion` guarda los `datos` de la pregunta (congelados al preguntar, se borran al revelar u ocultar); migrados estaciones, ciclo del agua y respiratorio.
