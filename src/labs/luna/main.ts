@@ -47,7 +47,7 @@ function valoresCurva(dia: number) {
   return { real: iluminada(elongacion(g)) * 100, ...(config.sombraTierra && { idea: ideaSombra(g).iluminada * 100 }) }
 }
 function reconstruirCurva(dia: number) {
-  curva.limpiar({ xMax: MES_SINODICO, yMax: 100 })
+  curva.limpiar()
   const paso = Math.max(0.5, dia / 40)
   for (let x = 0; x < dia; x += paso) curva.agregar(x, valoresCurva(x))
   curva.agregar(dia, valoresCurva(dia))

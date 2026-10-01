@@ -145,7 +145,9 @@ function aplicar(parcial: Partial<Config>) {
     reiniciar()
     return preguntar(despues)
   }
+  const esperaba = pred.pendiente
   pred.ocultar()
+  if (esperaba) seguir(true)
   muestrear()
 }
 

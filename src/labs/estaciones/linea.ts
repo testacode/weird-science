@@ -1,7 +1,7 @@
 // Línea de tiempo arrastrable: el día del año, con una marca por equinoccio y solsticio para saltar directo.
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
-import { lineaDeTiempo as linea } from '../../ui/linea'
+import { lineaArrastrable } from '../../ui/linea'
 import { D_AFELIO, D_PERIHELIO, FECHAS_CLAVE, YEAR, fecha } from './model'
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -34,7 +34,7 @@ export function lineaDeTiempo(alArrastrar: (dia: number) => void, alElegirFecha:
     return s
   })
 
-  const l = linea(
+  const l = lineaArrastrable(
     { etiqueta: 'Día del año · arrastralo', valor: [fechaTexto], max: YEAR, paso: 0.05, aria: 'Día del año', alArrastrar },
     h('div', { class: 'meses' }, ...meses),
     h('div', { class: 'marcas' }, ...marcas),

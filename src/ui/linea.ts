@@ -15,7 +15,7 @@ export interface OpcionesLinea {
  * Línea de tiempo arrastrable (va dentro de `.hud-linea`, abajo entre los dos HUD).
  * El lab agrega debajo sus marcas para saltar a fechas clave.
  */
-export function lineaDeTiempo({ etiqueta, valor, max, paso, aria, alArrastrar }: OpcionesLinea, ...debajo: HTMLElement[]) {
+export function lineaArrastrable({ etiqueta, valor, max, paso, aria, alArrastrar }: OpcionesLinea, ...debajo: HTMLElement[]) {
   const rango = h('input', { type: 'range', min: '0', max: String(max), step: String(paso), value: '0', 'aria-label': aria })
   let arrastrando = false
   rango.addEventListener('input', () => alArrastrar(Number(rango.value)))

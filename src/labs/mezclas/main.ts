@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './mezclas.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { fila, grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
@@ -102,14 +102,14 @@ const mechero = deslizador({
   titulo: 'Mechero', min: T_MECHERO.min, max: T_MECHERO.max, paso: T_MECHERO.paso, valor: config.tMechero, color: 'var(--ambar)', clase: 'mechero',
   formato: (v) => `${v} °C`, alCambiar: (v) => cambiar({ tMechero: v }),
 })
-const sobresaturar = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) =>
-  cambiar({ sobresaturar: v === 'si', mezcla: v === 'si' ? 'agua-sal' : config.mezcla }))
+const sobresaturar = interruptor('Sobresaturar con sal', false, (si) =>
+  cambiar({ sobresaturar: si, mezcla: si ? 'agua-sal' : config.mezcla }))
 
 /** Pone todos los controles en el estado de `config` (también cuando el cambio vino de un botón de "romper"). */
 function mostrarControles() {
   selectorMezcla.set(config.mezcla)
   selectorMetodo.set(config.metodo)
-  sobresaturar.set(config.sobresaturar ? 'si' : 'no')
+  sobresaturar.set(config.sobresaturar)
   mechero.set(config.tMechero)
   mechero.input.disabled = fase !== 'listo'
   mechero.el.hidden = config.metodo !== 'destilacion'
@@ -149,7 +149,7 @@ lab.append(
       reloj,
       grupo('Romper el sistema', h('div', { class: 'grupo' },
         h('button', { class: 'boton', type: 'button', onclick: () => cambiar({ mezcla: 'agua-sal', metodo: 'filtro', sobresaturar: false }) }, 'Filtrar agua salada'),
-        fila('Sobresaturar con sal', sobresaturar.el))),
+        sobresaturar.el)),
       interruptorAvanzado(),
     ),
     pred.el,

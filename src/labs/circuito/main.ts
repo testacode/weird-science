@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './circuito.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { fila, grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { fila, grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { hud } from '../../ui/hud'
 import { grafico } from '../../ui/grafico'
@@ -77,7 +77,7 @@ const cantidad = segmentado(
   (v) => pedir({ cantidad: Number(v) }),
 )
 const llave = segmentado([{ valor: 'cerrado', texto: 'Cerrado' }, { valor: 'abierto', texto: 'Abierto' }], 'cerrado', (v) => pedir({ cerrado: v === 'cerrado' }))
-const corto = segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], 'no', (v) => pedir({ corto: v === 'si' }))
+const corto = interruptor('Cortocircuito', false, (si) => pedir({ corto: si }))
 const botonSacar = h('button', { class: 'boton', type: 'button', onclick: () => sacarUna() }, 'Sacar una lamparita')
 const botonPoner = h('button', { class: 'boton', type: 'button', onclick: () => pedir({ sacadas: [false, false, false] }) }, 'Poner todas')
 
@@ -136,7 +136,7 @@ function sincronizar() {
   conexion.set(config.conexion)
   cantidad.set(String(config.cantidad))
   llave.set(config.cerrado ? 'cerrado' : 'abierto')
-  corto.set(config.corto ? 'si' : 'no')
+  corto.set(config.corto)
   const sacadas = config.sacadas.slice(0, config.cantidad).filter(Boolean).length
   botonSacar.disabled = sacadas === config.cantidad
   botonPoner.disabled = sacadas === 0
@@ -176,7 +176,7 @@ lab.append(
       fila('Interruptor', llave.el),
       grupo('Romper el sistema', h('div', { class: 'grupo' },
         h('div', { class: 'romper' }, botonSacar, botonPoner),
-        fila('Cortocircuito', corto.el))),
+        corto.el)),
       interruptorAvanzado(),
     ),
     pred.el,

@@ -76,11 +76,10 @@ function reiniciar() {
 }
 /** Romper algo (o tocar los controles con una predicción a la vista) reinicia el tránsito. */
 function cambiarConfig(clave: keyof Config, valor: boolean) {
-  const antes = config
   config = { ...config, [clave]: valor }
   if (clave === 'bilis') controles.set.bilis(valor)
   else controles.set.acido(valor)
-  if (preguntaPara(config) || preguntaPara(antes)) reiniciar()
+  if (preguntaPara(config) || !pred.el.hidden) reiniciar()
 }
 function cambiarVelocidad(v: number) {
   velocidad = v

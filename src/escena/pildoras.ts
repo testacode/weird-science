@@ -6,6 +6,8 @@ const MARGEN = 6
 const TOLERANCIA = 80
 
 type Origen = 'centro' | 'izquierda' | 'derecha'
+/** Qué fracción del ancho de la pastilla queda a la izquierda del punto. */
+const FRACCION: Record<Origen, number> = { izquierda: 0, centro: 0.5, derecha: 1 }
 
 export interface OpcionesPildora {
   clase?: string
@@ -60,7 +62,7 @@ export function crearPildoras(contenedor: HTMLElement, camera: THREE.Camera) {
         const afuera = proyectado.z > 1 || x < -TOLERANCIA || x > ancho + TOLERANCIA || y < -TOLERANCIA || y > alto + TOLERANCIA
         p.el.style.visibility = afuera ? 'hidden' : ''
         if (afuera) return
-        const izq = x + p.dx - { izquierda: 0, centro: w / 2, derecha: w }[p.origen]
+        const izq = x + p.dx - FRACCION[p.origen] * w
         const arriba = y + p.dy - h / 2
         p.el.style.left = `${THREE.MathUtils.clamp(izq, MARGEN, ancho - w - MARGEN)}px`
         p.el.style.top = `${THREE.MathUtils.clamp(arriba, MARGEN, alto - h - MARGEN)}px`

@@ -1,7 +1,7 @@
 // Línea de tiempo arrastrable: el día del ciclo lunar, con un ícono por fase para saltar directo.
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
-import { lineaDeTiempo as linea } from '../../ui/linea'
+import { lineaArrastrable } from '../../ui/linea'
 import { NOTA_MES } from './contenido'
 import { MES_SINODICO, esCreciente, elongacion, type Hemisferio } from './model'
 
@@ -53,7 +53,7 @@ export function lineaDeTiempo(inicial: Hemisferio, alElegir: (dia: number) => vo
   const poner = (hem: Hemisferio) => iconos.forEach((i) => dibujarIcono(i.canvas, i.g, hem))
   poner(inicial)
 
-  const l = linea(
+  const l = lineaArrastrable(
     {
       etiqueta: 'Día del ciclo · arrastralo', valor: [dia, ` de ${numero(MES_SINODICO)} `, ciclo],
       max: MES_SINODICO, paso: 0.01, aria: 'Día del ciclo lunar', alArrastrar: alElegir,

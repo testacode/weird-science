@@ -27,9 +27,9 @@
 .pildora.p-idea { color: var(--magenta); border-color: var(--magenta); }
 
 /* Línea de tiempo: la base sale del kit; acá lo propio (más aire para los íconos de fase). */
-.linea { gap: 6px; }
-.linea-valor b { font-size: 15px; }
-.linea input[type='range'] { margin-top: 6px; }
+.hud-linea .linea { gap: 6px; }
+.hud-linea .linea-valor b { font-size: 15px; }
+.hud-linea .linea input[type='range'] { margin-top: 6px; }
 .marcas { position: relative; height: 28px; margin: 0 9px; }
 .marca-fase {
   position: absolute; top: 0; transform: translateX(-50%); padding: 2px; border: 0; border-radius: 50%;

@@ -15,6 +15,7 @@
 4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
 5. **Detalles:**
    - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
+   - estaciones: `llenarCurva` redibuja el gráfico una vez por punto (~95 veces por cambio de ciudad o modo); un `cargar(puntos)` en el kit lo dejaría en una;
    - estaciones: mover la inclinación con la pregunta sin responder la descarta pero deja el año en pausa (ciclo del agua, en el mismo caso, sigue corriendo);
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
    - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;

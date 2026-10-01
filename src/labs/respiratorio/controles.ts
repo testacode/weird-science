@@ -1,5 +1,5 @@
 import { interruptorAvanzado } from '../../ui/avanzado'
-import { fila, grupo, segmentado } from '../../ui/componentes'
+import { grupo, interruptor, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
@@ -12,7 +12,6 @@ export interface Manejadores {
   ayuda: () => void
 }
 
-const siNo = (activo: boolean, alElegir: (si: boolean) => void) => segmentado([{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }], activo ? 'si' : 'no', (v) => alElegir(v === 'si'))
 
 /** Consola de controles. `sincronizar` deja lo que se ve igual que la config (también cuando el cambio vino de otro lado). */
 export function crearControles(inicial: Config, m: Manejadores) {
@@ -35,8 +34,8 @@ export function crearControles(inicial: Config, m: Manejadores) {
     String(inicial.altura), (v) => m.pedir({ altura: Number(v) }),
   )
   const notaAltura = h('small', { class: 'nota-altura' })
-  const aguanta = siNo(inicial.aguanta, (si) => m.pedir({ aguanta: si }))
-  const montana = siNo(inicial.altura === ALTURAS.montana, (si) => m.pedir({ altura: si ? ALTURAS.montana : ALTURAS.llano }))
+  const aguanta = interruptor('Aguantar la respiración', inicial.aguanta, (si) => m.pedir({ aguanta: si }))
+  const montana = interruptor('Subir a 4.000 m', inicial.altura === ALTURAS.montana, (si) => m.pedir({ altura: si ? ALTURAS.montana : ALTURAS.llano }))
 
   const grupoActividad = grupo('Actividad', actividad.el)
   grupoActividad.classList.add('act')
@@ -49,7 +48,7 @@ export function crearControles(inicial: Config, m: Manejadores) {
     volumen.el,
     grupoActividad,
     grupo('Altura sobre el nivel del mar', h('div', { class: 'grupo' }, altura.el, notaAltura)),
-    grupo('Romper el sistema', h('div', { class: 'grupo' }, fila('Aguantar la respiración', aguanta.el), fila('Subir a 4.000 m', montana.el))),
+    grupo('Romper el sistema', h('div', { class: 'grupo' }, aguanta.el, montana.el)),
     interruptorAvanzado(),
   )
 
@@ -60,8 +59,8 @@ export function crearControles(inicial: Config, m: Manejadores) {
       volumen.set(c.volumen)
       actividad.set(c.actividad)
       altura.set(String(c.altura))
-      aguanta.set(c.aguanta ? 'si' : 'no')
-      montana.set(c.altura === ALTURAS.montana ? 'si' : 'no')
+      aguanta.set(c.aguanta)
+      montana.set(c.altura === ALTURAS.montana)
       notaAltura.textContent = `${numero(c.altura, 0)} m · cada bocanada trae el ${numero((presion(c.altura) / presion(0)) * 100, 0)} % del O₂ del llano`
       botonPlay.textContent = corriendo ? '⏸ Pausa' : '▶ Seguir'
     },
