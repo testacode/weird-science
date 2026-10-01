@@ -1,7 +1,7 @@
 import '../../ui/kit.css'
 import './digestivo.css'
 import { prediccion } from '../../ui/prediccion'
-import { agregado, avanzar, foco, horasPorSegundo, nuevoFlujo, todosTerminaron, type Bocados } from './bocados'
+import { agregado, avanzar, nuevoFlujo, ritmoReloj, todosTerminaron, type Bocados } from './bocados'
 import { COMIDAS, type Comida } from './contenido'
 import { crearControles, VELOCIDADES, type Vista } from './controles'
 import { crearEscena } from './escena'
@@ -120,18 +120,20 @@ function cuadro(t: number) {
   if (corriendo) {
     animacion += dtReal
     avanzar(flujo, config, dtReal, velocidad)
-    hud.muestrear(agregado(flujo))
+  }
+  const estado = agregado(flujo)
+  if (corriendo) {
+    hud.muestrear(estado)
     if (todosTerminaron(flujo)) {
       corriendo = false
       controles.botonPlay.textContent = '↺ Repetir'
       revelar()
     }
   }
-  const estado = agregado(flujo)
   escalaPh.set(phSegmento(estado.segmento, config))
   controles.reloj.textContent =
     corriendo && !estado.terminado
-      ? `Reloj acelerado ×${Math.round(horasPorSegundo(foco(flujo), velocidad) * 3600).toLocaleString('es-AR')}`
+      ? `Reloj acelerado ×${Math.round(ritmoReloj(flujo, velocidad) * 3600).toLocaleString('es-AR')}`
       : 'Reloj detenido'
   hud.actualizar(estado, config, comida)
   escena.dibujar(flujo.estados, config, animacion)

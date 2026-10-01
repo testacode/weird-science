@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import { h } from '../../ui/dom'
 import { MACROS, type Macro } from './model'
-import { COLOR } from './particulas'
+import { cuotas, pintar } from './particulas'
 
 const TAM = 230
 const PARTICULAS = 72
@@ -76,17 +76,14 @@ export function crearVellosidades(contenedor: HTMLElement) {
 
   /** Los nutrientes se reparten entre macros según lo que se comió. */
   function setComida(gramos: Record<Macro, number>) {
-    const total = MACROS.reduce((s, m) => s + gramos[m], 0)
+    const n = cuotas(gramos, PARTICULAS)
     nutrientes = []
     for (const m of MACROS) {
-      const n = Math.round((gramos[m] / total) * PARTICULAS)
-      for (let i = 0; i < n && nutrientes.length < PARTICULAS; i++) {
-        nutrientes.push({ macro: m, rango: i / n, vello: nutrientes.length % vellos.length, fase: Math.random(), vel: 0.16 + Math.random() * 0.06, dx: (Math.random() - 0.5) * 0.7 })
+      for (let i = 0; i < n[m]; i++) {
+        nutrientes.push({ macro: m, rango: i / n[m], vello: nutrientes.length % vellos.length, fase: Math.random(), vel: 0.16 + Math.random() * 0.06, dx: (Math.random() - 0.5) * 0.7 })
       }
     }
-    bolitas.count = nutrientes.length
-    nutrientes.forEach((p, i) => bolitas.setColorAt(i, new THREE.Color(COLOR[p.macro])))
-    if (bolitas.instanceColor) bolitas.instanceColor.needsUpdate = true
+    pintar(bolitas, nutrientes.map((p) => p.macro))
   }
 
   let visible = false

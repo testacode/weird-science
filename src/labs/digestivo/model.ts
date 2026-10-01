@@ -55,6 +55,9 @@ const PH_CON_ANTIACIDO = 5
 
 export const PASO_HORAS = 0.01
 
+/** Índice del intestino delgado en SEGMENTOS (donde están el páncreas, el duodeno y las vellosidades). */
+export const DELGADO = SEGMENTOS.findIndex((s) => s.id === 'delgado')
+
 export const HORAS_TOTALES = SEGMENTOS.reduce((total, s) => total + s.horas, 0)
 
 export function estadoInicial(gramos: Record<Macro, number>): Estado {

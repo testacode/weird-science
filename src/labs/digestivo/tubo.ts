@@ -1,7 +1,7 @@
 // Geometría del tubo digestivo: un camino por segmento, en el mismo orden que SEGMENTOS.
 import * as THREE from 'three'
 
-const v = (x: number, y: number, z = 0) => new THREE.Vector3(x, y, z)
+export const v = (x: number, y: number, z = 0) => new THREE.Vector3(x, y, z)
 
 function serpentina(): THREE.Vector3[] {
   const puntos = [v(0.35, 1.25, 0), v(0.25, 0.45, 0.05)]

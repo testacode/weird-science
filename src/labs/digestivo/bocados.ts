@@ -17,13 +17,17 @@ export interface Flujo {
   estados: Estado[]
   /** Segundos de laboratorio (escalados por la velocidad) desde el primer bocado. */
   espera: number
-  /** Horas del bocado que va adelante: el reloj que ven las métricas y el gráfico. */
+  /** Hora del reloj en que entró cada bocado (mismo orden que `estados`). */
+  entradas: number[]
+  /** Horas desde el primer bocado: el máximo de entrada + horas propias. Lo ven las métricas y el gráfico. */
   reloj: number
+  /** Índice del bocado que marca el reloj (el que define el ritmo que muestra la etiqueta ×N). */
+  marca: number
 }
 
 export function nuevoFlujo(gramos: Record<Macro, number>, total: Bocados): Flujo {
   const porBocado = { carbos: gramos.carbos / total, proteinas: gramos.proteinas / total, grasas: gramos.grasas / total }
-  return { total, porBocado, estados: [estadoInicial(porBocado)], espera: 0, reloj: 0 }
+  return { total, porBocado, estados: [estadoInicial(porBocado)], entradas: [0], espera: 0, reloj: 0, marca: 0 }
 }
 
 /** Cada bocado avanza con el ritmo de SU tramo, así todos se ven como si viajaran solos. */
@@ -31,8 +35,10 @@ export const horasPorSegundo = (e: Estado, velocidad: number) => (SEGMENTOS[e.se
 
 export function avanzar(f: Flujo, config: Config, dtReal: number, velocidad: number) {
   f.espera += dtReal * velocidad
-  while (f.estados.length < f.total && f.espera >= f.estados.length * ENTRE_BOCADOS_SEG) f.estados.push(estadoInicial(f.porBocado))
-  let adelante = 0
+  while (f.estados.length < f.total && f.espera >= f.estados.length * ENTRE_BOCADOS_SEG) {
+    f.estados.push(estadoInicial(f.porBocado))
+    f.entradas.push(f.reloj)
+  }
   f.estados.forEach((e, i) => {
     let restante = dtReal * horasPorSegundo(e, velocidad)
     let n = e
@@ -41,11 +47,20 @@ export function avanzar(f: Flujo, config: Config, dtReal: number, velocidad: num
       n = paso(n, config, dt)
       restante -= dt
     }
-    adelante = Math.max(adelante, n.horas - e.horas)
     f.estados[i] = n
   })
-  f.reloj += adelante
+  // Cada bocado lleva su propio reloj; el del flujo es el más avanzado (no la suma de avances por cuadro).
+  f.estados.forEach((e, i) => {
+    const h = f.entradas[i] + e.horas
+    if (h >= f.reloj) {
+      f.reloj = h
+      f.marca = i
+    }
+  })
 }
+
+/** Horas de reloj por segundo real, según el tramo del bocado que marca el reloj. */
+export const ritmoReloj = (f: Flujo, velocidad: number) => horasPorSegundo(f.estados[f.marca], velocidad)
 
 export const todosTerminaron = (f: Flujo) => f.estados.length === f.total && f.estados.every((e) => e.terminado)
 

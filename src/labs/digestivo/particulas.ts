@@ -19,6 +19,25 @@ interface Particula {
   desde: THREE.Vector3
 }
 
+/** Cuántas partículas le tocan a cada macronutriente según los gramos, sin pasar el máximo. */
+export function cuotas(gramos: Record<Macro, number>, max: number): Record<Macro, number> {
+  const total = MACROS.reduce((s, m) => s + gramos[m], 0)
+  const n = {} as Record<Macro, number>
+  let usadas = 0
+  for (const m of MACROS) {
+    n[m] = Math.min(Math.round((gramos[m] / total) * max), max - usadas)
+    usadas += n[m]
+  }
+  return n
+}
+
+/** Deja visibles tantas instancias como macros y pinta cada una con el color de su macronutriente. */
+export function pintar(mesh: THREE.InstancedMesh, macros: Macro[]) {
+  mesh.count = macros.length
+  macros.forEach((m, i) => mesh.setColorAt(i, new THREE.Color(COLOR[m])))
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+}
+
 export function crearParticulas(scene: THREE.Scene, destinoAbsorcion: THREE.Vector3) {
   const bolitas = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 14, 10), new THREE.MeshBasicMaterial({ toneMapped: false }), PARTICULAS)
   bolitas.frustumCulled = false
@@ -32,22 +51,19 @@ export function crearParticulas(scene: THREE.Scene, destinoAbsorcion: THREE.Vect
 
   /** Reparte las partículas por macronutriente y, dentro de cada uno, entre los bocados. */
   function setComida(gramos: Record<Macro, number>, bocados: number) {
-    const total = MACROS.reduce((s, m) => s + gramos[m], 0)
+    const n = cuotas(gramos, PARTICULAS)
     particulas = []
     for (const m of MACROS) {
-      const n = Math.round((gramos[m] / total) * PARTICULAS)
-      for (let i = 0; i < n && particulas.length < PARTICULAS; i++) {
+      for (let i = 0; i < n[m]; i++) {
         const bocado = i % bocados
-        const enGrupo = Math.ceil((n - bocado) / bocados)
+        const enGrupo = Math.ceil((n[m] - bocado) / bocados)
         particulas.push({
           macro: m, bocado, rango: Math.floor(i / bocados) / enGrupo, desfase: (Math.random() - 0.5) * 0.02,
           offset: new THREE.Vector3().randomDirection().multiplyScalar(Math.random() * 0.6), absorbidaEn: null, desde: new THREE.Vector3(),
         })
       }
     }
-    bolitas.count = particulas.length
-    particulas.forEach((p, i) => bolitas.setColorAt(i, new THREE.Color(COLOR[p.macro])))
-    if (bolitas.instanceColor) bolitas.instanceColor.needsUpdate = true
+    pintar(bolitas, particulas.map((p) => p.macro))
   }
 
   /** `estados[i]` es el bocado i; los que todavía no entraron no se ven. */

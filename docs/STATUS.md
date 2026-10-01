@@ -3,6 +3,7 @@
 > Sitio solo para desktop (decisión 2026-09-30): no se hace versión mobile.
 
 ## Hecho
+- Code review del digestivo (2026-09-30): reloj con 3 bocados (daba ~46 h), barra espaciadora sobre botones, cámara en vista explotada, zoom solo con lo del delgado, ritmo ×N, animaciones tras cambiar de pestaña, conductos, reparto de partículas compartido, `DELGADO` derivado.
 - Digestivo, extras (2026-09-30): tubo teñido por pH, enzima activa, páncreas, vista explotada, zoom a vellosidades, atajos de teclado y 3 bocados.
 - Labs de fotosíntesis (Elodea, factor limitante, luz verde) y fases de la Luna (vista desde la Tierra por hemisferio, eclipses, idea errónea de la sombra) (2026-09-30).
 - Lab de estados de la materia (2026-09-30): curva de calentamiento con mesetas, 3 sustancias, olla a presión y predicción.
@@ -15,7 +16,6 @@
 
 ## Backlog
 - Etiquetas cortadas arriba de la pantalla: lupa de la fotosíntesis y una del digestivo en vista explotada.
-- Accesibilidad: la barra espaciadora del digestivo pisa la activación de botones enfocados.
 - Loop de video y poster por lab para la portada (como sael.net).
 - Partículas: verificar contra NIST/CRC las constantes de alcohol y acetona (cs, cg, Lf), que el agente cargó de memoria.
 - Kit: formateo de números es-AR en `grafico()` (hoy sale "2.6 W" con punto), helper de pastilla anclada a la maqueta, `.hud-der` con `max-height` y scroll, `line-height` de `.etiqueta` en tarjetas de la portada, `yMin` (eje Y negativo) y colores libres en `grafico()`, slider con título/valor, panel de "factor limitante" reutilizable, estilo de `input[type=range]`, intensidad de bloom configurable en `crearEscenario`, estilo `kbd` y helper de atajos de teclado, `.pildora` multilínea, `modal().cerrar()`.

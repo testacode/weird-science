@@ -26,6 +26,12 @@ function escribiendo(): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
 }
 
+/** Con un botón o link enfocado, la barra espaciadora es suya (lo activa): no la usamos para play/pausa. */
+function controlEnfocado(): boolean {
+  const el = document.activeElement
+  return el instanceof HTMLElement && ['BUTTON', 'A', 'SUMMARY'].includes(el.tagName)
+}
+
 export function instalarTeclado(a: AccionesTeclado) {
   const valida = (e: KeyboardEvent) => !(e.metaKey || e.ctrlKey || e.altKey || escribiendo())
   window.addEventListener('keydown', (e) => {
@@ -34,6 +40,7 @@ export function instalarTeclado(a: AccionesTeclado) {
     if (k === '?') return a.ayuda()
     if (a.modalAbierto()) return
     if (e.key === ' ') {
+      if (controlEnfocado()) return
       e.preventDefault()
       return e.repeat ? undefined : a.alternar()
     }
@@ -43,9 +50,5 @@ export function instalarTeclado(a: AccionesTeclado) {
     else if (k === 'b') a.bilis()
     else if (k === 'a') a.acido()
     else if (k === 'e') a.vista()
-  })
-  // Con un botón enfocado, soltar la barra dispara su click nativo: se cancela para no alternar dos veces.
-  window.addEventListener('keyup', (e) => {
-    if (e.key === ' ' && valida(e)) e.preventDefault()
   })
 }

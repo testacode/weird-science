@@ -1,7 +1,6 @@
 // Vista explotada: cuánto se separa cada órgano de su lugar normal (con factor 1).
 import * as THREE from 'three'
-
-const v = (x: number, y: number, z = 0) => new THREE.Vector3(x, y, z)
+import { v } from './tubo'
 
 /** Un desplazamiento por tramo del tubo, en el mismo orden que TRAMOS. */
 export const DESP_TRAMO = [v(-1.1, 0.25, 0.2), v(-0.35, 0.2), v(0.95, 0.1, 0.3), v(-0.9, -0.5, 0.2), v(3.0, -0.3, -0.2)]

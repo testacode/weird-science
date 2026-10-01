@@ -5,7 +5,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { crearEscenario } from '../../escena/escenario'
 import { MAX_BOCADOS } from './bocados'
 import { DESP_HIGADO, DESP_PANCREAS, DESP_TRAMO, despEnTubo } from './explosion'
-import { MACROS, phSegmento, posicionEnTubo, type Config, type Estado, type Macro } from './model'
+import { DELGADO, MACROS, phSegmento, posicionEnTubo, type Config, type Estado, type Macro } from './model'
 import { crearOrganos } from './organos'
 import { crearParticulas } from './particulas'
 import { colorPh } from './ph'
@@ -21,7 +21,6 @@ const FUERZA_PH = 0.85
 /** El vidrio también emite un poco de su color de pH, si no el tinte se pierde contra el fondo oscuro. */
 const BRILLO_PH = 0.34
 const BRILLO_ACTIVO = 0.12
-const DELGADO = 3
 const suavizar = (dt: number, ritmo: number) => 1 - Math.exp(-dt * ritmo)
 
 export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
@@ -31,8 +30,9 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
   const controles = new OrbitControls(camera, renderer.domElement)
   controles.target.set(0.8, 0.4, 0)
   controles.enableDamping = true
-  controles.minDistance = 6
-  controles.maxDistance = 18
+  const DISTANCIA = { min: 6, max: 18 }
+  controles.minDistance = DISTANCIA.min
+  controles.maxDistance = DISTANCIA.max
   controles.maxPolarAngle = Math.PI * 0.62
 
   const vidrio = new THREE.MeshPhysicalMaterial({
@@ -135,11 +135,15 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
     onVesicula: (cb: () => void) => (alTocarVesicula = cb),
     /** `estados[i]` es el bocado i (solo los que ya entraron). `ahora` es el reloj de animación (se frena en pausa). */
     dibujar(estados: Estado[], config: Config, ahora: number) {
-      const dt = Math.min((performance.now() - relojPrevio) / 1000, 0.1)
-      relojPrevio += dt * 1000
+      const ahoraReal = performance.now()
+      const dt = Math.min((ahoraReal - relojPrevio) / 1000, 0.1)
+      relojPrevio = ahoraReal
       f += (objetivo - f) * suavizar(dt, 5)
       if (Math.abs(objetivo - f) < 0.001) f = objetivo
       const k = 1 + ALEJAR_EXPLOTADA * f
+      // Los límites del zoom escalan igual que la cámara: así OrbitControls no recorta el alejamiento y la vuelta es exacta.
+      controles.minDistance = DISTANCIA.min * k
+      controles.maxDistance = DISTANCIA.max * k
       camera.position.sub(controles.target).multiplyScalar(k / alejado).add(controles.target)
       alejado = k
 
@@ -178,7 +182,8 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
       )
       const actividad = {} as Record<Macro, number>
       for (const m of MACROS) {
-        const digerido = estados.reduce((s, e) => s + e.nutrientes[m].digerido, 0)
+        // Solo lo digerido de los bocados que están en el delgado: es lo que pasa por las vellosidades.
+        const digerido = viajando.filter((e) => e.segmento === DELGADO).reduce((s, e) => s + e.nutrientes[m].digerido, 0)
         actividad[m] = Math.min(1, (digerido / gramos[m]) * 4)
       }
       vellosidades.actualizar(enDelgado, actividad, ahora)

@@ -1,13 +1,12 @@
 // Órganos anexos al tubo: hígado, vesícula, páncreas y sus conductos al duodeno.
 import * as THREE from 'three'
 import { DESP_HIGADO, DESP_PANCREAS, DESP_TRAMO } from './explosion'
-import { HIGADO, VESICULA } from './tubo'
+import { DELGADO } from './model'
+import { HIGADO, VESICULA, v } from './tubo'
 
-const v = (x: number, y: number, z = 0) => new THREE.Vector3(x, y, z)
 const DUODENO_BILIS = v(0.3, 0.8, 0.05)
 const DUODENO_PANCREAS = v(0.27, 0.62, 0.05)
 const PANCREAS = v(0.75, 0.62, -0.25)
-const DELGADO = 3
 
 /** Cabeza gruesa junto al duodeno y cola fina hacia la derecha: lóbulos de esferas achatadas. */
 const LOBULOS = [[0, 0, 0.21], [0.3, 0.04, 0.2], [0.6, 0.08, 0.18], [0.9, 0.12, 0.16], [1.2, 0.17, 0.13], [1.45, 0.22, 0.1]]
@@ -54,7 +53,8 @@ export function crearOrganos(scene: THREE.Scene) {
       vesicula.position.copy(VESICULA).addScaledVector(DESP_HIGADO, f)
       pancreas.position.copy(PANCREAS).addScaledVector(DESP_PANCREAS, f)
       centroHigado.copy(higado.position)
-      if (f === fPrevio) return
+      const asentado = f === 0 || f === 1
+      if (f === fPrevio || (!asentado && Math.abs(f - fPrevio) < 0.05)) return
       fPrevio = f
       const duodeno = (p: THREE.Vector3) => p.clone().addScaledVector(DESP_TRAMO[DELGADO], f)
       conductoBilis.geometry.dispose()
