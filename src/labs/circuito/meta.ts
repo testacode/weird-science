@@ -5,8 +5,8 @@ export const meta: Lab = {
   titulo: 'Circuito eléctrico',
   bajada: 'Pila, cable y lamparita',
   eje: 'fisica',
-  nap: 'Primaria 6° · corriente eléctrica',
+  nap: 'Primaria 6° · circuitos e instalaciones domiciliarias',
   temas: ['energia', 'sistemas'],
   orden: 1,
-  listo: false,
+  listo: true,
 }

@@ -1,0 +1,17 @@
+/* Colores con significado: celeste = corriente, ámbar = luz, lima = pila y voltaje, magenta = peligro. */
+.pildora.luz.activa { color: var(--ambar); border-color: var(--ambar); }
+.pildora.peligro { color: var(--magenta); border-color: var(--magenta); }
+
+.aviso { padding: 12px 14px; display: grid; gap: 6px; font-size: 13px; border-color: var(--magenta); }
+.aviso[hidden] { display: none; }
+.aviso strong { color: var(--magenta); }
+.aviso p { margin: 0; color: #cfdcd6; }
+
+.romper { display: flex; gap: 6px; }
+.romper .boton { flex: 1; padding: 8px; font-size: 13px; }
+.romper .boton:disabled { opacity: 0.4; cursor: default; }
+.hud-der .saltar { justify-self: start; }
+
+/* Con la predicción abierta la columna puede pasar el alto de la ventana: que scrollee en vez de cortarse. */
+.hud-der { max-height: calc(100vh - 40px); overflow-y: auto; scrollbar-width: thin; }
+.interruptor .segmentado { min-width: 170px; }
