@@ -22,3 +22,6 @@
 - **`eval` de agent-browser comparte el scope global**: un `const` repetido entre llamadas falla con "already declared"; envolver en `(() => { ... })()`.
 - **Tinte de vidrio con `transmission: 1`**: casi no muestra el `color`; el tinte necesita `emissive` del mismo color, compensando la luminancia (rojo y azul piden más intensidad que el verde).
 - **Inset circular** (zoom del digestivo, vista desde la Tierra): un segundo `WebGLRenderer` en su propio canvas con `border-radius: 50%` es más simple que scissor sobre el `EffectComposer`.
+- **HUD con scroll y `backdrop-filter`**: `mask-image`, `filter` u `opacity` en `.hud-*` rompen el vidrio esmerilado de los paneles; la pista "más ↓" es un `::after` sticky.
+- **Encuadre y ResizeObserver**: el alto de un HUD cambia al aparecer la predicción. `encuadrarEntreHuds` solo reencuadra si cambia el ancho, para no pisar el zoom del usuario.
+- **`overflow-y: auto` fuerza `overflow-x: auto`**: los HUD con scroll recortan el `box-shadow` y los outlines de foco en los costados.
