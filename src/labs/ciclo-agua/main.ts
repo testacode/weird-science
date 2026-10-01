@@ -104,8 +104,7 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config; arranque: Estado }>(() => seguir(true))
 
 function seguir(va: boolean) {
   corriendo = va
@@ -116,30 +115,26 @@ function reiniciar(desde: Estado) {
   reiniciarCurva()
   seguir(true)
 }
-function preguntar() {
-  if (!pregunta) return pred.ocultar()
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+function preguntar(pregunta: Pregunta) {
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config, arranque })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
-function cancelarPregunta() {
-  pregunta = null
-  pred.ocultar()
-}
 function revelar() {
-  if (!pregunta || !pred.enCurso || !pregunta.listo(estado, config)) return
-  const r = pregunta.resolver(config, arranque)
+  const datos = pred.datos
+  if (!datos || !pred.enCurso || !datos.pregunta.listo(estado, datos.config)) return
+  const r = datos.pregunta.resolver(datos.config, datos.arranque)
   pred.revelar(r.correcta, r.explicacion)
 }
 /** Si algo está roto, el ciclo ya venía andando; si no, arranca de cero y pregunta por el agua total. */
 function empezar() {
-  pregunta = preguntaRota(config) ?? AGUA
-  reiniciar(preguntaRota(config) ? estadoEnMarcha(config) : estadoInicial(config))
-  preguntar()
+  const rota = preguntaRota(config)
+  reiniciar(rota ? estadoEnMarcha(config) : estadoInicial(config))
+  preguntar(rota ?? AGUA)
 }
 function alternar() {
   if (pred.pendiente) {
-    cancelarPregunta()
+    pred.ocultar()
     return seguir(true)
   }
   seguir(!corriendo)
@@ -155,11 +150,9 @@ function aplicar(parcial: Partial<Config>) {
   const despues = preguntaRota(config)
   sincronizar()
   if (despues && despues.id !== antes) return empezar()
-  if (pregunta) {
-    const esperaba = pred.pendiente
-    cancelarPregunta()
-    if (esperaba) seguir(true)
-  }
+  const esperaba = pred.pendiente
+  pred.ocultar()
+  if (esperaba) seguir(true)
   muestrear()
 }
 
@@ -217,9 +210,8 @@ lab.append(
   ayuda.el,
 )
 
-pregunta = AGUA
 reiniciarCurva()
-preguntar()
+preguntar(AGUA)
 
 function dia(horas: number) {
   return `día ${Math.floor(horas / 24) + 1}, ${String(Math.floor(horas % 24)).padStart(2, '0')} h`
@@ -236,7 +228,7 @@ function actualizarHud(f: ReturnType<typeof flujos>, t: number) {
     filas[r].barra.style.width = `${Math.max((estado[r] / TOTAL) * 100, 0.5)}%`
     filas[r].valor.textContent = `${num((estado[r] / TOTAL) * 100, 0)}%`
   }
-  const midiendo = pred.enCurso && pregunta && pregunta.id !== 'sol' ? ` · midiendo ${num(Math.min(estado.horas, VENTANA_H) / 24, 1)} de ${num(VENTANA_H / 24, 0)} días` : ''
+  const midiendo = pred.enCurso && pred.datos?.pregunta.id !== 'sol' ? ` · midiendo ${num(Math.min(estado.horas, VENTANA_H) / 24, 1)} de ${num(VENTANA_H / 24, 0)} días` : ''
   reloj.textContent = `Velocidad · ${dia(estado.horas)}${corriendo ? '' : ' · detenido'}${midiendo}`
   if (t - ultimoRelato < 150) return
   ultimoRelato = t
