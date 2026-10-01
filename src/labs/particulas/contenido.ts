@@ -2,10 +2,10 @@
 // salen del modelo.
 
 import { av } from '../../ui/avanzado'
+import { numero } from '../../ui/formato'
 import { MASA_G, P_VALVULA_ATM, T_TOPE_CALOR, T_TOPE_FRIO, umbrales, velocidadMedia, type Config, type Lectura, type Sustancia } from './model'
 
-export const num = (n: number, decimales = 1) =>
-  n.toLocaleString('es-AR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales })
+export const num = numero
 
 const sol = (t: string) => `<span class="c-cielo">${t}</span>`
 const liq = (t: string) => `<span class="c-marca">${t}</span>`
@@ -121,7 +121,7 @@ export const COMO_FUNCIONA = `
   <ul>
     <li>Las bolitas ${sol('celestes')} son partículas de sólido (vibran en su lugar de la red), las ${liq('verdes')} de líquido (se deslizan juntas abajo) y las ${gas('rosas')} de gas (vuelan y rebotan).</li>
     <li>La barra de fases muestra qué porcentaje hay de cada una. Durante un cambio de estado conviven dos.</li>
-    <li>El gráfico es temperatura contra tiempo: las <b>mesetas</b> son los cambios de estado${av('. Está en kelvin (K = °C + 273) para poder mostrar temperaturas bajo cero')}.</li>
+    <li>El gráfico es temperatura (°C) contra tiempo: las <b>mesetas</b> son los cambios de estado. Lo que queda debajo de la línea del 0 está bajo cero.</li>
     <li>La placa brilla ${calor('ámbar')} cuando calienta y ${sol('celeste')} cuando enfría. El termómetro tiene la lectura en °C.</li>
   </ul>
   <h3>Controles</h3>
@@ -130,7 +130,7 @@ export const COMO_FUNCIONA = `
     <li><b>Sustancia:</b> agua, alcohol (etanol) o acetona. Cada una tiene sus puntos de fusión y de ebullición${av(', su calor específico en cada fase y sus calores latentes')}.</li>
     <li><b>Velocidad:</b> acelera el reloj. Un cambio de estado de verdad tarda minutos.</li>
     <li><b>Romper el sistema:</b> con la <b>tapa</b> (como una olla a presión) el vapor no se escapa, la presión sube y el punto de ebullición se corre${av(' (a 2 atm el agua hierve a unos 121 °C)')}. Con <b>calor latente: No</b> ves qué pasaría sin mesetas.</li>
-    <li><b>Info avanzada:</b> muestra u oculta ecuaciones, kelvin y detalles del modelo.</li>
+    <li><b>Info avanzada:</b> muestra u oculta ecuaciones y detalles del modelo.</li>
   </ul>
   <h3>Predecí antes de correr</h3>
   <p>Cada vez que empezás de nuevo, el lab te pregunta qué va a pasar con la temperatura. Elegí, dejá correr el experimento y se revela si acertaste, con los números del modelo.</p>

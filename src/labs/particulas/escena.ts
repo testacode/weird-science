@@ -2,7 +2,10 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { numero } from '../../ui/formato'
+import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
+import { crearPildoras } from '../../escena/pildoras'
 import { GAS, N, RADIO, R_INT, Y_BORDE, Y_SALA, crearDinamica } from './dinamica'
 import { CERO_ABSOLUTO_C, T_TOPE_CALOR, T_TOPE_FRIO, type Config, type Lectura, type Sustancia } from './model'
 
@@ -16,9 +19,7 @@ const X_TERMO = 2.3
 const Y_PISO_PLACA = -0.12
 const Y_TAPA_CERRADA = Y_BORDE + 0.1
 const Y_TAPA_ABIERTA = 4.5
-/** Ancho de la zona libre entre los dos HUD que tiene que entrar en cámara. */
-const HUD_IZQ = 400
-const HUD_DER = 350
+/** Ancho de la maqueta que tiene que entrar en el hueco libre entre los dos HUD. */
 const ANCHO_MAQUETA = 6.4
 
 export function crearEscena(contenedor: HTMLElement) {
@@ -32,16 +33,10 @@ export function crearEscena(contenedor: HTMLElement) {
   controles.maxPolarAngle = Math.PI * 0.55
 
   // Cámara: que la maqueta entre en el hueco entre el HUD izquierdo y la consola derecha.
-  const encuadrar = () => {
-    const { clientWidth: w, clientHeight: h } = contenedor
-    const libre = Math.max(w - HUD_IZQ - HUD_DER, 200)
-    const dist = Math.max(11.5, ANCHO_MAQUETA / ((libre / w) * (w / h) * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))))
+  encuadrarEntreHuds(camera, contenedor, ({ libre, alto }) => {
+    const dist = Math.max(11.5, ANCHO_MAQUETA / ((Math.max(libre, 200) / alto) * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))))
     camera.position.set(0.1, 2.9, dist)
-    // Corre el cuadro para que el centro de la maqueta quede en el centro del hueco libre.
-    camera.setViewOffset(w, h, -(HUD_IZQ - HUD_DER) / 2, 0, w, h)
-  }
-  encuadrar()
-  window.addEventListener('resize', encuadrar)
+  })
 
   const grupo = new THREE.Group()
   grupo.position.x = X_VASO
@@ -128,21 +123,10 @@ export function crearEscena(contenedor: HTMLElement) {
   scene.add(luz, ambar, cielo)
 
   // --- Etiquetas HTML ancladas ---
-  const pildora = (ancla: THREE.Vector3) => {
-    const el = document.createElement('div')
-    el.className = 'pildora'
-    contenedor.append(el)
-    return { el, ancla }
-  }
-  const pTermo = pildora(new THREE.Vector3(X_TERMO, 3.55, 0.2))
-  const pPlaca = pildora(new THREE.Vector3(X_VASO, -0.62, 2.35))
-  const pTapa = pildora(new THREE.Vector3(X_VASO, 4.15, 0))
-  const proyectado = new THREE.Vector3()
-  function ubicar({ el, ancla }: { el: HTMLElement; ancla: THREE.Vector3 }) {
-    proyectado.copy(ancla).project(camera)
-    el.style.left = `${(proyectado.x * 0.5 + 0.5) * contenedor.clientWidth}px`
-    el.style.top = `${(-proyectado.y * 0.5 + 0.5) * contenedor.clientHeight}px`
-  }
+  const pildoras = crearPildoras(contenedor, camera)
+  const pTermo = pildoras.crear('', { ancla: new THREE.Vector3(X_TERMO, 3.55, 0.2) })
+  const pPlaca = pildoras.crear('', { ancla: new THREE.Vector3(X_VASO, -0.62, 2.35) })
+  const pTapa = pildoras.crear('', { ancla: new THREE.Vector3(X_VASO, 4.15, 0) })
 
   let avanceTapa = 0
   let anterior = performance.now()
@@ -195,15 +179,13 @@ export function crearEscena(contenedor: HTMLElement) {
       columna.scale.y = alto
       columna.position.y = 0.3 + alto / 2
 
-      pTermo.el.textContent = `${l.temp.toFixed(1).replace('.', ',')} °C`
-      pPlaca.el.textContent = potencia === 0 ? 'Placa apagada' : `Placa ${potencia > 0 ? 'calienta' : 'enfría'} · ${Math.abs(potencia)} W`
+      pTermo.texto(`${numero(l.temp)} °C`)
+      pPlaca.texto(potencia === 0 ? 'Placa apagada' : `Placa ${potencia > 0 ? 'calienta' : 'enfría'} · ${Math.abs(potencia)} W`)
       pPlaca.el.classList.toggle('activa', potencia !== 0)
-      pTapa.el.style.display = avanceTapa > 0.9 ? '' : 'none'
-      pTapa.el.textContent = `Tapa · ${l.presion.toFixed(1).replace('.', ',')} atm`
+      pTapa.el.hidden = avanceTapa <= 0.9
+      pTapa.texto(`Tapa · ${numero(l.presion)} atm`)
       pTapa.el.classList.toggle('activa', ventea)
-      ubicar(pTermo)
-      ubicar(pPlaca)
-      ubicar(pTapa)
+      pildoras.ubicar()
 
       controles.update()
       render()

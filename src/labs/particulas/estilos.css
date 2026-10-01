@@ -1,7 +1,4 @@
 /* Ajustes propios del lab de partículas, encima del kit. */
-/* En pantallas bajas los HUD hacen scroll en lugar de cortarse. */
-.hud-izq, .hud-der { max-height: calc(100vh - 40px); overflow-y: auto; scrollbar-width: thin; }
-.hud-izq .metrica b { font-size: 14px; }
 
 .fases { display: grid; gap: 6px; margin-bottom: 9px; }
 .fases-barra { display: flex; height: 8px; overflow: hidden; border-radius: 99px; background: rgba(0, 0, 0, 0.35); }
@@ -12,9 +9,8 @@
 .fases-leyenda { display: flex; justify-content: space-between; font: 600 11px/1.3 var(--mono); }
 .fases-leyenda b { font-weight: 600; }
 
-.potencia { display: grid; gap: 6px; }
-.potencia .valor { font: 600 12px/1 var(--mono); color: var(--ambar); }
-.potencia input[type='range'] { width: 100%; margin: 0; accent-color: var(--ambar); }
-.potencia.enfria .valor { color: var(--cielo); }
-.potencia.enfria input[type='range'] { accent-color: var(--cielo); }
-.potencia.apagada input[type='range'] { opacity: 0.4; }
+/* Potencia de la placa: ámbar al calentar, celeste al enfriar. */
+.potencia { --acento: var(--ambar); }
+.potencia .cabeza b { color: var(--acento); }
+.potencia.enfria { --acento: var(--cielo); }
+.potencia.apagada input { opacity: 0.4; }

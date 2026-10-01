@@ -2,12 +2,16 @@ import '../../ui/kit.css'
 import './estilos.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
+import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, etiquetaEstado, num, relato } from './contenido'
 import { crearEscena } from './escena'
-import { POTENCIA_INICIAL_W, SUSTANCIAS, estadoInicial, leer, paso, velocidadMedia, type Config, type Lectura } from './model'
+import {
+  POTENCIA_INICIAL_W, SUSTANCIAS, T_TOPE_CALOR, T_TOPE_FRIO, estadoInicial, leer, paso, velocidadMedia, type Config, type Lectura,
+} from './model'
 import { preguntaPara, type Pregunta, type Respuesta } from './prediccion'
 
 /** Segundos simulados por segundo real, según la velocidad elegida. */
@@ -58,19 +62,19 @@ const ahora = h('div', { class: 'panel ahora' },
   textoAhora,
 )
 
-// El gráfico del kit arranca en 0, así que la temperatura va en kelvin (no admite negativos).
 const curva = grafico([{ id: 'temp', nombre: 'Temperatura', color: 'ambar' }], {
-  titulo: 'Temperatura en el tiempo (K = °C + 273)', unidadX: ' s', unidadY: 'K', alto: 140,
+  titulo: 'Temperatura en el tiempo', unidadX: ' s', unidadY: '°C', alto: 140,
 })
 let ultimoPunto = 0
+/** El eje Y va del tope de frío al de calor de la placa: queda fijo durante toda la corrida. */
 function reiniciarCurva() {
-  curva.limpiar({ yMax: 400 })
-  curva.agregar(0, { temp: leer(estado, sus, config).tempK })
+  curva.limpiar({ yMin: sus.tFusion - T_TOPE_FRIO, yMax: sus.tEbullicion + T_TOPE_CALOR })
+  curva.agregar(0, { temp: leer(estado, sus, config).temp })
   ultimoPunto = 0
 }
 
 lab.append(
-  h('div', { class: 'hud hud-izq' },
+  hud('izq',
     h('a', { href: '../../', class: 'etiqueta' }, '← Weird Science'),
     h('h1', { class: 'titulo' }, h('small', {}, 'Lab de estados de la materia'), h('span', {}, 'Partículas que se calientan')),
     gancho,
@@ -114,19 +118,15 @@ function alternar() {
 }
 
 // --- Placa: modo + potencia ---
-const valorPotencia = h('span', { class: 'valor' })
-const deslizador = h('input', {
-  type: 'range', min: '100', max: '1000', step: '50', value: String(magnitud), 'aria-label': 'Potencia de la placa en watts',
-  oninput: () => {
-    magnitud = Number(deslizador.value)
-    mostrarPotencia()
-  },
+const potenciaPlaca = deslizador({
+  titulo: 'Potencia', clase: 'potencia', min: 100, max: 1000, paso: 50, valor: magnitud,
+  formato: (v) => (modo === 'apagada' ? 'placa apagada' : `${v} W`),
+  alCambiar: (v) => (magnitud = v),
 })
-const bloquePotencia = h('div', { class: 'potencia' }, valorPotencia, deslizador)
 function mostrarPotencia() {
-  valorPotencia.textContent = modo === 'apagada' ? 'Placa apagada' : `${modo === 'calentar' ? 'Calienta' : 'Enfría'} · ${magnitud} W`
-  bloquePotencia.className = `potencia ${modo === 'enfriar' ? 'enfria' : modo === 'apagada' ? 'apagada' : ''}`
-  deslizador.value = String(magnitud)
+  potenciaPlaca.set(magnitud)
+  potenciaPlaca.el.classList.toggle('enfria', modo === 'enfriar')
+  potenciaPlaca.el.classList.toggle('apagada', modo === 'apagada')
 }
 const selectorModo = segmentado<Modo>(
   [{ valor: 'enfriar', texto: 'Enfriar' }, { valor: 'apagada', texto: 'Apagada' }, { valor: 'calentar', texto: 'Calentar' }],
@@ -163,11 +163,11 @@ function interruptor(texto: string, clave: keyof Config) {
 }
 
 lab.append(
-  h('div', { class: 'hud hud-der' },
+  hud('der',
     h('div', { class: 'panel consola' },
       h('div', { class: 'fila' }, botonPlay, h('button', { class: 'boton', type: 'button', onclick: reiniciar }, '↺ Otra vez'),
         h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),
-      grupo('Placa', h('div', { class: 'grupo' }, selectorModo.el, bloquePotencia)),
+      grupo('Placa', h('div', { class: 'grupo' }, selectorModo.el, potenciaPlaca.el)),
       grupo('Sustancia', segmentado(SUSTANCIAS.map((s) => ({ valor: s.id, texto: s.nombre })), sus.id, (id) => {
         sus = SUSTANCIAS.find((s) => s.id === id)!
         reiniciar()
@@ -225,7 +225,7 @@ function cuadro(t: number) {
   }
   const lectura = leer(estado, sus, config)
   if (estado.t - ultimoPunto >= Math.max(MUESTREO_S, estado.t / PUNTOS_APROX)) {
-    curva.agregar(estado.t, { temp: lectura.tempK })
+    curva.agregar(estado.t, { temp: lectura.temp })
     ultimoPunto = estado.t
   }
   revelar(lectura)
