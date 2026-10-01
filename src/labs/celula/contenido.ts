@@ -4,7 +4,7 @@ import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import { listaAtajos } from '../../ui/teclado'
 import { V_ROTURA } from './constantes'
-import { conPared, type Entorno, type Lectura } from './model'
+import { conPared, mOsmInterior, type Entorno, type Lectura } from './model'
 import { ATAJOS } from './teclado'
 
 export const GANCHO = `El agua cruza la membrana de una célula hacia donde hay más <span class="c-ambar">sal</span>. En un vaso con agua, ¿se hincha, se arruga o estalla? Depende de la sal${av(' y de si la célula tiene pared')}.`
@@ -16,6 +16,8 @@ export function relato(ent: Entorno, l: Lectura): string {
   const vegetal = ent.celula === 'vegetal'
   const sal = ent.selectiva ? '' : ' La membrana no es selectiva: la <span class="c-ambar">sal</span> la atraviesa y se reparte igual a los dos lados.'
   const cifras = av(` (afuera ${mosm(l.mOsmFuera)}, adentro ${mosm(l.mOsmDentro)})`)
+  // Ya en equilibrio las dos concentraciones coinciden: lo que explica el resultado es de dónde se partió.
+  const inicio = av(` (afuera ${mosm(l.mOsmFuera)}, adentro empezó en ${mosm(mOsmInterior(ent.celula))})`)
   if (l.rota)
     return vegetal
       ? `<strong>Estalló.</strong> Sin pared nada frena al agua: el protoplasto se hinchó hasta pasar el límite de la membrana${av(` (${numero(V_ROTURA, 2)}× su volumen)`)}.${sal}`
@@ -26,9 +28,11 @@ export function relato(ent: Entorno, l: Lectura): string {
   if (l.forma === 'hincha' || l.flujo > 0.02)
     return vegetal && conPared(ent)
       ? `<strong>Hipotónica${fin ? ': turgente' : ''}.</strong> Afuera hay menos sal${cifras}, entra agua y la membrana empuja contra la pared, que devuelve ${numero(l.presion, 2)} MPa${av(' (presión de turgencia)')}. ${fin ? 'Con esa presión el agua deja de entrar: no estalla.' : ''}`
-      : `<strong>Hipotónica${fin ? '' : ': el agua entra'}.</strong> Afuera hay menos sal${cifras}: el agua va hacia adentro${l.forma === 'hincha' ? ` y la célula se hincha, ahora ${numero(l.v, 2)}×` : ''}.${fin ? ' Llegó al equilibrio antes de romperse.' : ''}`
+      : fin
+        ? `<strong>Hipotónica.</strong> Afuera había menos sal${inicio}: entró agua y la célula se hinchó a ${numero(l.v, 2)}× hasta emparejar las concentraciones. Llegó al equilibrio antes de romperse.`
+        : `<strong>Hipotónica: el agua entra.</strong> Afuera hay menos sal${cifras}: el agua va hacia adentro${l.forma === 'hincha' ? ` y la célula se hincha, ahora ${numero(l.v, 2)}×` : ''}.`
   if (l.forma === 'achica' || l.flujo < -0.02)
-    return `<strong>Hipertónica${fin ? '' : ': el agua sale'}.</strong> Afuera hay más sal${cifras}: el agua sale y la sal no entra. ${l.forma !== 'achica' ? '' : vegetal ? `La pared no se achica y la membrana se despega: <b>plasmólisis</b> (${numero(l.v, 2)}×).` : `El glóbulo se achica a ${numero(l.v, 2)}× y se arruga con pinchos: <b>crenación</b>.`}`
+    return `<strong>Hipertónica${fin ? '.' : ': el agua sale.'}</strong> Afuera ${fin ? `había más sal${inicio}: salió agua hasta emparejar` : `hay más sal${cifras}: el agua sale`} y la sal no entra. ${l.forma !== 'achica' ? '' : vegetal ? `La pared no se achica y la membrana se despega: <b>plasmólisis</b> (${numero(l.v, 2)}×).` : `El glóbulo se achica a ${numero(l.v, 2)}× y se arruga con pinchos: <b>crenación</b>.`}`
   return `<strong>Isotónica.</strong> Adentro y afuera hay la misma concentración${cifras}: el agua cruza en los dos sentidos al mismo ritmo y la célula no cambia${vegetal ? ' (sin presión de la pared)' : ''}.`
 }
 
