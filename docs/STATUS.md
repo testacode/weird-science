@@ -11,7 +11,7 @@
 
 1. **Próxima ola de labs:** volcanes y placas; electrostática (quedó fuera de imanes); eco (quedó fuera de sonido).
 2. **Kit, pedidos de la ola 5:**
-   - Patrón "preguntar antes del cambio, aplicar al responder, revelar con timer", con un `listo()` del lab que exija que lo que se ve coincida con el veredicto (célula) (circuito, respiratorio, circulatorio, imanes, luz): llevarlo al kit para que cancelar el timer y ocultar al cambiar la config salga solo (fue el bug más repetido en los reviews).
+   - `listo()` del lab en el kit de predicción: que el reveal exija que lo que se ve coincida con el veredicto (hoy célula lo hace a mano).
    - `[hidden] { display: none !important }` en `kit.css` (`fila`, `deslizador` y `grupo` le ganan al atributo; luz y célula lo parchearon).
    - `grafico.cargar(puntos)` para dibujar de una vez (sonido, estaciones).
    - `segmentado` con estado deshabilitado; `deslizador` logarítmico y deshabilitado.
@@ -28,10 +28,10 @@
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
    - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
    - archivos de más de 200 líneas: `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`, `flotacion/model.ts`, `ciclo-agua/main.ts`.
-6. **Modo libre, sin preguntas:** hoy hay que responder (o saltar) la predicción para seguir interactuando. Un interruptor del kit (junto a "Info avanzada", guardado en localStorage y válido para todos los labs) que desactive "Predecí antes de correr" y deje aplicar los cambios directo.
 
 ## Hecho reciente
 
+- 2026-10-01 — Kit de predicción: modo libre (interruptor "Preguntas" junto a "Info avanzada", en localStorage), `revelarEn` (el timer lo cancela la tarjeta), botón "Saltar y hacerlo igual" en la tarjeta y `saltar(datos)` como único camino para seguir sin predecir; los 15 labs migrados.
 - 2026-10-01 — Ola 5 completa: imanes, sonido, circulatorio, luz y célula, cada uno con code review, arreglos y prueba en CDP; fuentes integradas en `docs/fuentes.md`.
 - 2026-10-01 — Datos pendientes: aire (20,95 % O₂), atmósfera estándar, pan y papas fritas (USDA) verificados; 16 % de O₂ exhalado derivado; P50, milanesa y absorción de Elodea declarados como aproximados en cada lab.
 - 2026-10-01 — Fuentes en luna, estaciones, circuito, digestivo y fotosíntesis, más gravedades (flotación) y gases (respiratorio). Fotosíntesis corregida: la hoja absorbe ~70 % del verde (antes 12 %, el mito del "verde rebotado"). Ciclo del agua sin fuentes: todo son parámetros del modelo.
