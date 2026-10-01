@@ -3,7 +3,7 @@ import type { ColorLuz } from './model'
 
 /** Color real de la lámpara para cada opción. */
 export const LUZ_HEX: Record<ColorLuz, number> = { blanca: 0xfff3dc, roja: 0xff4136, azul: 0x4b7dff, verde: 0x34ff6b }
-/** La luz blanca que rebota en la hoja sale verde: la clorofila se quedó con el rojo y el azul. */
+/** La luz blanca que rebota en la hoja sale verde: la hoja se quedó con casi todo el rojo y el azul. */
 export const REBOTE_HEX = 0x7dff8a
 export const BURBUJA_HEX = 0x8fdcff
 export const CO2_HEX = 0xff5fa2

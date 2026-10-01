@@ -4,7 +4,7 @@
 //   C₆H₁₂O₆ + 6 O₂       →  6 CO₂ + 6 H₂O + energía  (respiración: lo inverso, de día y de noche)
 //
 // Luz que llega:      I     = 100 · (D_REF / d)²                (ley del inverso del cuadrado, % de la lámpara a 10 cm)
-// Luz absorbida:      Iabs  = I · absorción(color)               (la clorofila casi no absorbe el verde)
+// Luz absorbida:      Iabs  = I · absorción(color)               (la hoja absorbe menos el verde, pero igual la mayor parte)
 // Factor de luz:      fLuz  = 1 − exp(−Iabs / IK)                (curva saturante)
 // Factor de CO₂:      fCO2  = C / (C + KC) · (100 + KC) / 100    (Michaelis-Menten normalizada a 1 con C = 100)
 // Factor de temp.:    fTemp = Q10^((T − T_OPT)/10) si T ≤ T_OPT, exp(−((T − T_OPT)/ANCHO)²) si T > T_OPT
@@ -31,8 +31,12 @@ export const CONFIG_INICIAL: Config = { distancia: 20, co2: 30, temperatura: 26,
 
 export const LIMITES = { distancia: [10, 60], co2: [0, 100], temperatura: [5, 45] } as const
 
-/** Fracción de la luz de cada color que la clorofila absorbe (a igual cantidad de fotones). */
-export const ABSORCION: Record<ColorLuz, number> = { blanca: 0.75, roja: 0.9, azul: 0.95, verde: 0.12 }
+/**
+ * Fracción de la luz de cada color que absorbe la hoja (a igual cantidad de fotones). Una hoja de lechuga absorbe
+ * ~92 % del rojo y del azul y ~81 % del verde (Liu y van Iersel 2021); la de Elodea es más fina: estimación algo menor.
+ * La blanca es la mezcla, con mucho verde. Ver docs/fuentes.md.
+ */
+export const ABSORCION: Record<ColorLuz, number> = { blanca: 0.8, roja: 0.9, azul: 0.95, verde: 0.7 }
 
 export const P_MAX = 5
 export const RESPIRACION = 0.4

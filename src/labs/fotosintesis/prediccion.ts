@@ -54,8 +54,8 @@ const VERDE: Pregunta = {
     const hecho = `Con luz verde se contaron <b>${real} burbujas</b> en ${VENTANA_MIN} min; con luz blanca habrían sido ${blanca}.`
     const causa =
       correcta === 'igual'
-        ? ' Acá no es la luz lo que frena a la planta, así que cambiar su color no se nota.'
-        : ` La clorofila casi no absorbe el verde${av(` (${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}% de la blanca)`)}: la hoja lo rebota, y por eso se ve verde.`
+        ? ` La hoja usa casi tanta luz verde como blanca${av(` (absorbe ${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}%)`)}: la idea de que "el verde rebota todo" es un mito. Se ve verde por lo poco que rebota.`
+        : ` La hoja absorbe un poco menos de verde${av(` (${num(ABSORCION.verde * 100, 0)}% contra ${num(ABSORCION.blanca * 100, 0)}% de la blanca)`)}, pero igual usa la mayor parte: la idea de que "el verde rebota todo" es un mito. Se ve verde por lo poco que rebota.`
     return { correcta, explicacion: hecho + causa }
   },
 }
