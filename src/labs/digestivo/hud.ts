@@ -1,4 +1,5 @@
 // HUD izquierdo: título, métricas, relato en vivo, gráfico y leyenda de pH.
+import { numero } from '../../ui/formato'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
@@ -64,11 +65,11 @@ export function crearHud(lab: HTMLElement, extra: HTMLElement[] = []) {
     actualizar(e: Estado, config: Config, comida: Comida) {
       const ph = phSegmento(e.segmento, config)
       mTiempo.set(horas(e.horas), 'min')
-      mEnergia.set(kcalAbsorbidas(e.nutrientes).toFixed(0), 'kcal')
-      mPh.set(ph.toFixed(1))
+      mEnergia.set(numero(kcalAbsorbidas(e.nutrientes), 0), 'kcal')
+      mPh.set(numero(ph, 1))
       const total = MACROS.reduce((s, m) => s + comida.gramos[m], 0)
       const roto = MACROS.reduce((s, m) => s + e.nutrientes[m].digerido + e.nutrientes[m].absorbido, 0)
-      mDigerido.set(((roto / total) * 100).toFixed(0), '%')
+      mDigerido.set(numero(((roto / total) * 100), 0), '%')
 
       const kcalTotal = MACROS.reduce((t, m) => t + comida.gramos[m] * KCAL_POR_GRAMO[m], 0)
       const g = e.nutrientes.grasas

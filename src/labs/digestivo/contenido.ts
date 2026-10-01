@@ -1,4 +1,5 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
+import { numero } from '../../ui/formato'
 
 import { av } from '../../ui/avanzado'
 import { listaAtajos } from '../../ui/teclado'
@@ -22,7 +23,7 @@ export const GANCHO = `Un tubo de vidrio de casi 9 m. Cada tramo trabaja a su ma
 
 type Relato = (s: Segmento, e: Estado, c: Config, ph: number) => string
 
-const titulo = (nombre: string, ph: number) => `<strong>${nombre}${av(` · pH ${ph.toFixed(1)}`)}.</strong>`
+const titulo = (nombre: string, ph: number) => `<strong>${nombre}${av(` · pH ${numero(ph, 1)}`)}.</strong>`
 
 export const RELATO: Record<Segmento['id'], Relato> = {
   boca: (_s, _e, _c, ph) =>
@@ -40,8 +41,8 @@ export const RELATO: Record<Segmento['id'], Relato> = {
 }
 
 export function relatoFinal(kcal: number, kcalTotal: number, grasasPerdidas: number): string {
-  const perdida = grasasPerdidas >= 1 ? ` Se perdieron <span class="c-cielo">${grasasPerdidas.toFixed(0)} g de grasa</span>.` : ''
-  return `<strong>Fin del tránsito.</strong> Absorbidas <span class="c-marca">${kcal.toFixed(0)} kcal</span> de ${kcalTotal.toFixed(0)} ingeridas.${perdida} El resto se elimina con las heces.`
+  const perdida = grasasPerdidas >= 1 ? ` Se perdieron <span class="c-cielo">${numero(grasasPerdidas, 0)} g de grasa</span>.` : ''
+  return `<strong>Fin del tránsito.</strong> Absorbidas <span class="c-marca">${numero(kcal, 0)} kcal</span> de ${numero(kcalTotal, 0)} ingeridas.${perdida} El resto se elimina con las heces.`
 }
 
 

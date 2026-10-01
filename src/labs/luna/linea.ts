@@ -48,7 +48,7 @@ export function lineaDeTiempo(inicial: Hemisferio, alElegir: (dia: number) => vo
   const iconos = MARCAS.map((g) => {
     const canvas = h('canvas', { class: 'icono-fase' })
     const boton = h('button', {
-      type: 'button', class: 'marca-fase', 'aria-label': `Ir al día ${((g / 360) * MES_SINODICO).toFixed(1)}`,
+      type: 'button', class: 'marca-fase', 'aria-label': `Ir al día ${numero(((g / 360) * MES_SINODICO), 1)}`,
       onclick: () => alElegir((g / 360) * MES_SINODICO),
     }, canvas)
     boton.style.left = `${(g / 360) * 100}%`

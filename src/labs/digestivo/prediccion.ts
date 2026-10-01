@@ -1,4 +1,5 @@
 // Preguntas de "Predecí antes de correr". La respuesta sale del modelo, no está escrita a mano.
+import { numero } from '../../ui/formato'
 
 import type { Opcion } from '../../ui/componentes'
 import { av } from '../../ui/avanzado'
@@ -38,10 +39,10 @@ const PREGUNTA_ENERGIA: Pregunta = {
     const normal = kcalAbsorbidas(base.nutrientes)
     const correcta = clasificar(real, normal, TOLERANCIA.energia)
     const perdidas = base.nutrientes.grasas.absorbido - final.nutrientes.grasas.absorbido
-    const hecho = `Se absorbieron <b>${real.toFixed(0)} kcal</b> en vez de ${normal.toFixed(0)}.`
+    const hecho = `Se absorbieron <b>${numero(real, 0)} kcal</b> en vez de ${numero(normal, 0)}.`
     const causa =
       correcta === 'baja'
-        ? ` Se absorbieron ${perdidas.toFixed(1)} g de grasa menos que con bilis, y cada gramo de grasa aporta 9 kcal${av(' (4 los carbohidratos y las proteínas)')}.`
+        ? ` Se absorbieron ${numero(perdidas, 1)} g de grasa menos que con bilis, y cada gramo de grasa aporta 9 kcal${av(' (4 los carbohidratos y las proteínas)')}.`
         : ' Esta comida casi no tiene grasa para perder, así que la bilis casi no se nota.'
     return { correcta, explicacion: hecho + causa }
   },
@@ -58,7 +59,7 @@ const PREGUNTA_PROTEINAS: Pregunta = {
     const real = final.nutrientes.proteinas.absorbido
     const normal = base.nutrientes.proteinas.absorbido
     const correcta = clasificar(real, normal, TOLERANCIA.proteinas)
-    const hecho = `Se absorbieron <b>${real.toFixed(1)} g</b> de proteínas en vez de ${normal.toFixed(1)} g.`
+    const hecho = `Se absorbieron <b>${numero(real, 1)} g</b> de proteínas en vez de ${numero(normal, 1)} g.`
     const causa =
       correcta === 'igual'
         ? ` El estómago ayuda, pero no es imprescindible: el páncreas${av(' (tripsina)')} corta las proteínas en el intestino delgado.`
