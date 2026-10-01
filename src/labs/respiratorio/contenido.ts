@@ -2,6 +2,7 @@
 // Colores con significado: cielo = O₂, magenta = CO₂, lima = aire, ámbar = lo que pide el cuerpo, rojo = sangre.
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import { ACELERACION, ESPACIO_MUERTO, FICO2, QUIEBRE_CO2, estadoEn, saturacion, type Config, type Derivados, type Estado } from './model'
 
@@ -85,4 +86,10 @@ export const COMO_FUNCIONA = `
   <p>Al abrir el lab te pregunta por el aire que exhalás, y cuando empezás a correr, subís a la montaña o aguantás la respiración te pregunta qué va a pasar. Elegí, dejá correr unos segundos y se revela si acertaste.</p>
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> el aire tiene 21 % de O₂ y exhalamos ≈ 16 % de O₂ y ≈ 4 % de CO₂ (no usamos todo el oxígeno, y el gas que el cuerpo agrega es el CO₂, además del vapor de agua), el espacio muerto, que la saturación normal ronda 97 %, que a más esfuerzo hace falta más aire, que la presión baja con la altura, y que lo que te obliga a volver a respirar es el CO₂.</p>
-  <p><b>Simplificado:</b> es una persona adulta de 70 kg. La respiración queda fija en lo que elegís, pero el cerebro real la ajusta solo (por eso acá las situaciones se ponen peor que en la vida real). El reloj del cuerpo va ${ACELERACION} veces más rápido que el real (así los cambios se ven en segundos), pero la maqueta respira en tiempo real. La absorción de O₂ de la sangre es una versión simplificada (se frena sola cuando el alvéolo se queda sin O₂), así que no conserva el O₂ al detalle. No incluye aclimatación a la altura ni el corazón (los latidos son solo dibujo). El alvéolo es esquemático y no está a escala. Los valores son de libro de texto y aproximados: verificalos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> es una persona adulta de 70 kg. La respiración queda fija en lo que elegís, pero el cerebro real la ajusta solo (por eso acá las situaciones se ponen peor que en la vida real). El reloj del cuerpo va ${ACELERACION} veces más rápido que el real (así los cambios se ven en segundos), pero la maqueta respira en tiempo real. La absorción de O₂ de la sangre es una versión simplificada (se frena sola cuando el alvéolo se queda sin O₂), así que no conserva el O₂ al detalle. No incluye aclimatación a la altura ni el corazón (los latidos son solo dibujo). El alvéolo es esquemático y no está a escala. Los valores son de libro de texto y aproximados: verificalos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: 'Herrmann y otros, «2024 Adult Compendium of Physical Activities», <i>Journal of Sport and Health Science</i>: oxígeno que consume el cuerpo al correr.', url: 'https://pacompendium.com/running/' },
+  { texto: 'Mismo Compendium, sección caminar: oxígeno que consume el cuerpo al caminar.', url: 'https://pacompendium.com/walking/' },
+  { texto: 'Stock, Schisler y McSweeney, «The PaCO2 rate of rise in anesthetized patients with airway obstruction», <i>J Clin Anesth</i>, 1989: cuánto sube el CO₂ al no respirar.', url: 'https://pubmed.ncbi.nlm.nih.gov/2516732/' },
+  { texto: 'MacIntosh y otros, <i>Open Textbook of Exercise Physiology</i>, cap. 7, LibreTexts: presión de O₂ de la sangre venosa.', url: 'https://med.libretexts.org/Bookshelves/Sports_and_Exercise/Open_Textbook_of_Exercise_Physiology_(MacIntosh)/02:_The_Fundamentals_of_Exercise_Physiology/2.05:_Chapter_7_-_Pulmonary_Function_Gas_Exchange_Between_the_Environment_and_Blood' },
+  ])}`

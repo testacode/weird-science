@@ -1,6 +1,7 @@
 // Textos del lab. Todo el HTML de este archivo es propio (se inyecta con innerHTML); los números salen del modelo.
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import { ESPECIES, METODOS, METODO_PROPIO, mezclaDe, metodoDe, type EspecieId } from './datos'
 import { tEbullicionInicial } from './destilacion'
@@ -21,6 +22,12 @@ const gramos = (g: number) => `${numero(g, g < 10 ? 1 : 0)} g`
 
 export const GANCHO = `Una mezcla se separa aprovechando algo en lo que sus componentes son <em>distintos</em>${av(' (el tamaño, la densidad, el punto de ebullición, el magnetismo)')}. Pero ¿qué pasa si filtrás ${con('agua')} con ${con('sal')}?`
 
+function ebullicion(e: EspecieId): string {
+  const { humo, tEbullicion } = ESPECIES[e]
+  if (humo) return `no hierve: humea y se quema a ~${num(humo, 0)} °C`
+  return tEbullicion < 1000 ? `${num(tEbullicion)} °C` : 'más de 1000 °C'
+}
+
 /** Frase corta que presenta cada método (la propiedad que usa y el dato que importa). */
 function presentar(c: Corrida): string {
   const { metodo } = c.config
@@ -30,7 +37,7 @@ function presentar(c: Corrida): string {
     case 'tamiz': return `El tamiz tiene agujeros de ${mm(LUZ_TAMIZ_MM)}: deja pasar lo más chico y frena lo más grande. Tamaños: ${lista}.`
     case 'filtro': return `El papel de filtro tiene poros de ${mm(PORO_FILTRO_MM)}: frena los granos y deja pasar el líquido. Tamaños: ${lista}.`
     case 'decantacion': return `En la ampolla, lo más denso se hunde y lo menos denso flota (siempre que no se mezclen). Densidades: ${partes.map((e) => `${con(e)} ${num(ESPECIES[e].densidad, 2)} g/mL`).join(', ')}.`
-    case 'destilacion': return `Con el mechero el balón se calienta hasta que algo hierve; el vapor pasa por el refrigerante y vuelve a líquido. Ebullición: ${partes.map((e) => `${con(e)} ${ESPECIES[e].tEbullicion < 1000 ? `${num(ESPECIES[e].tEbullicion)} °C` : 'más de 1000 °C'}`).join(', ')}.`
+    case 'destilacion': return `Con el mechero el balón se calienta hasta que algo hierve; el vapor pasa por el refrigerante y vuelve a líquido. Ebullición: ${partes.map((e) => `${con(e)} ${ebullicion(e)}`).join(', ')}.`
     case 'iman': return `El imán solo atrae al hierro. ${partes.map((e) => `${con(e)}: ${ESPECIES[e].magnetico ? 'magnético' : 'no magnético'}`).join(', ')}.`
   }
 }
@@ -151,4 +158,13 @@ export const COMO_FUNCIONA = `
   </ul>
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> los puntos de ebullición, las densidades y la solubilidad de la sal (${num(ESPECIES.sal.solubilidad, 0)} g cada 100 mL de agua a 20 °C) son de tablas${av(' (redondeados)')}. Que lo disuelto atraviesa cualquier filtro, que lo denso se hunde y que el imán solo atrae al hierro.</p>
-  <p><b>Simplificado:</b> unas 700 partículas dibujadas representan millones de millones. Los tamaños de grano son típicos (arena gruesa, limaduras finas), no medidos. Los tiempos están acelerados. La arena sale sin agua entre los granos, la solubilidad no cambia con la temperatura y la destilación es un modelo simple (el equilibrio etanol-agua es un ajuste propio, solo vale para ver tendencias). Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> unas 700 partículas dibujadas representan millones de millones. Los tamaños de grano son típicos (arena gruesa, limaduras finas), no medidos. Los tiempos están acelerados. La arena sale sin agua entre los granos, la solubilidad no cambia con la temperatura y la destilación es un modelo simple (el equilibrio etanol-agua es un ajuste propio, solo vale para ver tendencias). Modelo educativo: verificá los datos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: '«Sodium chloride», «Iron» y «Silicon dioxide», Wikipedia (citan el <i>CRC Handbook</i>): densidad, ebullición y solubilidad de la sal, el hierro y la arena.', url: 'https://en.wikipedia.org/wiki/Sodium_chloride' },
+  { texto: '<i>NIST Chemistry WebBook</i>: ebullición del etanol.', url: 'https://webbook.nist.gov/cgi/cbook.cgi?ID=C64175&Units=SI&Mask=4' },
+  { texto: 'The Engineering ToolBox, «Liquids - Densities»: densidad del aceite y del alcohol.', url: 'https://www.engineeringtoolbox.com/liquids-densities-d_743.html' },
+  { texto: '«Smoke point», Wikipedia: el aceite humea y se quema antes de hervir.', url: 'https://en.wikipedia.org/wiki/Smoke_point' },
+  { texto: 'Escala de Wentworth, «Grain size», Wikipedia: tamaño de la arena gruesa.', url: 'https://en.wikipedia.org/wiki/Grain_size' },
+  { texto: '«Salt, the Only Rock We Eat!», UC Master Food Preserver Program (2025): tamaño del grano de sal fina.', url: 'https://ucanr.edu/program/uc-master-food-preserver-program/article/salt-only-rock-we-eat-may-2025' },
+  { texto: 'Sigma-Aldrich, tabla de conversión de tamaños de partícula: tamaño de las limaduras.', url: 'https://www.sigmaaldrich.com/US/en/support/calculators-and-apps/particle-size-conversion-table' },
+  ])}`

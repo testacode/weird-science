@@ -28,3 +28,5 @@
 - **`agent-browser errors` no alcanza como evidencia**: no atrapó un TypeError real del loop de render (respiratorio). Para declarar "consola limpia" mirar también `agent-browser console` (filtrando error/warn) y el log de Vite.
 - **`dt` negativo**: el timestamp de `requestAnimationFrame` puede ser anterior a un `performance.now()` tomado antes; acotar con `Math.max(0, …)` antes de usarlo (por ejemplo en `getPointAt`).
 - **`segmentado` (kit)**: no avisa si se vuelve a tocar la opción ya elegida. Antes, en flotación y ciclo del agua, eso descartaba la predicción abierta.
+- **NIST WebBook no tiene todo**: falta el Cp del etanol sólido y, para el agua, los calores latentes y los Cp (solo trae Tboil y presión de vapor). Para esos datos, "Water (data page)" de Wikipedia (cita el CRC) o un libro de texto. Detalle en `docs/fuentes.md`.
+- **`agent-browser eval` comparte el scope de la página**: un `const` declarado en un eval sigue vivo en el siguiente y se rompe con "Identifier has already been declared". Envolver el código en `(() => { … })()`.

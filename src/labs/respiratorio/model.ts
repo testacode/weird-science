@@ -32,7 +32,8 @@ export const LIMITES = { frecuencia: [6, 50], volumen: [0.25, 2.5] } as const
 /** Alturas del control: llano, sierra y montaña (m). */
 export const ALTURAS = { llano: 0, sierra: 2000, montana: 4000 } as const
 
-/** O₂ que consume el cuerpo, en mL/min: ≈ 1, 3 y 9 METs de una persona de 70 kg (1 MET ≈ 3,5 mL/kg/min). */
+/** O₂ que consume el cuerpo, en mL/min: ≈ 1, 3 y 9 METs de una persona de 70 kg (1 MET ≈ 3,5 mL/kg/min; Compendium 2024).
+ *  Caminar es un paso tranquilo: a paso moderado (4,5–5,5 km/h) el Compendium da 3,8 METs. */
 export const ACTIVIDADES: Record<Actividad, { nombre: string; vo2: number }> = {
   reposo: { nombre: 'Reposo', vo2: 250 },
   caminar: { nombre: 'Caminar', vo2: 750 },

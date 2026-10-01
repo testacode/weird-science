@@ -28,7 +28,7 @@ const VISCOSIDAD = 1e-3
 const ALTO_AMPOLLA_M = 0.12
 /** Los granos gruesos caen más lento de lo que dice Stokes (que vale para partículas diminutas). */
 const V_MAX_SEDIMENTACION = 0.1
-/** Radio de las gotas de aceite después de agitar la ampolla, m (no verificado: orden de magnitud). */
+/** Radio de las gotas de aceite después de agitar la ampolla, m (orden de magnitud, sin fuente directa). */
 const RADIO_GOTA_M = 2.5e-4
 /** mL/s que salen por la llave de la ampolla. */
 const CAUDAL_LLAVE = 6
