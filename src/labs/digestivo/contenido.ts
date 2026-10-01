@@ -46,6 +46,12 @@ export function relatoFinal(kcal: number, kcalTotal: number, grasasPerdidas: num
 }
 
 
+/** Ventana corta solo con los atajos, para el botón de la consola. */
+export const AYUDA_ATAJOS = `
+  <h2>Atajos de teclado</h2>
+  <p>Funcionan en cualquier momento, salvo mientras escribís en un campo de texto.</p>
+  ${listaAtajos(Object.values(ATAJOS))}`
+
 export const COMO_FUNCIONA = `
   <h2>¿Cómo funciona?</h2>
   <p>Comer no alcanza: el cuerpo tiene que romper la comida en moléculas tan chicas que puedan pasar a la sangre. Cada tramo del tubo trabaja distinto${av(', como un reactor con su pH y sus enzimas')}.${av(' En cada paso de 0,01 h, una fracción de cada nutriente intacto se hidroliza (cinética de primer orden) y, en el intestino delgado, una fracción de lo digerido se absorbe.')}</p>
