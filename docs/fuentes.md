@@ -153,3 +153,98 @@ Conversión: J/(mol·K) ÷ masa molar = J/(g·K). Etanol 46,07 g/mol; acetona 58
   USDA FoodData Central #170721 — https://fdc.nal.usda.gov/food-details/170721/nutrients
 - Digestivo, milanesa 15 / 30 / 18 g: no está en USDA (2 búsquedas). Declarada en el lab como porción aproximada.
 - Fotosíntesis, absorción de Elodea: sin valor medido. Declarada en el lab como estimación a partir de otras hojas.
+
+## Imanes (`src/labs/imanes/model.ts`)
+
+Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, hechas por el agente del lab.
+
+- Temperaturas de Curie: ferrita 450 °C, neodimio 340 °C. Wikipedia: hierro 770 °C, cobalto 1.130 °C, níquel 354 °C, ferrita de estroncio 450 °C; neodimio 310–400 °C en "Curie temperature" y 310–370 °C en "Neodymium magnet" (340 cae dentro de las dos). OK.
+  "Curie temperature", Wikipedia — https://en.wikipedia.org/wiki/Curie_temperature
+- Magnetización con la temperatura, m = tanh(m·Tc/T) (Weiss): forma ilustrativa; los imanes reales se apartan.
+- Remanencia: neodimio 1,3 T (Wikipedia 1–1,5 T), ferrita 0,35 T (campo máximo ≈ 0,35 T). Neodimio de grado estándar: uso máximo 80 °C. OK.
+  "Neodymium magnet", Wikipedia — https://en.wikipedia.org/wiki/Neodymium_magnet
+  "Ferrite magnet", Wikipedia — https://en.wikipedia.org/wiki/Ferrite_magnet
+- Fuerza entre imanes de barra por modelo de polos (suma de 4 pares, suavizado 0,5 cm); lejos decae como 1/d⁴. Orden de magnitud: neodimio a 0,5 cm da 95 N, debajo del tope B²A/(2μ0) ≈ 170 N. OK.
+  "Force between magnets", Wikipedia — https://en.wikipedia.org/wiki/Force_between_magnets
+  "Magnetic dipole–dipole interaction", Wikipedia — https://en.wikipedia.org/wiki/Magnetic_dipole%E2%80%93dipole_interaction
+- Susceptibilidad (SI): aluminio +2,2×10⁻⁵, cobre −9,63×10⁻⁶, PVC −1,071×10⁻⁵, níquel 600, hierro 200.000; densidades hierro 7,874, aluminio 2,70, cobre 8,92, níquel 8,9, PVC 1,372 g/cm³. OK.
+  "Magnetic susceptibility", Wikipedia — https://en.wikipedia.org/wiki/Magnetic_susceptibility
+- Cobalto, densidad 8,834 g/cm³ a 20 °C, de la página "Cobalt" (el valor de libro ronda 8,90; no verificado). OK. — "Cobalt", Wikipedia — https://en.wikipedia.org/wiki/Cobalt
+- Acero 7,85 g/cm³: ver Flotación.
+- Factor desmagnetizante 1/3 (cubo por simetría) y saturación 1,6 T (aleaciones de hierro 1,6–2,2 T). OK.
+  "Demagnetizing field" y "Saturation (magnetic)", Wikipedia — https://en.wikipedia.org/wiki/Demagnetizing_field
+- Hierro, níquel y cobalto ferromagnéticos; un imán partido da dos imanes con N y S. OK. — "Magnet", Wikipedia — https://en.wikipedia.org/wiki/Magnet
+- Latas de bebida: 75 % aluminio, 25 % acero estañado. OK. — "Beverage can", Wikipedia — https://en.wikipedia.org/wiki/Beverage_can
+- Campo terrestre 30.000–60.000 nT; el código usa 20 µT de componente horizontal (parámetro). — "Earth's magnetic field", Wikipedia — https://en.wikipedia.org/wiki/Earth%27s_magnetic_field
+- Sin verificar: susceptibilidad del cobalto (250) y del acero (1.000) (no cambian el resultado: la forma limita a 3); que un imán desmagnetizado siga siendo atraído (el modelo da 0, avisado); pérdida irreversible del neodimio desde 80 °C no modelada (avisado).
+- Suavizado del polo 0,65 cm (antes 0,5): parámetro ajustado. El polo real es una cara de 1,6 cm; se ajustó contra la fuerza entre dos caras cuadradas de 1,6 cm con carga uniforme (integración numérica, error medio ~10 %; a 0,5 cm ~4,3 N contra ~4,5 N).
+- Parámetros del modelo: campo de alineación de limaduras 1 mT, rozamiento 0,3, tamaños de imán y muestra.
+
+## Sonido (`src/labs/sonido/model.ts`)
+
+Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, hechas por el agente del lab.
+
+- Velocidad del sonido: aire a 20 °C 343 m/s; agua dulce a 20 °C 1.481 m/s. OK. Fórmula de fluidos v = √(K/ρ). OK. En un gas ideal c no depende de la presión (sostiene que en el vacío p baja con ρ). OK.
+- Acero como barra: 5.050 m/s = √(E/ρ) con E = 200 GPa (A36) y ρ = 7.850; vale para varillas con diámetro menor que la longitud de onda. En masa, la tabla da 5.596–5.912 m/s (el lab lo declara). OK.
+  "Young's modulus", Wikipedia — https://en.wikipedia.org/wiki/Young%27s_modulus
+  "Speed of sound", Wikipedia — https://en.wikipedia.org/wiki/Speed_of_sound
+- Densidad del acero 7.850 kg/m³ (tabla 7.787–7.965). OK.
+- Densidad del aire 1,204 kg/m³ a 20 °C, z0 = 413,3 Pa·s/m, p/v = ±ρc. OK. — "Acoustic impedance", Wikipedia — https://en.wikipedia.org/wiki/Acoustic_impedance
+- Densidad del agua 998,2 kg/m³ a 20 °C. OK. — "Water (data page)", Wikipedia — https://en.wikipedia.org/wiki/Water_(data_page)
+- Rango audible 20–20.000 Hz. OK. — "Hearing range", Wikipedia — https://en.wikipedia.org/wiki/Hearing_range
+- 20 µPa = 0 dB y 1 Pa ≈ 94 dB. OK. — "Sound pressure", Wikipedia — https://en.wikipedia.org/wiki/Sound_pressure
+- Conversación 60–70 dBA; daño con exposición ≥ 85 dBA. OK.
+  NIDCD, Noise-Induced Hearing Loss — https://www.nidcd.nih.gov/health/noise-induced-hearing-loss
+  NIOSH, Noise and hearing loss — https://www.cdc.gov/niosh/noise/about/index.html
+- El sonido no se propaga en el vacío; campana de vacío con el despertador que se apaga. OK.
+  "Sound", Wikipedia — https://en.wikipedia.org/wiki/Sound
+  "Bell jar", Wikipedia — https://en.wikipedia.org/wiki/Bell_jar
+- Presión mínima de la bomba 0,1 Pa (rotativa de varias etapas, 10⁻⁶ bar). OK como bomba de laboratorio; la campana de aula no llega (no verificado). — "Rotary vane pump", Wikipedia — https://en.wikipedia.org/wiki/Rotary_vane_pump
+- La4 = 440 Hz y Do4 = 261,6256 Hz. OK. — "A440 (pitch standard)" y "Piano key frequencies", Wikipedia — https://en.wikipedia.org/wiki/A440_(pitch_standard)
+- Derivado: el agua es ≈ 15.000 veces más difícil de comprimir que el aire = (1481/343)² · (998,2/1,204); desplazamiento < 1 µm a 80 dB y 440 Hz (p = Zv, Z = 413).
+- Sin verificar o parámetros: presión de una campana de aula; tiempos y escalas de visualización (`TAU_BOMBA`, `TAU_ENTRADA`, `PULSO_S`, `F_VISUAL`); desplazamiento de partículas (derivado con p = Zv); límites grave/medio/agudo (criterio de redacción).
+
+## Circulatorio (`src/labs/circulatorio/model.ts`)
+
+Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, hechas por el agente del lab.
+
+- Gasto cardíaco, FC y VS en reposo: código 70 /min, 70 mL, 4,9 L/min. Wikipedia: ≈ 5 L/min con 70 /min y VS ≈ 70 mL (rango 4–8 L/min); por RM (Maceira 2006) VFD 142, VFS 47–50, VS ≈ 90–95 mL. OK (70/70 es el set de libro; el 90 se nombra en el lab).
+  "Cardiac output", Wikipedia — https://en.wikipedia.org/wiki/Cardiac_output
+  "Stroke volume", Wikipedia — https://en.wikipedia.org/wiki/Stroke_volume
+- VFS = 50 mL. OK. FC en reposo 60–100 /min y máxima ≈ 220 − edad; `FC_MAXIMA` = 190 (30 años, ajuste).
+  "Heart rate", Wikipedia — https://en.wikipedia.org/wiki/Heart_rate
+- Ciclo de 0,8 s a 70–75 /min, sístole 0,3 s y diástole 0,5 s. OK. La sístole a otras frecuencias (0,3 · √(RR/0,8)) es un ajuste propio.
+  "Cardiac cycle", Wikipedia — https://en.wikipedia.org/wiki/Cardiac_cycle
+- Fick, 1,34 mL O₂/g Hb, Hb 150 g/L, SaO₂ 98 % → 197 mL/L; venosa mixta ≈ 75 %. Saturación arterial 96–100 %, venosa 60–80 %. OK.
+  "Fick principle", Wikipedia — https://en.wikipedia.org/wiki/Fick_principle
+  "Oxygen saturation (medicine)", Wikipedia — https://en.wikipedia.org/wiki/Oxygen_saturation_(medicine)
+- Extracción máxima 0,89 (venosa mixta ≈ 22 de 200 mL/L en el pico); gasto máximo 20–25 L/min y VO₂ máx 3,0–3,5 L/min en un joven típico; código 22,5 L/min y 3.250 mL/min. OK.
+  Magder, "Mechanical Limits of Cardiac Output at Maximal Aerobic Exercise", IntechOpen, 2022 — https://www.intechopen.com/chapters/81078
+- `BOMBEO_MAXIMO` = 25 L/min (lo máximo que bombea el ventrículo; aviso "el corazón no da más"): mismo límite de llenado ≈ 25 L/min. OK. Misma fuente (Magder 2022).
+- Volumen de sangre ≈ 5 L. OK. — "Blood volume", Wikipedia — https://en.wikipedia.org/wiki/Blood_volume
+- VO₂ por actividad: ver Respiratorio (Compendium 2024).
+- Insuficiencia mitral por fracción regurgitante: leve < 20 %, moderada 20–40 %, moderada a grave 40–60 %, grave > 60 %. OK. La compensación (el ventrículo expulsa VS / (1 − FR) para que al cuerpo llegue lo mismo) sale de la definición de fracción regurgitante.
+  "Mitral valve regurgitation", Wikipedia — https://en.wikipedia.org/wiki/Mitral_valve_regurgitation
+- CIV: cortocircuito izquierda → derecha (VI ≈ 120 mmHg, VD ≈ 20); Qp/Qs pequeña < 1,5:1, moderada 1,5–3:1, grande > 3:1; Eisenmenger invierte el paso. OK. El modelo conserva el flujo al cuerpo (Qs) y sube Qp = Qs / (1 − f), coherente con las fuentes. El mapeo de la gravedad (20–70 %) es parámetro del modelo.
+  "Ventricular septal defect", Wikipedia — https://en.wikipedia.org/wiki/Ventricular_septal_defect
+  "Left-to-Right Shunts", UTMB — https://www.utmb.edu/pedi_ed/CoreV2/Cardiology/Cardiology8.html
+  Bradley, "Ventricular Septal Defects (VSD)", STS — https://ebook.sts.org/sts/view/Cardiac-and-Congenital/1864080/all/Ventricular_Septal_Defects__VSD_
+- Sangre roja viva con O₂ y oscura sin O₂; las venas se ven azules por la piel; el lab dibuja azul por convención y lo aclara. — "Blood", Wikipedia — https://en.wikipedia.org/wiki/Blood
+- Sin verificar o ajustes: duración de la sístole a otras frecuencias, valores típicos por actividad (interpolación), mapeo gravedad → fuga/paso, velocidad de las partículas, τ de mezcla = 5 L / Qs (modelo propio con datos verificados).
+
+## Luz (`src/labs/luz/model.ts`)
+
+Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, hechas por el agente del lab. Todos los índices a 589,3 nm.
+
+- Agua 1,3333: Daimon y Masumura 2007, agua destilada a 20,0 °C, 1,3333 a 589,3 nm (1,3334 a 587,6 nm; 1,3317 a 650 nm). OK. — RefractiveIndex.INFO, H2O, Daimon-20.0C — https://refractiveindex.info/?shelf=main&book=H2O&page=Daimon-20.0C
+- Vidrio común 1,5233: Rubin 1985, soda-lime transparente, 1,5233. OK (control: N-BK7 1,5167). — RefractiveIndex.INFO, Soda lime glass, Rubin-clear — https://refractiveindex.info/?shelf=glass&book=soda-lime&page=Rubin-clear
+- Diamante 2,4173: Peter 1923. OK. — RefractiveIndex.INFO, C, Peter — https://refractiveindex.info/?shelf=main&book=C&page=Peter
+- Aire 1,000277: Ciddor 1996, aire estándar, 1,00027715. OK. — RefractiveIndex.INFO, Air, Ciddor — https://refractiveindex.info/?shelf=other&book=air&page=Ciddor
+- Aceite de oliva 1,469: Wikipedia 1,4677–1,4705 (sin λ ni temperatura). Aproximado, una sola fuente. — "Olive oil", Wikipedia — https://en.wikipedia.org/wiki/Olive_oil
+- Velocidad de la luz 299.792.458 m/s (exacta). OK. — NIST CODATA — https://physics.nist.gov/cgi-bin/cuu/Value?c
+- Ángulo crítico (sale de los n): agua 48,6°, aceite 42,9°, vidrio 41,0° (n = 1,5233), diamante 24,4°. Wikipedia: 48,6° agua–aire; ~49° agua y ~42° vidrio con n ≈ 1,5. El 41,0° es cálculo del modelo. OK.
+  "Snell's law" y "Total internal reflection", Wikipedia — https://en.wikipedia.org/wiki/Total_internal_reflection
+- Fresnel sin polarizar a incidencia normal: aire–agua 2,0 %, aire–vidrio 4,3 %, aire–diamante 17 %; Wikipedia ~4 % para vidrio n ≈ 1,5. OK. — "Fresnel equations", Wikipedia — https://en.wikipedia.org/wiki/Fresnel_equations
+- Ley de la reflexión. OK. El giro del rayo = 2 × giro del espejo sale del modelo vectorial. — "Reflection (physics)", Wikipedia — https://en.wikipedia.org/wiki/Reflection_(physics)
+- Profundidad aparente: desde arriba aparente/real = n_aire/n_agua (0,75), tiende a cero al mirar rasante. OK. La fórmula de costado d · tan β / tan α es derivación propia con la ley de Snell (no está en la fuente). — "Refraction", Wikipedia — https://en.wikipedia.org/wiki/Refraction
+- Parámetros: rango del medio inventado (1,00–2,50), medidas de pecera y lápiz, distancia del ojo, láser adentro en crítico + 11°, `TOLERANCIA_IGUAL` 1 %, umbral "una parte sale" 25 %, vara de "bastante más cerca" 2/3, margen del ojo a la pared (`ojoMax`). Se ignora la dispersión.

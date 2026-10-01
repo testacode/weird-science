@@ -5,15 +5,23 @@
 
 ## En curso
 
-- Nada.
+- Ola 5: célula en code review (`.worktrees/celula`). Imanes, sonido, circulatorio y luz ya mergeados.
 
 ## Backlog
 
-1. **Próxima ola de labs** (temas en `temario.md`): sistema circulatorio, la célula, imanes y electricidad estática, luz (reflexión y refracción), sonido, volcanes y placas.
+1. **Próxima ola de labs:** volcanes y placas; electrostática (quedó fuera de imanes); eco (quedó fuera de sonido).
+2. **Kit, pedidos de la ola 5:**
+   - Patrón "preguntar antes del cambio, aplicar al responder, revelar con timer" (circuito, respiratorio, circulatorio, imanes, luz): llevarlo al kit para que cancelar el timer y ocultar al cambiar la config salga solo (fue el bug más repetido en los reviews).
+   - `[hidden] { display: none !important }` en `kit.css` (`fila`, `deslizador` y `grupo` le ganan al atributo; luz y célula lo parchearon).
+   - `grafico.cargar(puntos)` para dibujar de una vez (sonido, estaciones).
+   - `segmentado` con estado deshabilitado; `deslizador` logarítmico y deshabilitado.
+   - Botones con muestra de color (luz, flotación) como componente.
 2. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
 3. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
 4. **Detalles:**
    - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
+   - sonido: franja negra arriba de la escena;
+   - preguntas al borde de su umbral (imanes "alejar al doble" con banda muerta; luz, lápiz en aceite a 20° da 66 % contra la vara de 2/3);
    - estaciones: `llenarCurva` redibuja el gráfico una vez por punto (~95 veces por cambio de ciudad o modo); un `cargar(puntos)` en el kit lo dejaría en una;
    - estaciones: mover la inclinación con la pregunta sin responder la descarta pero deja el año en pausa (ciclo del agua, en el mismo caso, sigue corriendo);
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
@@ -22,6 +30,7 @@
 
 ## Hecho reciente
 
+- 2026-10-01 — Ola 5: imanes, sonido, circulatorio y luz, cada uno con code review, arreglos y prueba en CDP; fuentes integradas en `docs/fuentes.md`.
 - 2026-10-01 — Datos pendientes: aire (20,95 % O₂), atmósfera estándar, pan y papas fritas (USDA) verificados; 16 % de O₂ exhalado derivado; P50, milanesa y absorción de Elodea declarados como aproximados en cada lab.
 - 2026-10-01 — Fuentes en luna, estaciones, circuito, digestivo y fotosíntesis, más gravedades (flotación) y gases (respiratorio). Fotosíntesis corregida: la hoja absorbe ~70 % del verde (antes 12 %, el mito del "verde rebotado"). Ciclo del agua sin fuentes: todo son parámetros del modelo.
 - 2026-10-01 — Kit: `fila` e `interruptor` (6 copias), `grafico.cambiar()` y `yTecho` (luna, estaciones y mezclas ya no recrean el gráfico; eje de 24 h), pastillas con `origen: 'derecha'`, línea de tiempo en `src/ui/linea.ts` (luna gana `pointercancel`), y los 10 labs con la pregunta en `pred.datos`. Descartado: `yMin` positivo (ningún lab lo usa). El "bug" de luna con `sombraTierra` no existía: la respuesta no depende de esa opción.
