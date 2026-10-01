@@ -2,15 +2,16 @@ import '../../ui/kit.css'
 import './fotosintesis.css'
 import { interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
+import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
+import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, FACTORES, GANCHO, burbujas, num, relato } from './contenido'
-import { deslizador } from './deslizador'
 import { crearEscena } from './escena'
 import { LUZ_HEX } from './constantes'
 import {
-  CONFIG_INICIAL, LIMITES, P_MAX, RESPIRACION, estadoInicial, glucosaMg, paso, tasas, type ColorLuz, type Config, type Factor,
+  CONFIG_INICIAL, LIMITES, P_MAX, estadoInicial, glucosaMg, paso, tasas, type ColorLuz, type Config, type Factor,
 } from './model'
 import { VENTANA_MIN, preguntaPara, type Pregunta, type Respuesta } from './prediccion'
 
@@ -56,13 +57,10 @@ const factores = h('div', { class: 'panel factores' },
   }),
 )
 
-const curva = grafico(
-  [
-    { id: 'fotosintesis', nombre: 'Fotosíntesis', color: 'marca' },
-    { id: 'respiracion', nombre: 'Respiración', color: 'magenta' },
-  ],
-  { titulo: 'O₂ que se fabrica y se gasta', unidadX: ' min', unidadY: 'µmol/min' },
-)
+// El balance (fabrica − gasta) baja de 0 cuando la respiración le gana a la fotosíntesis.
+const curva = grafico([{ id: 'balance', nombre: 'Balance', color: 'cielo' }], {
+  titulo: 'Balance de O₂ (fabrica − gasta)', unidadX: ' min', unidadY: 'µmol/min', yMin: -1,
+})
 let origenGrafico = 0
 let ultimoPunto = 0
 function reiniciarCurva() {
@@ -76,13 +74,12 @@ function muestrear() {
     origenGrafico = estado.minutos
     curva.limpiar()
   }
-  const d = tasas(config)
-  curva.agregar(estado.minutos - origenGrafico, { fotosintesis: d.bruta, respiracion: RESPIRACION })
+  curva.agregar(estado.minutos - origenGrafico, { balance: tasas(config).neto })
   ultimoPunto = estado.minutos
 }
 
 lab.append(
-  h('div', { class: 'hud hud-izq' },
+  hud('izq',
     h('a', { href: '../../', class: 'etiqueta' }, '← Weird Science'),
     h('h1', { class: 'titulo' }, h('small', {}, 'Lab de fotosíntesis'), h('span', {}, 'Luz, agua y aire')),
     gancho,
@@ -165,19 +162,19 @@ function interruptor(texto: string, activo: boolean, alElegir: (si: boolean) => 
 }
 
 const distancia = deslizador({
-  titulo: 'Distancia de la lámpara', clase: 'luz', ...rango('distancia'), paso: 1, valor: config.distancia,
+  titulo: 'Distancia de la lámpara', clase: 'luz', color: 'var(--luz)', ...rango('distancia'), paso: 1, valor: config.distancia,
   formato: (v) => `${v} cm`,
   nota: (v) => `llega ${num(tasas({ ...config, distancia: v, encendida: true }).llega, 0)}%`,
   alCambiar: (v) => aplicar({ distancia: v }),
 })
 const co2 = deslizador({
-  titulo: 'CO₂ disuelto', clase: 'co2', ...rango('co2'), paso: 5, valor: config.co2,
+  titulo: 'CO₂ disuelto', clase: 'co2', color: 'var(--magenta)', ...rango('co2'), paso: 5, valor: config.co2,
   formato: (v) => (v === 0 ? 'nada' : v <= 30 ? 'poco' : v <= 70 ? 'medio' : 'mucho'),
   nota: (v) => (v === 30 ? 'agua de la canilla' : v === 100 ? 'con bicarbonato' : ''),
   alCambiar: (v) => aplicar({ co2: v }),
 })
 const temperatura = deslizador({
-  titulo: 'Temperatura del agua', clase: 'temp', ...rango('temperatura'), paso: 1, valor: config.temperatura,
+  titulo: 'Temperatura del agua', color: 'var(--texto)', ...rango('temperatura'), paso: 1, valor: config.temperatura,
   formato: (v) => `${v} °C`, alCambiar: (v) => aplicar({ temperatura: v }),
 })
 function rango(clave: keyof typeof LIMITES) {
@@ -203,7 +200,7 @@ function sincronizar() {
 sincronizar()
 
 lab.append(
-  h('div', { class: 'hud hud-der' },
+  hud('der',
     h('div', { class: 'panel consola' },
       h('div', { class: 'fila' }, botonPlay, h('button', { class: 'boton', type: 'button', onclick: otraVez }, '↺ Otra vez'),
         h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),

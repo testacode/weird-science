@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
+import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
+import { crearPildoras } from '../../escena/pildoras'
 import { crearBurbujas } from './burbujas'
 import { VASO, lamparaX } from './constantes'
 import { crearLampara } from './lampara'
@@ -10,9 +12,6 @@ import { P_MAX, type Config, type Derivados, type Estado } from './model'
 import { crearPlanta } from './planta'
 import { crearVaso } from './vaso'
 
-/** Ancho que ocupan los HUD a cada lado (px): 20 de margen + 380 y 330 de panel. */
-const HUD_IZQ = 400
-const HUD_DER = 350
 /** Lo que tiene que entrar a lo ancho y a lo alto (unidades del mundo): del vaso a la lámpara más lejana, de la mesada a la lupa. */
 const ANCHO_MUNDO = 8.6
 const ALTO_MUNDO = 7
@@ -30,27 +29,19 @@ export function crearEscena(contenedor: HTMLElement) {
   controles.maxPolarAngle = Math.PI * 0.49
   controles.enablePan = false
 
-  /** Aleja la cámara hasta que la maqueta entre en el hueco que dejan los HUD y la corre al centro de ese hueco. */
-  function encuadrar() {
-    const w = contenedor.clientWidth
-    const h = contenedor.clientHeight
-    const hud = w > 900
-    const libre = hud ? Math.max(w - HUD_IZQ - HUD_DER, 360) : w
+  // Aleja la cámara hasta que la maqueta entre en el hueco que dejan los HUD (el kit la centra en ese hueco).
+  camera.position.copy(CENTRO).add(new THREE.Vector3(0.1, 0.9, 3))
+  encuadrarEntreHuds(camera, contenedor, ({ libre, alto }) => {
     const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-    const distancia = Math.max(ANCHO_MUNDO / (libre / w) / (2 * tanV * (w / h)), ALTO_MUNDO / (2 * tanV)) * 1.04
+    const distancia = Math.max((ANCHO_MUNDO * alto) / (Math.max(libre, 360) * 2 * tanV), ALTO_MUNDO / (2 * tanV)) * 1.04
     const direccion = camera.position.clone().sub(controles.target)
     if (direccion.lengthSq() < 1e-6) direccion.set(0.05, 0.3, 1)
     camera.position.copy(controles.target).addScaledVector(direccion.normalize(), distancia)
     controles.minDistance = distancia * 0.55
     controles.maxDistance = distancia * 1.3
+    // La niebla acompaña a la distancia: si no, con la cámara lejos la maqueta se apaga.
     scene.fog = new THREE.Fog(0x07100f, distancia + 12, distancia + 34)
-    if (hud) camera.setViewOffset(w, h, -(HUD_IZQ - HUD_DER) / 2, 0, w, h)
-    else camera.clearViewOffset()
-    camera.updateProjectionMatrix()
-  }
-  camera.position.copy(CENTRO).add(new THREE.Vector3(0.1, 0.9, 3))
-  encuadrar()
-  window.addEventListener('resize', encuadrar)
+  })
 
   const vaso = crearVaso(scene)
   const planta = crearPlanta(scene)
@@ -67,24 +58,14 @@ export function crearEscena(contenedor: HTMLElement) {
     { id: 'cloroplasto', texto: 'Cloroplastos', ancla: new THREE.Vector3(CENTRO_LUPA.x, CENTRO_LUPA.y - 1.3, CENTRO_LUPA.z) },
     ...MARCAS_REGLA.map((cm) => ({ id: `cm${cm}`, texto: `${cm}`, ancla: new THREE.Vector3(lamparaX(cm), 0, 1.95) })),
   ]
-  const pildoras = etiquetas.map((e) => {
-    const el = document.createElement('div')
-    el.className = e.id.startsWith('cm') ? 'pildora regla' : 'pildora'
-    el.textContent = e.texto
-    contenedor.append(el)
-    return { ...e, el }
-  })
-  const proyectado = new THREE.Vector3()
+  const rotulos = crearPildoras(contenedor, camera)
+  const pildoras = etiquetas.map((e) => rotulos.crear(e.texto, { ancla: e.ancla, clase: e.id.startsWith('cm') ? 'regla' : '' }))
+  const lamp = pildoras[etiquetas.findIndex((e) => e.id === 'lampara')]
   function ubicarPildoras(c: Config) {
-    const lamp = pildoras.find((p) => p.id === 'lampara')!
-    lamp.el.textContent = c.encendida ? `Lámpara · ${c.distancia} cm` : 'Lámpara apagada'
+    lamp.texto(c.encendida ? `Lámpara · ${c.distancia} cm` : 'Lámpara apagada')
     lamp.ancla.x = lampara.x
-    for (const p of pildoras) {
-      proyectado.copy(p.ancla).project(camera)
-      p.el.style.left = `${(proyectado.x * 0.5 + 0.5) * contenedor.clientWidth}px`
-      p.el.style.top = `${(-proyectado.y * 0.5 + 0.5) * contenedor.clientHeight}px`
-      p.el.classList.toggle('activa', p.id === 'lampara' && c.encendida)
-    }
+    lamp.el.classList.toggle('activa', c.encendida)
+    rotulos.ubicar()
   }
 
   let burbujasVistas = 0

@@ -2,11 +2,10 @@
 // Colores con significado: ámbar = glucosa, cielo = oxígeno, magenta = CO₂ y respiración, lima = la fotosíntesis.
 
 import { av } from '../../ui/avanzado'
+import { numero } from '../../ui/formato'
 import { ABSORCION, P_MAX, type Config, type Derivados, type Estado, type Factor } from './model'
 
-/** Número con coma decimal y signo menos tipográfico. */
-export const num = (n: number, decimales = 1) =>
-  n.toLocaleString('es-AR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales }).replace('-', '−')
+export const num = numero
 
 /** Burbujas por minuto: con decimal cuando son pocas. */
 export const burbujas = (n: number) => num(n, n < 10 ? 1 : 0)
@@ -54,7 +53,7 @@ export const COMO_FUNCIONA = `
     <li>Los puntitos de <span class="c-luz">luz</span> viajan de la lámpara a la planta: los que se absorben desaparecen y los que rebotan se van. Con luz blanca rebotan verdes.</li>
     <li>Los puntitos <span class="c-magenta">magenta</span> son CO₂ disuelto que entra a las hojas.</li>
     <li>Las burbujas <span class="c-cielo">celestes</span> son oxígeno. En el cuadrito de arriba ves una célula de la hoja con sus cloroplastos, que se encienden cuando trabajan.</li>
-    <li>El gráfico compara lo que la planta fabrica (<span class="c-marca">fotosíntesis</span>) con lo que gasta (<span class="c-magenta">respiración</span>). Cuando la línea lima cae por debajo de la magenta, la planta pierde oxígeno.</li>
+    <li>El gráfico muestra el <span class="c-cielo">balance de oxígeno</span>: lo que la planta fabrica con la fotosíntesis menos lo que gasta respirando. Arriba del 0 sobra oxígeno y salen burbujas; debajo del 0 la planta gasta más de lo que fabrica y el agua pierde oxígeno.</li>
   </ul>
   <h3>Controles</h3>
   <ul>
