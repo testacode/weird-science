@@ -71,27 +71,24 @@ lab.append(
 
 // --- Predecí antes de correr: la pregunta va antes del cambio (la primera, sobre el aire que sale, no cambia nada); el cambio se hace al responder y se revela tras unos segundos ---
 const ayuda = modal()
-let pendiente: { cambio: Partial<Config>; pregunta: Pregunta } | null = null
 let enCurso: { pregunta: Pregunta; antes: Foto; t0: number } | null = null
 const foto = (): Foto => ({ c: config, e: estado })
 const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const cambio = pendiente?.cambio
+  const cambio = pred.datos?.cambio
   descartarPendiente()
   if (cambio) aplicar({ ...config, ...cambio })
 } }, 'Saltar y hacerlo igual')
-const pred = prediccion<Respuesta>(() => {
-  if (!pendiente) return
+const pred = prediccion<Respuesta, { cambio: Partial<Config>; pregunta: Pregunta }>(() => {
+  if (!pred.datos) return
   // El cambio se arma sobre la config de ahora (si en el medio el cerebro soltó la respiración, no se vuelve a aguantar).
-  const { cambio, pregunta } = pendiente
-  pendiente = null
+  const { cambio, pregunta } = pred.datos
   saltar.hidden = true
   const antes = foto()
   aplicar({ ...config, ...cambio })
   enCurso = { pregunta, antes, t0: estado.t }
 })
 function descartarPendiente() {
-  if (!pendiente) return
-  pendiente = null
+  if (!pred.pendiente) return
   saltar.hidden = true
   pred.ocultar()
 }
@@ -105,8 +102,7 @@ function revelar() {
 
 /** Al abrir el lab (y al restablecer) se pregunta por el aire que sale, sin cambiar nada: el cuerpo ya está en reposo. */
 function preguntarInicial() {
-  pendiente = { cambio: {}, pregunta: PREGUNTA_INICIAL }
-  pred.preguntar(PREGUNTA_INICIAL.texto, PREGUNTA_INICIAL.opciones)
+  pred.preguntar(PREGUNTA_INICIAL.texto, PREGUNTA_INICIAL.opciones, { cambio: {}, pregunta: PREGUNTA_INICIAL })
 }
 
 /** Todo cambio de los controles pasa por acá: si corresponde una predicción, primero se pregunta; si no, se aplica. */
@@ -127,8 +123,7 @@ function pedir(cambio: Partial<Config>) {
     return aplicar(nueva)
   }
   enCurso = null
-  pendiente = { cambio, pregunta }
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })
   saltar.hidden = false
   controles.sincronizar(config, corriendo)
 }

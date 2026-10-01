@@ -123,29 +123,29 @@ lab.append(h('div', { class: 'hud-linea' }, tiempo.el))
 // --- Predecí antes de correr: arranca pausado hasta que el usuario elige (o salta la pregunta) ---
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '▶ Seguir')
-let pregunta: Pregunta | null = null
 let tRevela = 0
-const pred = prediccion<Respuesta>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; eps: number }>(() => seguir(true))
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
-  pregunta = preguntaPara(eps, idea)
+  const pregunta = preguntaPara(eps, idea)
   t = pregunta.inicio
   tRevela = pregunta.revela >= pregunta.inicio ? pregunta.revela : pregunta.revela + YEAR
-  pred.preguntar(pregunta.texto, pregunta.opciones)
+  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, eps })
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
 /** Al llegar a la fecha clave se revela la respuesta, calculada con el modelo. */
 function revisarPrediccion(desdeElJuego: boolean) {
-  if (!pregunta || !(pred.enCurso || pred.pendiente) || t < tRevela) return
+  const datos = pred.datos
+  if (!datos || t < tRevela) return
   if (desdeElJuego) {
     t = tRevela
     seguir(false)
   }
-  const r = pregunta.resolver(eps)
+  const r = datos.pregunta.resolver(datos.eps)
   pred.revelar(r.correcta, r.explicacion)
   // En pantallas bajas la tarjeta queda debajo de la consola: se desplaza solo el HUD (con scrollIntoView se movería toda la página).
   const columna = pred.el.parentElement!
@@ -155,15 +155,13 @@ function revisarPrediccion(desdeElJuego: boolean) {
 }
 /** La pregunta se armó para otra inclinación: se retira (la respuesta no coincidiría con lo que se vio). */
 function descartarPregunta() {
-  if (!pregunta || !(pred.pendiente || pred.enCurso)) return
+  if (!pred.datos) return
   pred.ocultar()
-  pregunta = null
   seguir(corriendo)
 }
 function alternar() {
   if (pred.pendiente) {
     pred.ocultar()
-    pregunta = null
     return seguir(true)
   }
   seguir(!corriendo)
