@@ -1,0 +1,8 @@
+/* Colores con significado: ámbar = carga +, celeste = carga −, lima = fuerza. */
+
+.interruptor .segmentado { min-width: 190px; }
+.interruptor .segmentado button { padding-inline: 6px; font-size: 12.5px; }
+.grupo .segmentado button { padding-inline: 4px; font-size: 12.5px; }
+.hud-der .fila > .boton { flex: 1; }
+
+.pildora.cota { color: var(--apagado); font-size: 11px; padding: 1px 7px; background: rgba(7, 16, 15, 0.6); }
