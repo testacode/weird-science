@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run --exclude '.worktrees/**'",
     "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
