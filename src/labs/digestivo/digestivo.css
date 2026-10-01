@@ -33,3 +33,6 @@
   font: 600 10.5px/1.4 var(--mono); color: var(--marca);
 }
 .zoom .rotulo span { color: var(--apagado); }
+
+.boton-atajos { width: 100%; font-size: 13px; color: var(--apagado); }
+.boton-atajos:hover { color: var(--texto); }
