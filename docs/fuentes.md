@@ -267,3 +267,23 @@ Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, he
   "Plasmolysis" y "Water potential", Wikipedia — https://en.wikipedia.org/wiki/Plasmolysis
 - Van't Hoff π = i·c·R·T, `PI0_VEGETAL_MPA` 0,91 MPa a 20 °C. OK. — "Osmotic pressure", Wikipedia — https://en.wikipedia.org/wiki/Osmotic_pressure
 - Sin verificar o parámetros: borde de plasmólisis de la cebolla 1,17 % (fuente bloqueada), `RIGIDEZ_PARED` 11 (orden de magnitud), `K_AGUA_VEGETAL`, `K_SOLUTO`, ritmos, rotura del protoplasto sin pared en 1,67× (supuesto), cantidades de partículas de la maqueta.
+
+## Eco (`src/labs/eco/model.ts`)
+
+Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, hechas por el agente del lab. Datos de absorción y voz rechequeados por el code review el mismo día.
+
+- Velocidad del sonido en el aire v = 331,4 + 0,6·T m/s. OK. — "Speed of Sound in Air", HyperPhysics — http://hyperphysics.phy-astr.gsu.edu/hbase/Sound/souspe.html
+- Umbral del eco 0,1 s (≈ 17,2 m a 343 m/s). OK (regla didáctica). Matiz: la fusión llega a ~50 ms con voz y ~100 ms con música (efecto Haas), citado en "Qué es real y qué no".
+  "Echo", Wikipedia — https://en.wikipedia.org/wiki/Echo
+  "Precedence effect", Wikipedia — https://en.wikipedia.org/wiki/Precedence_effect
+- Absorción a 1.000 Hz: ladrillo 0,04, cortinas pesadas 0,75. OK. El acantilado usa el valor del ladrillo (parámetro).
+  "Absorption (acoustics)", Wikipedia — https://en.wikipedia.org/wiki/Absorption_(acoustics)
+  "Sound - Room Absorption Coefficients", The Engineering ToolBox — https://www.engineeringtoolbox.com/accoustic-sound-absorption-d_68.html
+- Divergencia esférica −20·log10(2d) dB (−6 dB al duplicar la distancia). OK. — "Inverse-square law", Wikipedia — https://en.wikipedia.org/wiki/Inverse-square_law
+- Agua de mar 1.500 m/s; los dB en agua y en aire usan referencias distintas. OK. — "Basics of Underwater Sound", NOAA Ocean Service — https://cdn.oceanservice.noaa.gov/oceanserviceprod/about/environmental-compliance/final-fact-sheets/NOS%20Final%20PEIS_Fact%20Sheet_Basics%20of%20Underwater%20Sound.pdf
+- Voz a 1 m: conversación 58 dB, grito 76 dB. OK. — "Facts about speech intelligibility", DPA Microphones — https://www.dpamicrophones.com/mic-university/background-knowledge/facts-about-speech-intelligibility/
+- Ruido de fondo 25 dB: cuarto muy calmo 20–30 dB (se usa la mitad del rango, parámetro). — "Sound pressure", Wikipedia — https://en.wikipedia.org/wiki/Sound_pressure
+- Fondo de arena fina: ρ 1.970 kg/m³, c 1.619 m/s; agua de mar ρ 1.023 kg/m³. R ≈ 0,12 de la energía a incidencia normal (`ALFA_FONDO` ≈ 0,88, derivado). Es un caso: fango refleja menos, arena gruesa más.
+  Frontiers in Marine Science 2023 (Tabla 1, área B) — https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1195651/full
+  Frontiers in Marine Science 2025 (Tabla 1) — https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2025.1635127/full
+- Parámetros: `UMBRAL_ECO` 0,1 s, ruido del aire 25 dB, umbral del sonar 0 dB y potencia del ping 50–100 dB (relativos), `SIGMA` 30 ms, rango de volumen 50–100 dB, temperatura 0–40 °C, α de la roca = α del ladrillo.
