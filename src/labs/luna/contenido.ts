@@ -1,6 +1,7 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
 import {
   INCLINACION, MES_SIDERAL, MES_SINODICO, ladoIluminado, letraDeLaForma, type Config, type Eclipse, type Hemisferio, type IdFase, type IdeaSombra,
@@ -113,4 +114,9 @@ export const COMO_FUNCIONA = `
   <p>${NOTA_MES}</p>`)}
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> la Luna siempre tiene media cara iluminada, la secuencia de fases, que la Luna llena está del lado opuesto al Sol y que en el hemisferio sur las fases se ven al revés que en el norte.${av(' También son reales las ecuaciones (fracción iluminada = (1 − cos θ) / 2), el mes de 29,53 días, la inclinación de 5,14°, el tamaño de la sombra respecto de la Luna y la duración de un eclipse (~3,5 h).')}</p>
-  <p><b>Simplificado:</b> los tamaños y distancias están muy fuera de escala (la Luna real está a unos 60 radios terrestres; acá, a menos de 5) y la inclinación de la órbita se dibuja ×3 para que se note. La órbita es circular y el Sol está fijo, a un costado. La Tierra gira mucho más lento que en la realidad. La vista desde la Tierra muestra la Luna de frente, sin la inclinación que muestra cerca del horizonte, y sin atmósfera. La sombra de la Tierra no se proyecta con la luz de la maqueta (con esta escala taparía a la Luna todos los meses): se calcula con los ángulos reales. No se modelan eclipses de Sol ni penumbrales. Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p><b>Simplificado:</b> los tamaños y distancias están muy fuera de escala (la Luna real está a unos 60 radios terrestres; acá, a menos de 5) y la inclinación de la órbita se dibuja ×3 para que se note. La órbita es circular y el Sol está fijo, a un costado. La Tierra gira mucho más lento que en la realidad. La vista desde la Tierra muestra la Luna de frente, sin la inclinación que muestra cerca del horizonte, y sin atmósfera. La sombra de la Tierra no se proyecta con la luz de la maqueta (con esta escala taparía a la Luna todos los meses): se calcula con los ángulos reales. No se modelan eclipses de Sol ni penumbrales. Modelo educativo: verificá los datos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: '<i>Explanatory Supplement to the Astronomical Ephemeris</i> (1961), vía «Lunar month», Wikipedia: duración de los meses sinódico, sideral y dracónico.', url: 'https://en.wikipedia.org/wiki/Lunar_month' },
+  { texto: 'NASA NSSDCA, <i>Moon Fact Sheet</i>: distancia, radio e inclinación de la órbita de la Luna.', url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html' },
+  { texto: 'Pogge, «Eclipses of the Sun & Moon», Ohio State University: tamaño de la sombra de la Tierra a la distancia de la Luna.', url: 'https://www.astronomy.ohio-state.edu/pogge.1/Ast161/Unit2/eclipses.html' },
+  ])}`

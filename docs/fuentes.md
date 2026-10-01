@@ -72,3 +72,23 @@ Conversión: J/(mol·K) ÷ masa molar = J/(g·K). Etanol 46,07 g/mol; acetona 58
   Tabla de conversión de tamaños de partículas, Sigma-Aldrich — https://www.sigmaaldrich.com/US/en/support/calculators-and-apps/particle-size-conversion-table
   "Iron Filings, 40 mesh", The Science Company — https://www.sciencecompany.com/Iron-Filings-40-mesh-500g-P6370
 - Radio de gota de aceite al agitar, 0,25 mm (`RADIO_GOTA_M`): parámetro de orden de magnitud, sin fuente directa. Sin verificar.
+
+## Luna (`src/labs/luna/model.ts`)
+
+- Mes sinódico 29,530588, sideral 27,321662 y dracónico 27,212221 días. *Explanatory Supplement* (1961), vía Wikipedia: 29,530588861, 27,321661554 y 27,212220815 (dracónico: "draconitic"). NASA: sinódico 29,53 y revolución 27,3217. OK.
+  "Lunar month", Wikipedia — https://en.wikipedia.org/wiki/Lunar_month
+  NASA NSSDCA, Moon Fact Sheet — https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html
+- Inclinación de la órbita 5,145°, distancia 384.400 km, radio 1.737,4 km: NASA da 5,145° respecto de la eclíptica, semieje 0,3844 × 10⁶ km y radio volumétrico medio 1.737,4 km. OK. Misma fuente (Moon Fact Sheet).
+- Radio de la umbra a la distancia de la Luna, 4.600 km (= 9.200 de diámetro): OSU da un ancho de 9.000 km, ≈ 2,6 diámetros lunares. OK (2 %).
+  Pogge, "Lecture 9: Eclipses of the Sun & Moon", Astronomy 161, Ohio State University — https://www.astronomy.ohio-state.edu/pogge.1/Ast161/Unit2/eclipses.html
+- `ARGUMENTO_INICIAL` (14,7): parámetro elegido para que el primer eclipse caiga en la 6.ª Luna llena. No es un dato.
+
+## Estaciones (`src/labs/estaciones/model.ts`)
+
+- Inclinación del eje 23,44°, excentricidad 0,0167 y semieje 149,6 × 10⁶ km: NASA da 23,44°, 0,0167 y 149,598. OK. Año de 365,25 días: NASA da 365,242 (trópico); el redondeo es una simplificación.
+  NASA NSSDCA, Earth Fact Sheet — https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+- Longitud del perihelio 282,94° (vista desde la Tierra): NASA da 102,94719° heliocéntrica; + 180° = 282,947°. OK. Misma fuente.
+- Perihelio ~3 de enero (día 2 desde el 1 de enero): 4 ene 2025, 3 ene 2026, 3 ene 2027. OK.
+  "Apsis", Wikipedia (tabla de perihelios y afelios) — https://en.wikipedia.org/wiki/Apsis
+- Ciudades: Buenos Aires −34,6 / −58,4; Ushuaia −54,8 / −68,3; Madrid 40,4 / −3,7. Wikipedia: −34,604 / −58,381; −54,807 / −68,308; 40,417 / −3,703. OK. "Ecuador" es un punto sobre el ecuador (lat 0) a la longitud de Quito.
+  Buenos Aires, Ushuaia y Madrid, Wikipedia — https://en.wikipedia.org/wiki/Buenos_Aires
