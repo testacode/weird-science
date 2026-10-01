@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { crearEscenario } from '../../escena/escenario'
+import { crearPildoras } from '../../escena/pildoras'
 import { crearLuna, crearSol, crearTierra } from './cuerpos'
 import { crearInset, type Sombra } from './inset'
 import { INCLINACION, latitudLunar, nodoRespectoDelSol, type Config, type Eclipse, type IdeaSombra } from './model'
@@ -34,8 +35,6 @@ export interface Cuadro {
   sur: boolean
   avanzado: boolean
 }
-
-type Pildora = { el: HTMLElement; ancla: THREE.Vector3; dy: number }
 
 export function crearEscena(contenedor: HTMLElement, tamInset: number) {
   const { scene, camera, renderer, render } = crearEscenario(contenedor)
@@ -97,28 +96,13 @@ export function crearEscena(contenedor: HTMLElement, tamInset: number) {
   const inset = crearInset({ scene, luna, sol, frente, intensidadSol: INTENSIDAD_SOL, tam: tamInset })
 
   // Etiquetas HTML ancladas a los objetos.
-  const crearPildora = (texto: string, clase: string, ancla: THREE.Vector3, dy: number): Pildora & { texto: (t: string) => void } => {
-    const el = document.createElement('div')
-    el.className = `pildora ${clase}`
-    el.textContent = texto
-    contenedor.append(el)
-    return { el, ancla, dy, texto: (t) => (el.textContent = t) }
-  }
-  const pSol = crearPildora('Sol', 'p-sol', new THREE.Vector3(SOL_X, 0, 0), 38)
-  const pTierra = crearPildora('Tierra', 'p-tierra', new THREE.Vector3(), 46)
-  const pLuna = crearPildora('Luna', 'p-luna', new THREE.Vector3(), 28)
-  const pAngulo = crearPildora('', 'p-angulo avanzado', new THREE.Vector3(), 0)
-  const pNodos = nodos.map(() => crearPildora('nodo', 'p-nodo avanzado', new THREE.Vector3(), -16))
-  const pSombra = crearPildora('Sombra de la Tierra (idea)', 'p-idea', new THREE.Vector3(1.9, 0, 0), -52)
-  const pildoras = [pSol, pTierra, pLuna, pAngulo, ...pNodos, pSombra]
-  const proyectado = new THREE.Vector3()
-  function ubicarPildoras() {
-    for (const { el, ancla, dy } of pildoras) {
-      proyectado.copy(ancla).project(camera)
-      el.style.left = `${(proyectado.x * 0.5 + 0.5) * contenedor.clientWidth}px`
-      el.style.top = `${(-proyectado.y * 0.5 + 0.5) * contenedor.clientHeight + dy}px`
-    }
-  }
+  const pildoras = crearPildoras(contenedor, camera)
+  pildoras.crear('Sol', { clase: 'p-sol', ancla: new THREE.Vector3(SOL_X, 0, 0), dy: 38 })
+  pildoras.crear('Tierra', { clase: 'p-tierra', dy: 46 })
+  const pLuna = pildoras.crear('Luna', { clase: 'p-luna', dy: 28 })
+  const pAngulo = pildoras.crear('', { clase: 'p-angulo avanzado' })
+  const pNodos = nodos.map(() => pildoras.crear('nodo', { clase: 'p-nodo avanzado', dy: -16 }))
+  const pSombra = pildoras.crear('Sombra de la Tierra (idea)', { clase: 'p-idea', ancla: new THREE.Vector3(1.9, 0, 0), dy: -52 })
 
   // Cambio de vista: la cámara se desliza en coordenadas esféricas alrededor del centro.
   let tween: { desde: THREE.Spherical; hasta: THREE.Spherical; inicio: number } | null = null
@@ -178,7 +162,7 @@ export function crearEscena(contenedor: HTMLElement, tamInset: number) {
         n.visible = c.avanzado && !c.config.sinInclinacion
         n.position.copy(sobre(nodo + i * 180, R_ORBITA))
         pNodos[i].ancla.copy(n.position)
-        pNodos[i].el.style.display = n.visible ? '' : 'none'
+        pNodos[i].el.hidden = !n.visible
       })
 
       // Ejes y ángulo Sol-Tierra-Luna (elongación).
@@ -198,7 +182,7 @@ export function crearEscena(contenedor: HTMLElement, tamInset: number) {
       pAngulo.texto(`${elong.toFixed(0)}°`)
 
       cono.visible = c.config.sombraTierra
-      pSombra.el.style.display = cono.visible ? '' : 'none'
+      pSombra.el.hidden = !cono.visible
       pLuna.ancla.copy(lunaPos)
       const hay = c.eclipse.tipo !== 'ninguno'
       pLuna.el.classList.toggle('eclipse', hay)
@@ -208,7 +192,7 @@ export function crearEscena(contenedor: HTMLElement, tamInset: number) {
       luna.setSombra(sombraReal.dx, sombraReal.dy, sombraReal.fuerza, 1, sombraReal.suavidad)
       moverCamara()
       controles.update()
-      ubicarPildoras()
+      pildoras.ubicar()
       render()
       sombraIdea.dx = c.idea.dx
       inset.dibujar(lunaPos, c.sur, sombraReal, c.config.sombraTierra ? sombraIdea : null)

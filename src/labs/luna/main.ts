@@ -4,6 +4,7 @@ import { interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
+import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, PIE_AVANZADO, num, pieVista, relato, type Situacion } from './contenido'
 import { crearEscena, type Vista } from './escena'
@@ -72,7 +73,6 @@ const mDia = metrica('Día')
 const mIluminada = metrica('Iluminada')
 const mFase = metrica('Fase')
 const mAngulo = metrica('Ángulo')
-mFase.el.classList.add('fase')
 mAngulo.el.classList.add('avanzado')
 const ahora = h('div', { class: 'panel ahora' })
 // --- Vista desde la Tierra (círculos) ---
@@ -86,7 +86,7 @@ const vistaIdea = h('div', { class: 'vista idea', hidden: true },
   h('p', { class: 'pie' }, 'Así se vería con esa idea'),
 )
 lab.append(
-  h('div', { class: 'hud hud-izq' },
+  hud('izq',
     h('a', { href: '../../', class: 'etiqueta' }, '← Weird Science'),
     h('h1', { class: 'titulo' }, h('small', {}, 'Lab de astronomía'), h('span', {}, 'Fases de la Luna')),
     gancho,
@@ -183,7 +183,7 @@ const irAlEclipse = h('button', {
 }, 'Ir al próximo eclipse de Luna')
 
 lab.append(
-  h('div', { class: 'hud hud-der' },
+  hud('der',
     h('div', { class: 'panel consola' },
       h('div', { class: 'fila' }, botonPlay, h('button', { class: 'boton', type: 'button', onclick: reiniciar }, '↺ Otra vez'),
         h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),

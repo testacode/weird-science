@@ -1,12 +1,13 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
 
 import { av } from '../../ui/avanzado'
+import { numero } from '../../ui/formato'
 import {
   INCLINACION, MES_SIDERAL, MES_SINODICO, ladoIluminado, letraDeLaForma, type Config, type Eclipse, type Hemisferio, type IdFase, type IdeaSombra,
 } from './model'
 
 /** Número con coma decimal, como se escribe en Argentina. */
-export const num = (n: number, decimales = 0) => n.toFixed(decimales).replace('.', ',')
+export const num = (n: number, decimales = 0) => numero(n, decimales)
 
 export interface Situacion {
   id: IdFase

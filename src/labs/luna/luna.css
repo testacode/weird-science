@@ -1,7 +1,6 @@
 /* Estilos propios del lab de la Luna (lo que el kit no cubre). */
 .c-luna { color: #e8e6d6; }
 
-.metrica.fase b { font-size: 12px; line-height: 1.2; white-space: normal; }
 .nota-mes { margin: 2px 0 0; font-size: 12px; line-height: 1.4; color: #cfdcd6; }
 .nota-mes b { color: var(--texto); }
 
@@ -26,7 +25,6 @@
 .pildora.p-luna.eclipse { color: var(--magenta); border-color: var(--magenta); }
 .pildora.p-angulo { color: var(--texto); }
 .pildora.p-idea { color: var(--magenta); border-color: var(--magenta); }
-body.sin-avanzado .pildora.avanzado { display: none; }
 
 /* Línea de tiempo */
 .hud-linea { position: absolute; z-index: 2; bottom: 16px; left: 410px; right: 360px; }
@@ -34,23 +32,9 @@ body.sin-avanzado .pildora.avanzado { display: none; }
 .linea-cabecera { display: flex; justify-content: space-between; align-items: baseline; }
 .linea-valor { font: 600 12px/1 var(--mono); color: var(--apagado); }
 .linea-valor b { font-size: 15px; color: var(--marca); }
-.linea input[type='range'] {
-  --p: 0%;
-  width: 100%; margin: 6px 0 0; height: 20px; background: transparent; appearance: none; cursor: grab;
-}
+/* El estilo del range sale del kit; acá solo lo propio de la línea de tiempo. */
+.linea input[type='range'] { margin-top: 6px; cursor: grab; }
 .linea input[type='range']:active { cursor: grabbing; }
-.linea input[type='range']::-webkit-slider-runnable-track {
-  height: 6px; border-radius: 3px;
-  background: linear-gradient(to right, var(--marca) var(--p), rgba(255, 255, 255, 0.15) var(--p));
-}
-.linea input[type='range']::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
-.linea input[type='range']::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--marca); }
-.linea input[type='range']::-webkit-slider-thumb {
-  appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
-  background: var(--texto); border: 3px solid var(--marca);
-}
-.linea input[type='range']::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--texto); border: 3px solid var(--marca); }
-.linea input[type='range']:focus-visible { outline: 2px solid var(--marca); outline-offset: 4px; border-radius: 4px; }
 .marcas { position: relative; height: 28px; margin: 0 9px; }
 .marca-fase {
   position: absolute; top: 0; transform: translateX(-50%); padding: 2px; border: 0; border-radius: 50%;
