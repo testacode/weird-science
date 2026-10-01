@@ -10,7 +10,7 @@ export const AGUJERO_Y = 0.75
 
 /** Cada tramo del camino de la sangre, en el orden en que lo recorre. */
 export type Zona = 'ad' | 'vd' | 'arteriaPulmonar' | 'pulmon' | 'venaPulmonar' | 'ai' | 'vi' | 'aorta' | 'cuerpo' | 'vena'
-export const ORDEN: Zona[] = ['ad', 'vd', 'arteriaPulmonar', 'pulmon', 'venaPulmonar', 'ai', 'vi', 'aorta', 'cuerpo', 'vena']
+const ORDEN: Zona[] = ['ad', 'vd', 'arteriaPulmonar', 'pulmon', 'venaPulmonar', 'ai', 'vi', 'aorta', 'cuerpo', 'vena']
 
 const v = (x: number, y: number, z = 0) => new THREE.Vector3(x, y, z)
 
@@ -49,7 +49,7 @@ export interface Tramo {
 }
 
 let acumulado = 0
-export const TRAMOS: Tramo[] = ORDEN.map((zona) => {
+const TRAMOS: Tramo[] = ORDEN.map((zona) => {
   const curva = new THREE.CatmullRomCurve3(PUNTOS[zona], false, 'centripetal')
   const tramo = { zona, curva, largo: curva.getLength(), inicio: acumulado }
   acumulado += tramo.largo

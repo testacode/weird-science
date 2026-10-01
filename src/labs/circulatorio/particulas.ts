@@ -1,13 +1,12 @@
 import * as THREE from 'three'
 import { colorSangre } from './constantes'
-import { SAO2 } from './model'
+import { GASTO_REPOSO, SAO2 } from './model'
 import { AGUJERO_Y, LARGO, posicion, tramo, ubicar, type Zona } from './trayecto'
 
 const CANTIDAD = 420
 const RADIO = 0.065
 /** Cuánto se acelera el dibujo del recorrido de la sangre (en la realidad una vuelta completa tarda ≈ 1 min en reposo). */
 const VELOCIDAD = 3
-const GASTO_REPOSO = 4.9
 /** Qué tan rápido vuelven las partículas que se devuelven por la válvula (unidades por segundo) y cuánto tardan en cruzar el agujero. */
 const VUELTA_REFLUJO = 7
 const CRUCE_AGUJERO = 0.3
@@ -28,6 +27,9 @@ interface Particula {
   origen: THREE.Vector3
   desvio: THREE.Vector3
 }
+
+/** Tramos que recorre el flujo de los pulmones (Qp); el resto sigue el flujo del cuerpo (Qs). Con el agujero del tabique son distintos. */
+const PULMONAR: Zona[] = ['vd', 'arteriaPulmonar', 'pulmon', 'venaPulmonar', 'ai', 'vi']
 
 /** Factor de velocidad de cada tramo: lento en los capilares, a golpes en los ventrículos y las arterias. */
 function factor(zona: Zona, fase: number, fs: number): number {
@@ -82,11 +84,10 @@ export function crearParticulas(scene: THREE.Scene, svoInicial: number) {
   return {
     /**
      * `dt`: segundos reales (0 en pausa). `fase`: del latido (0 a 1; 0 es el comienzo de la sístole) y `fs` la parte del ciclo que dura la sístole.
-     * `nuevoLatido`: la fase acaba de dar la vuelta. `gasto`: L/min que bombea el ventrículo; `fuga` y `agujero`: fracciones del latido; `svo2` es la saturación venosa.
+     * `nuevoLatido`: la fase acaba de dar la vuelta. `pulmones` y `cuerpo`: flujo de cada circuito (L/min); `fuga` y `agujero`: fracciones del latido; `svo2` es la saturación venosa.
      */
-    actualizar(dt: number, fase: number, fs: number, nuevoLatido: boolean, gasto: number, fuga: number, agujero: number, svo2: number) {
+    actualizar(dt: number, fase: number, fs: number, nuevoLatido: boolean, pulmones: number, cuerpo: number, fuga: number, agujero: number, svo2: number) {
       if (nuevoLatido) sortear(fuga, agujero)
-      const base = (VELOCIDAD * gasto) / GASTO_REPOSO
       lista.forEach((p, i) => {
         let tamano = RADIO
         const sistole = fase < fs
@@ -104,7 +105,9 @@ export function crearParticulas(scene: THREE.Scene, svoInicial: number) {
         }
         if (p.modo === 'normal') {
           const zona = ubicar(p.s).tramo.zona
-          const ds = base * factor(zona, fase, fs) * dt
+          // Cada circuito va a la velocidad de su flujo: con un defecto los pulmones y el cuerpo no mueven lo mismo.
+          const flujo = PULMONAR.includes(zona) ? pulmones : cuerpo
+          const ds = ((VELOCIDAD * flujo) / GASTO_REPOSO) * factor(zona, fase, fs) * dt
           p.s = (p.s + ds) % LARGO
           const destino = ubicar(p.s).tramo.zona
           const objetivo = destino === 'pulmon' ? SAO2 : destino === 'cuerpo' ? svo2 : null

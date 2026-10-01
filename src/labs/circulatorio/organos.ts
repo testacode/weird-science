@@ -61,10 +61,11 @@ export function crearOrganos(scene: THREE.Scene) {
     /** `t`: segundos reales (para el parpadeo cuando la sangre no alcanza). */
     actualizar(d: Derivados, e: Estado, t: number) {
       vasos.colorear(e.svo2, d.satPulmonar)
-      // El cuerpo brilla ámbar con lo que pide; si no alcanza, parpadea en magenta.
+      // El cuerpo brilla ámbar con lo que pide; si no alcanza (o el corazón no da más), parpadea en magenta.
+      const bien = d.alcanza && !d.sobrecarga
       const pide = d.vo2 / ACTIVIDADES.correr.vo2
-      cuerpoMaterial.emissive.copy(d.alcanza ? ambar : alerta)
-      cuerpoMaterial.emissiveIntensity = d.alcanza ? 0.1 + 0.9 * pide : 0.35 + 0.35 * Math.sin(t * 6)
+      cuerpoMaterial.emissive.copy(bien ? ambar : alerta)
+      cuerpoMaterial.emissiveIntensity = bien ? 0.1 + 0.9 * pide : 0.35 + 0.35 * Math.sin(t * 6)
     },
   }
 }

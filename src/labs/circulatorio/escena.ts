@@ -71,7 +71,7 @@ export function crearEscena(contenedor: HTMLElement, svoInicial: number) {
       const fs = (d.sistole * c.frecuencia) / 60
       corazon.actualizar(c, d, e, fase, dt)
       organos.actualizar(d, e, tiempo)
-      sangre.actualizar(dt, fase, fs, fase < anterior, d.bombea, c.defecto === 'valvula' ? c.gravedad : 0, c.defecto === 'tabique' ? c.gravedad : 0, e.svo2)
+      sangre.actualizar(dt, fase, fs, fase < anterior, d.pulmones, d.cuerpo, c.defecto === 'valvula' ? c.gravedad : 0, c.defecto === 'tabique' ? c.gravedad : 0, e.svo2)
 
       pulmon.texto(`Pulmones · ${numero(d.pulmones, 1)} L/min`)
       cuerpo.texto(`Cuerpo · ${numero(d.cuerpo, 1)} L/min`)

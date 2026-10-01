@@ -101,8 +101,9 @@ export function crearCorazon(scene: THREE.Scene) {
     actualizar(c: Config, d: Derivados, e: Estado, fase: number, dt: number) {
       const fs = (d.sistole * c.frecuencia) / 60
       const sistole = fase < fs
-      const cubo = (volumen: number) => Math.cbrt(volumen / VOLUMEN_BASE)
-      vi.grupo.scale.setScalar(cubo(volumenVentriculo(fase, c.frecuencia, c.volumen)))
+      // Un ventrículo muy agrandado (por un defecto grave) no se dibuja más grande que esto.
+      const cubo = (volumen: number) => Math.min(Math.cbrt(volumen / VOLUMEN_BASE), 1.5)
+      vi.grupo.scale.setScalar(cubo(volumenVentriculo(fase, c.frecuencia, d.expulsa)))
       vd.grupo.scale.setScalar(cubo(volumenVentriculo(fase, c.frecuencia, (d.pulmones * 1000) / c.frecuencia)))
       // La aurícula se contrae justo antes de la sístole.
       const x = (fase - fs) / (1 - fs)
