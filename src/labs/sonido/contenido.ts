@@ -4,7 +4,7 @@
 import { av } from '../../ui/avanzado'
 import { fuentes } from '../../ui/fuentes'
 import { numero } from '../../ui/formato'
-import { AIRE_MIN, AUDIBLE, L_TUBO, MEDIOS, NIVEL_PELIGRO, P_ATM, UMBRAL_DB, golpeTerminado, llegada, longitudOnda, nivelAire, nota, oido, T_EMISION, type Config, type Estado } from './model'
+import { AUDIBLE, L_TUBO, MEDIOS, NIVEL_PELIGRO, T_EMISION, UMBRAL_DB, formatoAire, frecuenciaOida, golpeTerminado, llegada, longitudOnda, nivelAire, nota, oido, vacioLogrado, type Config, type Estado } from './model'
 
 export const num = numero
 
@@ -28,9 +28,6 @@ export function textoNivel(nivel: number): string {
   return nivel === -Infinity ? '−∞' : num(nivel, 0)
 }
 
-/** Un golpe suena en todo el rango audible: la frecuencia del tono no cuenta. */
-export const frecuenciaOida = (c: Config) => (c.modo === 'tono' ? c.frecuencia : 1000)
-
 /** Lo que dice "Se oye" en el HUD: sí o por qué no. */
 export function textoOido(c: Config, e: Estado): string {
   const o = oido(frecuenciaOida(c), nivelAire(c.amplitud, e.aire))
@@ -44,14 +41,17 @@ function registro(f: number): string {
   return f < 250 ? 'un tono grave' : f < 2000 ? 'un tono medio' : 'un tono agudo'
 }
 
-const aireTxt = (aire: number) => (aire > 0.01 ? `el ${num(aire * 100, aire > 0.1 ? 0 : 1)} % del aire` : `${num(aire * P_ATM, aire * P_ATM < 10 ? 1 : 0)} Pa de aire`)
+const aireTxt = (aire: number) => {
+  const { valor, unidad } = formatoAire(aire)
+  return unidad === '%' ? `el ${valor} % del aire` : `${valor} Pa de aire`
+}
 
 /** Relato de "ahora": cuenta qué pasa con los números del momento. */
 export function relato(c: Config, e: Estado): string {
   const nivel = nivelAire(c.amplitud, e.aire)
   const ref = `${textoNivel(nivel)} dB, ${referencia(nivel)}`
   if (e.aire < 0.9999) {
-    const accion = c.bomba ? (e.aire <= AIRE_MIN * 1.01 ? 'La bomba llegó a su mínimo' : 'La bomba saca el aire') : 'Entra el aire de nuevo'
+    const accion = c.bomba ? (vacioLogrado(e) ? 'La bomba llegó a su mínimo' : 'La bomba saca el aire') : 'Entra el aire de nuevo'
     return `<strong>${accion}: queda ${aireTxt(e.aire)} en el tubo de aire.</strong> La fuente sigue vibrando igual, pero hay cada vez menos aire para empujar: el micrófono marca ${ref}. En el agua y el acero no cambió nada: no necesitan aire, necesitan un medio.`
   }
   if (c.modo === 'tono') {
@@ -86,10 +86,11 @@ export const COMO_FUNCIONA = `
   <h3>Predecí antes de correr</h3>
   <p>Antes de lanzar el golpe y antes de prender la bomba, el lab te pregunta qué va a pasar. Elegí, dejá correr el experimento y se revela si acertaste, con los números del modelo.</p>
   <h3>Qué es real y qué no</h3>
-  <p><b>Real:</b> las velocidades del sonido (aire a 20 °C, 343 m/s; agua dulce, 1.481 m/s; acero, 5.900 m/s), que no dependen de la frecuencia ni del volumen, y que la longitud de onda es v / f. El rango que oye una persona (${AUDIBLE.min} Hz a ${num(AUDIBLE.max, 0)} Hz), que 0 dB es el umbral de audición (20 µPa) y que 1 Pa son unos 94 dB. Que una conversación ronda los 60–70 dB y que desde 85 dB el oído se daña. Que el sonido no se propaga en el vacío y que, al sacar el aire de una campana, se va apagando${av(' (la presión sonora es proporcional a la densidad del medio, p = ρ · v)')}. Que el La4 es 440 Hz.</p>
-  <p><b>Simplificado:</b> el tono se ve vibrar a 1,5 Hz, mucho más lento que el real, y el desplazamiento está muy exagerado (a 80 dB y 440 Hz las partículas se mueven menos de un micrómetro) y crece con la raíz de la amplitud para que una fuente suave también se vea. Las pocas bolitas que se dibujan representan una cantidad enorme de moléculas. El tubo guía la onda y no se dispersa, así que el nivel no cae con la distancia (al aire libre sí). El parlante es ideal: mantiene la presión a cualquier frecuencia y su vibración no cambia cuando falta el aire; los reales no. El nivel en dB solo se calcula en el aire: en el agua y el acero el micrófono muestra la llegada, sin comparar volúmenes. No hay absorción ni reflexiones. La bomba llega a 0,1 Pa (una bomba rotativa de laboratorio de varias etapas); una campana de vidrio de aula no llega tan lejos, y el tiempo de bombeo está ajustado para que se vea. Se considera que no se oye cuando el nivel baja de 0 dB, un umbral ideal en silencio absoluto: con ruido ambiente se deja de oír antes. El acero es el acero en masa: las aleaciones medidas van de unos 5.600 a 5.900 m/s. El volumen que sale por tus parlantes no es el nivel real en dB (depende de tu equipo) y puede que no reproduzcan los graves. El timbre de los "tic" del golpe es solo para distinguir los tubos. Modelo educativo: verificá los datos con tu docente o manual.</p>
+  <p><b>Real:</b> las velocidades del sonido (aire a 20 °C, 343 m/s; agua dulce, 1.481 m/s; acero en una barra, 5.050 m/s), que no dependen de la frecuencia ni del volumen, y que la longitud de onda es v / f. El rango que oye una persona (${AUDIBLE.min} Hz a ${num(AUDIBLE.max, 0)} Hz), que 0 dB es el umbral de audición (20 µPa) y que 1 Pa son unos 94 dB. Que una conversación ronda los 60–70 dB y que desde 85 dB el oído se daña. Que el sonido no se propaga en el vacío y que, al sacar el aire de una campana, se va apagando${av(' (la presión sonora es p = ρ · c · v, con v la velocidad de las partículas: con la misma vibración y la misma c, baja junto con la densidad ρ del aire; y entre medios cuenta ρ · c)')}. Que el La4 es 440 Hz.</p>
+  <p><b>Simplificado:</b> el tono se ve vibrar a 1,5 Hz, mucho más lento que el real, y el desplazamiento está muy exagerado (a 80 dB y 440 Hz las partículas se mueven menos de un micrómetro) y crece con la raíz de la amplitud para que una fuente suave también se vea. Las pocas bolitas que se dibujan representan una cantidad enorme de moléculas. El tubo guía la onda y no se dispersa, así que el nivel no cae con la distancia (al aire libre sí). El parlante es ideal: mantiene la presión a cualquier frecuencia y su vibración no cambia cuando falta el aire; los reales no. El nivel en dB solo se calcula en el aire: en el agua y el acero el micrófono muestra la llegada, sin comparar volúmenes. No hay absorción ni reflexiones. La bomba llega a 0,1 Pa (una bomba rotativa de laboratorio de varias etapas); una campana de vidrio de aula no llega tan lejos, y el tiempo de bombeo está ajustado para que se vea. Se considera que no se oye cuando el nivel baja de 0 dB, un umbral ideal en silencio absoluto: con ruido ambiente se deja de oír antes. El acero es una barra: la velocidad √(E/ρ) vale cuando la longitud de onda es mayor que el diámetro (a frecuencias muy altas ya no) y es algo menor que en el acero en masa (5.600 a 5.900 m/s medidos en aleaciones). El volumen que sale por tus parlantes no es el nivel real en dB (depende de tu equipo) y puede que no reproduzcan los graves. El timbre de los "tic" del golpe es solo para distinguir los tubos. Modelo educativo: verificá los datos con tu docente o manual.</p>
   ${fuentes([
-  { texto: '<i>Speed of sound</i>, Wikipedia: aire 343 m/s a 20 °C, agua dulce 1.481 m/s, tabla de aceros (5.596–5.912 m/s), v = √(K/ρ).', url: 'https://en.wikipedia.org/wiki/Speed_of_sound' },
+  { texto: '<i>Speed of sound</i>, Wikipedia: aire 343 m/s a 20 °C, agua dulce 1.481 m/s, v = √(K/ρ) en un fluido, v = √(E/ρ) en una barra más fina que la longitud de onda y tabla de aceros en masa (5.596–5.912 m/s).', url: 'https://en.wikipedia.org/wiki/Speed_of_sound' },
+  { texto: '<i>Young\'s modulus</i>, Wikipedia: acero A36, E = 200 GPa.', url: 'https://en.wikipedia.org/wiki/Young%27s_modulus' },
   { texto: '<i>Hearing range</i>, Wikipedia: rango humano, 20 a 20.000 Hz.', url: 'https://en.wikipedia.org/wiki/Hearing_range' },
   { texto: '<i>Sound pressure</i>, Wikipedia: referencia de 20 µPa (0 dB) y 1 Pa ≈ 94 dB.', url: 'https://en.wikipedia.org/wiki/Sound_pressure' },
   { texto: '<i>Noise-Induced Hearing Loss</i>, NIDCD (NIH): conversación 60–70 dBA y daño desde 85 dBA.', url: 'https://www.nidcd.nih.gov/health/noise-induced-hearing-loss' },

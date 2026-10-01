@@ -6,11 +6,11 @@ import { grafico, type Serie } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { crearAudio } from './audio'
-import { COMO_FUNCIONA, GANCHO, frecuenciaOida, num, relato, textoNivel, textoOido } from './contenido'
+import { COMO_FUNCIONA, GANCHO, num, relato, textoNivel, textoOido } from './contenido'
 import { crearControles } from './controles'
 import { crearEscena } from './escena'
 import {
-  CONFIG_INICIAL, ESTADO_INICIAL, MEDIOS, P_ATM, T_EMISION, llegada, nivelAire, nota, oido, paso, senal, tiempoFinal, type Config, type MedioId,
+  CONFIG_INICIAL, ESTADO_INICIAL, MEDIOS, T_EMISION, formatoAire, frecuenciaOida, llegada, nivelAire, nota, oido, paso, senal, tiempoFinal, type Config, type MedioId,
 } from './model'
 import { preguntaPara, type Datos, type Pregunta, type Respuesta } from './prediccion'
 import { F_VISUAL } from './onda'
@@ -95,11 +95,14 @@ function descartarPendiente() {
 function hacer(tipo: Pregunta['tipo']) {
   preguntadas.add(tipo)
   if (tipo === 'golpe') lanzarGolpe()
-  else aplicar({ ...config, bomba: true })
+  else {
+    aplicar({ ...config, bomba: true })
+    seguir(true)
+  }
 }
 function preguntar(tipo: Pregunta['tipo']) {
   const p = preguntaPara(tipo)
-  pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud } })
+  pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud, frecuencia: frecuenciaOida(config) } })
   saltar.hidden = false
 }
 function revelar() {
@@ -112,7 +115,7 @@ function revelar() {
 function invalidar(cambio: Partial<Config>) {
   const tipo = pred.datos?.pregunta.tipo
   if (!tipo) return
-  if ((tipo === 'golpe' && ('distancia' in cambio || 'modo' in cambio)) || (tipo === 'bomba' && ('amplitud' in cambio || cambio.bomba === false))) {
+  if ((tipo === 'golpe' && ('distancia' in cambio || 'modo' in cambio)) || (tipo === 'bomba' && ('amplitud' in cambio || 'frecuencia' in cambio || 'modo' in cambio || cambio.bomba === false))) {
     saltar.hidden = true
     pred.ocultar()
   }
@@ -152,6 +155,8 @@ function pedir(cambio: Partial<Config>) {
     return controles.sincronizar(config, corriendo)
   }
   aplicar({ ...config, ...cambio })
+  // Un cambio que arranca la bomba la deja correr aunque el reloj estuviera en pausa.
+  if (cambio.bomba) seguir(true)
 }
 function golpe() {
   if (preguntadas.has('golpe') || pred.enCurso) return lanzarGolpe()
@@ -171,7 +176,10 @@ function reiniciar() {
 const controles = crearControles(config, {
   pedir, golpe, reiniciar, ayuda: () => ayuda.abrir(COMO_FUNCIONA),
   alternar: () => seguir(!corriendo),
-  sonido: (si) => audio.activar(si),
+  // Si Web Audio falla, el interruptor vuelve a No (tocar Sí de nuevo no avisaría: el kit ignora el mismo valor).
+  sonido: (si) => {
+    if (!audio.activar(si) && si) controles.sonido(false)
+  },
 })
 lab.append(hud('der', controles.el, pred.el, saltar), ayuda.el)
 controles.sincronizar(config, corriendo)
@@ -183,11 +191,10 @@ let ultimoRelato = 0
 function actualizarHud(t: number) {
   const nivel = nivelAire(config.amplitud, estado.aire)
   const n = nota(config.frecuencia)
-  mTono.set(config.modo === 'tono' ? num(config.frecuencia, 0) : '—', config.modo === 'tono' ? `Hz${n ? ` · ${n.nombre}` : ''}` : '')
+  mTono.set(config.modo === 'tono' ? num(config.frecuencia, 0) : '—', config.modo === 'tono' ? `Hz${n ? ` · ${n.exacta ? '' : '≈ '}${n.nombre}` : ''}` : '')
   mNivel.set(textoNivel(nivel), 'dB')
-  const pa = estado.aire * P_ATM
-  if (estado.aire > 0.01) mAire.set(num(estado.aire * 100, estado.aire > 0.1 ? 0 : 1), '%')
-  else mAire.set(num(pa, pa < 10 ? 1 : 0), 'Pa')
+  const aire = formatoAire(estado.aire)
+  mAire.set(aire.valor, aire.unidad)
   mOido.set(textoOido(config, estado))
   controles.reloj(config.modo === 'tono' ? `Cámara lenta ×${num(config.frecuencia / F_VISUAL, 0)}${corriendo ? '' : ' · en pausa'}` : corriendo ? '' : 'En pausa')
   if (t - ultimoRelato < 100) return

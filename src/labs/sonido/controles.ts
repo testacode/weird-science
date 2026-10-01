@@ -3,7 +3,7 @@ import { fila, grupo, interruptor, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { numero } from '../../ui/formato'
-import { DISTANCIA, FRECUENCIA, LENTAS, nivelAire, nota, type Config, type Modo } from './model'
+import { DISTANCIA, FRECUENCIA, LENTAS, ajustarANota, nivelAire, nota, type Config, type Modo } from './model'
 
 export interface Manejadores {
   /** Un cambio de la config pasa por acá: si corresponde una predicción, primero se pregunta. */
@@ -18,7 +18,8 @@ export interface Manejadores {
 // La frecuencia se mueve en escala logarítmica (las notas se separan por razones, no por diferencias): el deslizador lleva un índice de 0 a 1000.
 const PASOS = 1000
 const aIndice = (f: number) => (PASOS * Math.log(f / FRECUENCIA.min)) / Math.log(FRECUENCIA.max / FRECUENCIA.min)
-const deIndice = (i: number) => Number((FRECUENCIA.min * (FRECUENCIA.max / FRECUENCIA.min) ** (i / PASOS)).toPrecision(3))
+// Cerca de una nota (±0,15 semitonos) se clava en ella: así el La4 de 440 Hz se puede volver a elegir.
+const deIndice = (i: number) => ajustarANota(Number((FRECUENCIA.min * (FRECUENCIA.max / FRECUENCIA.min) ** (i / PASOS)).toPrecision(3)))
 
 /** Consola de controles. `sincronizar` deja lo que se ve igual que la config (también cuando el cambio vino de otro lado). */
 export function crearControles(inicial: Config, m: Manejadores) {

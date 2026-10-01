@@ -5,7 +5,7 @@ import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
 import { crearPildoras } from '../../escena/pildoras'
 import { numero } from '../../ui/formato'
-import { AIRE_MIN, MEDIOS, P_ATM, T_EMISION, llegada, longitudOnda, type Config, type Estado, type MedioId } from './model'
+import { AIRE_MIN, MEDIOS, T_EMISION, formatoAire, llegada, longitudOnda, vacioLogrado, type Config, type Estado, type MedioId } from './model'
 import { F_VISUAL } from './onda'
 import { L_U, crearTubo } from './tubo'
 
@@ -17,13 +17,6 @@ const num = numero
 const BANCO_X = 0.35
 /** Dónde cae en la escena el extremo izquierdo de los tubos. */
 const X0 = -L_U / 2 - BANCO_X
-
-/** Cuánto aire queda en el tubo: en % hasta el 1 %, y en pascales después. */
-function textoAire(aire: number): string {
-  if (aire > 0.01) return `Aire ${num(aire * 100, aire > 0.1 ? 0 : 1)} %`
-  const pa = aire * P_ATM
-  return `Aire ${num(pa, pa < 10 ? 1 : 0)} Pa`
-}
 
 export function crearEscena(contenedor: HTMLElement) {
   const { scene, camera, renderer, render } = crearEscenario(contenedor, { bloom: 0.15, niebla: { cerca: 24, lejos: 55 } })
@@ -112,9 +105,10 @@ export function crearEscena(contenedor: HTMLElement) {
         mic.texto(c.modo === 'tono' ? `${num(c.distancia, 1)} m` : `${num(c.distancia, 1)} m · ${llego ? 'llegó a' : 'llega a'} ${num(tLleg * 1000, 1)} ms`)
       }
       pBomba.el.hidden = !c.bomba && e.aire > 0.9999
-      pBomba.texto(textoAire(e.aire))
+      const { valor, unidad } = formatoAire(e.aire)
+      pBomba.texto(`Aire ${valor} ${unidad}`)
       pBomba.el.classList.toggle('activa', c.bomba)
-      luzBomba.emissiveIntensity = c.bomba && e.aire > AIRE_MIN * 1.05 ? 1.2 : 0
+      luzBomba.emissiveIntensity = c.bomba && !vacioLogrado(e) ? 1.2 : 0
       const marca = Math.log10(Math.max(e.aire, AIRE_MIN) / AIRE_MIN) / Math.log10(1 / AIRE_MIN)
       aguja.rotation.z = 0.75 * Math.PI - 1.5 * Math.PI * marca
       pildoras.ubicar()

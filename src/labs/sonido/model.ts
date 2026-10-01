@@ -6,8 +6,11 @@
 //
 //   tiempo de llegada    t = d / v                 (v depende solo del medio, no de la frecuencia ni del volumen)
 //   longitud de onda     λ = v / f
-//   presión sonora       p = ρ · v_partícula       (con la misma vibración de la fuente, p crece con la densidad ρ)
+//   presión sonora       p = ρ · c · u             (u = velocidad de las partículas; ρ·c es la impedancia del medio.
+//                                                   En el aire, c no depende de la presión: con la misma vibración, p baja con ρ)
 //   nivel                L = 94 dB + 20·log10(amplitud · fracción de aire)   (1 Pa ≈ 94 dB re 20 µPa)
+
+import { numero } from '../../ui/formato'
 
 export type MedioId = 'aire' | 'agua' | 'acero'
 
@@ -20,12 +23,13 @@ export interface Medio {
   densidad: number
 }
 
-// Aire a 20 °C: 343 m/s y 1,204 kg/m³. Agua dulce a 20 °C: 1.481 m/s y 998,2 kg/m³. Acero: 5.900 m/s (las aleaciones
-// medidas van de 5.600 a 5.900) y ≈ 7.850 kg/m³. Fuentes y verificación: docs/fuentes.md.
+// Aire a 20 °C: 343 m/s y 1,204 kg/m³. Agua dulce a 20 °C: 1.481 m/s y 998,2 kg/m³. Acero: una barra, donde el diámetro es
+// menor que la longitud de onda y v = √(E/ρ) = √(200 GPa / 7.850 kg/m³) ≈ 5.050 m/s (en el acero en masa, 5.600 a 5.900 m/s).
+// Fuentes y verificación: docs/fuentes.md.
 export const MEDIOS: readonly Medio[] = [
   { id: 'aire', nombre: 'Aire', v: 343, densidad: 1.204 },
   { id: 'agua', nombre: 'Agua', v: 1481, densidad: 998.2 },
-  { id: 'acero', nombre: 'Acero', v: 5900, densidad: 7850 },
+  { id: 'acero', nombre: 'Acero', v: 5050, densidad: 7850 },
 ]
 export const medio = (id: MedioId): Medio => MEDIOS.find((m) => m.id === id)!
 
@@ -47,6 +51,15 @@ export const NIVEL_PELIGRO = 85
 export const P_ATM = 101325
 /** Lo más bajo que llega la bomba: una rotativa de dos etapas llega a 0,1 Pa (parámetro del modelo). */
 export const AIRE_MIN = 0.1 / P_ATM
+/** La bomba ya no puede sacar más aire. */
+export const vacioLogrado = (e: Estado) => e.aire <= AIRE_MIN * 1.01
+
+/** Cuánto aire queda, como lo muestra la interfaz: en % hasta el 1 % y en pascales después. */
+export function formatoAire(aire: number): { valor: string; unidad: '%' | 'Pa' } {
+  if (aire > 0.01) return { valor: numero(aire * 100, aire > 0.1 ? 0 : 1), unidad: '%' }
+  const pa = aire * P_ATM
+  return { valor: numero(pa, pa < 10 ? 1 : 0), unidad: 'Pa' }
+}
 /** Constantes de tiempo del aire, s reales del reloj (parámetros de ajuste): la bomba lo saca en unos 8 s. */
 const TAU_BOMBA = 0.6
 const TAU_ENTRADA = 0.35
@@ -96,6 +109,9 @@ export function nivelAire(amplitud: number, aire: number): number {
   return p > 0 ? NIVEL_MAX + 20 * Math.log10(p) : -Infinity
 }
 
+/** Un golpe suena en todo el rango audible: la frecuencia del tono no cuenta. */
+export const frecuenciaOida = (c: Config) => (c.modo === 'tono' ? c.frecuencia : 1000)
+
 export type Oido = 'si' | 'bajo' | 'infra' | 'ultra'
 /** ¿Un oído humano lo oiría? Fuera del rango audible o por debajo del umbral, no. */
 export function oido(frecuencia: number, nivel: number): Oido {
@@ -104,10 +120,10 @@ export function oido(frecuencia: number, nivel: number): Oido {
   return nivel < UMBRAL_DB ? 'bajo' : 'si'
 }
 
-/** Pulso de presión normalizado (derivada de una gaussiana, ±1 en τ = ±σ): compresión adelante, rarefacción atrás. */
+/** Pulso de presión normalizado (derivada de una gaussiana, ±1 en τ = ∓σ): compresión adelante (τ < 0), rarefacción atrás. */
 export function pulso(tau: number): number {
   const x = tau / PULSO_S
-  return x * Math.exp(0.5 - (x * x) / 2)
+  return -x * Math.exp(0.5 - (x * x) / 2)
 }
 
 /** Lo que registra el micrófono del medio `m` (presión relativa, 1 = la amplitud de la fuente) a los `t` s del golpe. */
@@ -122,6 +138,14 @@ export function nota(f: number): { nombre: string; exacta: boolean } | null {
   const midi = 69 + 12 * Math.log2(f / 440)
   const m = Math.round(midi)
   return { nombre: `${NOTAS[((m % 12) + 12) % 12]}${Math.floor(m / 12) - 1}`, exacta: Math.abs(midi - m) < 0.1 }
+}
+
+/** Si la frecuencia cae a menos de 0,15 semitonos de una nota del piano, devuelve la frecuencia exacta de esa nota. */
+export function ajustarANota(f: number): number {
+  if (f < 27 || f > 4200) return f
+  const midi = 69 + 12 * Math.log2(f / 440)
+  const m = Math.round(midi)
+  return Math.abs(midi - m) < 0.15 ? 440 * 2 ** ((m - 69) / 12) : f
 }
 
 /** Avanza `dt` s reales de reloj: el golpe viaja en cámara lenta y la bomba saca (o deja entrar) el aire. */

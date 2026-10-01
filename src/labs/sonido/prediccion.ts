@@ -4,16 +4,18 @@
 import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
 import { numero } from '../../ui/formato'
-import { AIRE_MIN, L_TUBO, MEDIOS, P_ATM, UMBRAL_DB, golpeTerminado, llegada, medio, nivelAire, type Config, type Estado } from './model'
+import { AIRE_MIN, L_TUBO, MEDIOS, P_ATM, UMBRAL_DB, golpeTerminado, llegada, medio, nivelAire, oido, vacioLogrado, type Config, type Estado } from './model'
 
 const num = numero
 
-export type Respuesta = 'aire_agua_acero' | 'juntos' | 'acero_agua_aire' | 'igual' | 'mas_bajo' | 'nada'
+export type Respuesta = 'aire_agua_acero' | 'juntos' | 'acero_agua_aire' | 'gradual' | 'de_golpe' | 'igual'
 
 /** Lo que la pregunta necesita para resolverse: se congela al preguntar. */
 export interface Datos {
   distancia: number
   amplitud: number
+  /** La que oiría una persona: la del tono, o una audible si es un golpe. */
+  frecuencia: number
 }
 
 export interface Pregunta {
@@ -27,7 +29,7 @@ export interface Pregunta {
 
 /** Si el más lento tarda menos de esto (veces) que el más rápido, se considera que llegan "juntos". */
 const TOLERANCIA_LLEGADA = 1.1
-/** Caída de nivel (dB) por debajo de la cual se considera que "se oye igual". */
+/** Caída de nivel (dB) por debajo de la cual se considera que "no cambió". */
 const TOLERANCIA_DB = 3
 
 const ms = (s: number) => `${num(s * 1000, 1)} ms`
@@ -56,26 +58,45 @@ const GOLPE: Pregunta = {
 
 const BOMBA: Pregunta = {
   tipo: 'bomba',
-  texto: 'La bomba saca el aire del tubo de aire y el parlante sigue vibrando igual. ¿Qué pasa con lo que oye el micrófono de ese tubo?',
+  texto: 'La bomba saca el aire del tubo de aire y el parlante sigue vibrando igual. Mientras el aire se va, ¿cómo cambia lo que marca el micrófono de ese tubo?',
   opciones: [
-    { valor: 'nada', texto: 'Ya no se oye nada' },
-    { valor: 'igual', texto: 'Se oye igual: el parlante vibra lo mismo' },
-    { valor: 'mas_bajo', texto: 'Se oye más bajito, pero se sigue oyendo' },
+    { valor: 'gradual', texto: 'Baja de a poco, a medida que se va el aire' },
+    { valor: 'de_golpe', texto: 'Se mantiene casi igual y se corta de golpe cuando no queda aire' },
+    { valor: 'igual', texto: 'No cambia: el parlante vibra lo mismo' },
   ],
-  listo: (c, e) => c.bomba && e.aire <= AIRE_MIN * 1.01,
-  resolver: ({ amplitud }) => {
+  listo: (c, e) => c.bomba && vacioLogrado(e),
+  resolver: ({ amplitud, frecuencia }) => {
     const antes = nivelAire(amplitud, 1)
-    const despues = nivelAire(amplitud, AIRE_MIN)
-    const correcta: Respuesta = despues < UMBRAL_DB ? 'nada' : antes - despues > TOLERANCIA_DB ? 'mas_bajo' : 'igual'
-    // Fracción de aire con la que el nivel cruza el umbral de audición.
+    const nivel = (aire: number) => nivelAire(amplitud, aire)
+    // "De golpe" = casi no baja hasta que queda el 10 % del aire; "igual" = no baja ni al final.
+    const correcta: Respuesta = antes - nivel(AIRE_MIN) < TOLERANCIA_DB ? 'igual' : antes - nivel(0.1) < TOLERANCIA_DB ? 'de_golpe' : 'gradual'
+    const dB = (aire: number) => `<b>${num(nivel(aire), 0)} dB</b>`
+    const hecho = `Con todo el aire el micrófono marcaba ${num(antes, 0)} dB; con la mitad, ${dB(0.5)}; con el 10 %, ${dB(0.1)}; y con lo último que saca la bomba (${num(AIRE_MIN * P_ATM, 1)} Pa), ${dB(AIRE_MIN)}.`
+    // Cuándo dejaría de oírse: solo tiene sentido si ese tono es audible.
     const cruce = 10 ** ((UMBRAL_DB - antes) / 20)
     const pa = cruce * P_ATM
-    const hecho = `El nivel pasó de <b>${num(antes, 0)} dB</b> a <b>${num(despues, 0)} dB</b>, bajo el umbral de audición (${UMBRAL_DB} dB).`
-    const causa = correcta === 'nada'
-      ? ` No se cortó de golpe: se fue apagando a medida que se iba el aire, y dejó de oírse cuando quedaba el ${num(cruce * 100, 3)} % (${num(pa, pa < 10 ? 1 : 0)} Pa). Sin moléculas, la vibración no tiene qué empujar. En el agua y el acero no hace falta aire, solo un medio: sus micrófonos siguen recibiendo.`
-      : ' Todavía queda aire suficiente para llevar la vibración.'
-    return { correcta, explicacion: hecho + causa + av(' La presión sonora es p = ρ · v de las partículas: con la misma vibración, p baja junto con la densidad ρ.') }
+    const persona = oido(frecuencia, antes) === 'si'
+      ? ` Una persona dejaría de oírlo cuando quedara el ${num(cruce * 100, 3)} % del aire (${num(pa, pa < 10 ? 1 : 0)} Pa), con el umbral de 0 dB.`
+      : ` Con ${num(frecuencia, 0)} Hz una persona no lo oiría ni con aire (no está en el rango audible), pero el micrófono sí lo registra.`
+    const causa = correcta === 'gradual' ? ' No se corta de golpe: baja a medida que se va el aire, porque cada partícula que falta es una que no empuja a la vecina.' : ''
+    return {
+      correcta,
+      explicacion: `${hecho}${causa}${persona} En el agua y el acero no hace falta aire, solo un medio.${av(' La presión sonora es p = ρ · c · v, con v la velocidad de las partículas: con la misma vibración y la misma c (que en el aire no depende de la presión), p baja junto con la densidad ρ.')}`,
+    }
   },
 }
 
-export const preguntaPara = (tipo: Pregunta['tipo']) => (tipo === 'golpe' ? GOLPE : BOMBA)
+/** Orden al azar: la opción correcta no tiene posición fija. */
+function mezclar<T>(lista: T[]): T[] {
+  const m = [...lista]
+  for (let i = m.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[m[i], m[j]] = [m[j], m[i]]
+  }
+  return m
+}
+
+export const preguntaPara = (tipo: Pregunta['tipo']): Pregunta => {
+  const p = tipo === 'golpe' ? GOLPE : BOMBA
+  return { ...p, opciones: mezclar(p.opciones) }
+}

@@ -21,11 +21,12 @@ export function crearAudio() {
     get activo() {
       return osc !== null
     },
-    activar(si: boolean) {
+    /** Enciende o apaga el sonido. Devuelve `false` si se pidió encender y Web Audio falló. */
+    activar(si: boolean): boolean {
       try {
         if (si && !osc) {
           ctx ??= new AudioContext()
-          void ctx.resume()
+          ctx.resume().catch(() => {})
           osc = ctx.createOscillator()
           volumen = ctx.createGain()
           volumen.gain.value = 0
@@ -40,6 +41,7 @@ export function crearAudio() {
       } catch {
         osc = volumen = null
       }
+      return !si || osc !== null
     },
     /** Tono continuo: frecuencia y nivel de ahora; `suena` es false si el oído no lo captaría o no es el modo tono. */
     tono(frecuencia: number, nivel: number, suena: boolean) {
