@@ -1,6 +1,7 @@
 // Consola de controles (arriba a la derecha). Devuelve los `set` de cada control para que
 // el teclado y la lógica del lab mantengan la botonera sincronizada.
 import { interruptorAvanzado } from '../../ui/avanzado'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { grupo, interruptor, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
@@ -68,6 +69,7 @@ export function crearControles(ent: Entorno, velocidad: number, a: Acciones) {
     reloj,
     grupo('Romper el sistema', h('div', { class: 'grupo' }, selectiva.el, pared.el)),
     interruptorAvanzado(),
+    interruptorPreguntas(),
     h('button', { class: 'boton boton-atajos', type: 'button', onclick: abrirAtajos }, '⌨ Atajos de teclado (H)'),
   )
 

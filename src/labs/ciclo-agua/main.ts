@@ -6,7 +6,7 @@ import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, RESERVORIO_TEXTO, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import {
@@ -104,7 +104,7 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config; arranque: Estado }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config; arranque: Estado }>(() => seguir(true), { saltar: () => seguir(true) })
 
 function seguir(va: boolean) {
   corriendo = va
@@ -116,7 +116,7 @@ function reiniciar(desde: Estado) {
   seguir(true)
 }
 function preguntar(pregunta: Pregunta) {
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config, arranque })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config, arranque })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -133,10 +133,7 @@ function empezar() {
   preguntar(rota ?? AGUA)
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 
@@ -200,6 +197,7 @@ lab.append(
       fila('Relieve', relieve.el),
       grupo('Romper el sistema', h('div', { class: 'grupo' }, apagarSol.el, talar.el)),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
   ),

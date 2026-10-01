@@ -8,7 +8,6 @@
 .pildora.muestra { color: var(--texto); }
 
 .interruptor .segmentado { min-width: 190px; }
-.hud-der .saltar { justify-self: start; }
 .hud-der .doble { justify-self: stretch; }
 .grupo .segmentado + .segmentado { margin-top: 0; }
 

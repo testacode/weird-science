@@ -4,6 +4,7 @@ import { av, interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, interruptor, segmentado, type Opcion } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { COLOR_LIQUIDO, COLOR_OBJETO, hex } from './constantes'
 import { newtons, num } from './contenido'
 import {
@@ -71,6 +72,7 @@ export function crearConsola(a: Acciones, inicial: Config) {
       agujero.el,
       h('div', { class: 'grupo' }, h('span', {}, 'Cambiar de planeta'), planeta.el))),
     interruptorAvanzado(),
+    interruptorPreguntas(),
   )
 
   return {

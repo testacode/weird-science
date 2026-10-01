@@ -6,7 +6,7 @@ import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, FACTORES, GANCHO, burbujas, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import { LUZ_HEX } from './constantes'
@@ -94,7 +94,7 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
 
 function seguir(va: boolean) {
   corriendo = va
@@ -108,7 +108,7 @@ function reiniciar() {
 }
 function preguntar(pregunta: Pregunta | null) {
   if (!pregunta) return pred.ocultar()
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -124,10 +124,7 @@ function otraVez() {
   preguntar(preguntaPara(config))
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   corriendo = !corriendo
   botonPlay.textContent = corriendo ? '⏸ Pausa' : '▶ Seguir'
 }
@@ -200,6 +197,7 @@ lab.append(
       grupo('Color de la luz', color.el),
       grupo('Romper el sistema', h('div', { class: 'grupo' }, apagar.el)),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
   ),

@@ -1,4 +1,5 @@
 import { interruptorAvanzado } from '../../ui/avanzado'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { fila, grupo, interruptor, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
@@ -63,6 +64,7 @@ export function crearControles(inicial: Config, m: Manejadores) {
     sonido.el,
     grupo('Romper el sistema', bomba.el),
     interruptorAvanzado(),
+    interruptorPreguntas(),
   )
 
   return {

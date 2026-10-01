@@ -1,4 +1,5 @@
 import { interruptorAvanzado } from '../../ui/avanzado'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { grupo, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
@@ -60,6 +61,7 @@ export function crearControles(inicial: Config, m: Manejadores) {
     grupoActividad,
     grupoRomper,
     interruptorAvanzado(),
+    interruptorPreguntas(),
   )
 
   return {

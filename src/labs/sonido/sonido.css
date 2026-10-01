@@ -6,7 +6,6 @@
 
 .consola [hidden] { display: none; }
 .hud-der .consola { gap: 10px; padding: 12px 14px; }
-.hud-der .saltar { justify-self: start; }
 .boton-golpe { background: var(--ambar); color: #0b1413; border-color: transparent; font-weight: 700; font-size: 15px; padding: 10px; }
 .boton-golpe:hover { background: #ffd981; }
 .deslizador .etiqueta { color: var(--marca); }

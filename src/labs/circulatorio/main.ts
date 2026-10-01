@@ -71,24 +71,24 @@ lab.append(
 const ayuda = modal()
 let enCurso: { pregunta: Pregunta; antes: Foto; t0: number } | null = null
 const foto = (): Foto => ({ c: config, e: estado })
-const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
-  const cambio = pred.datos?.cambio
-  descartarPendiente()
-  if (cambio) aplicar({ ...config, ...cambio })
-} }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta, { cambio: Partial<Config>; pregunta: Pregunta }>(() => {
   if (!pred.datos) return
   // El cambio se arma sobre la config de ahora (si en el medio cambió otra cosa, se conserva).
   const { cambio, pregunta } = pred.datos
-  saltar.hidden = true
   const antes = foto()
   aplicar({ ...config, ...cambio })
   enCurso = { pregunta, antes, t0: estado.t }
+}, {
+  // Saltar (o apagar las preguntas): el cambio se hace igual, sin predicción. La pregunta inicial no cambia nada.
+  saltar: (d) => d && aplicarSaltado(d.cambio),
+  textoSaltar: (d) => (d && Object.keys(d.cambio).length ? 'Saltar y hacerlo igual' : null),
 })
+/** Un cambio que se hace sin predecir (saltar o modo libre), sobre la config de ahora. */
+function aplicarSaltado(cambio: Partial<Config>) {
+  aplicar({ ...config, ...cambio })
+}
 function descartarPendiente() {
-  if (!pred.pendiente) return
-  saltar.hidden = true
-  pred.ocultar()
+  if (pred.pendiente) pred.ocultar()
 }
 function revelar() {
   if (!enCurso) return
@@ -115,9 +115,7 @@ function pedir(cambio: Partial<Config>) {
     return aplicar(nueva)
   }
   enCurso = null
-  pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })
-  saltar.hidden = false
-  controles.sincronizar(config, corriendo)
+  if (pred.preguntar(pregunta.texto, pregunta.opciones, { cambio, pregunta })) controles.sincronizar(config, corriendo)
 }
 
 function aplicar(nueva: Config) {
@@ -141,7 +139,7 @@ function alternar() {
 }
 
 const controles = crearControles(config, { pedir, tipico: () => pedir(tipico(config.actividad)), reiniciar, alternar, ayuda: () => ayuda.abrir(COMO_FUNCIONA) })
-lab.append(hud('der', controles.el, pred.el, saltar), ayuda.el)
+lab.append(hud('der', controles.el, pred.el), ayuda.el)
 controles.sincronizar(config, corriendo)
 reiniciarCurva()
 preguntarInicial()

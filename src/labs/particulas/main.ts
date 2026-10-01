@@ -6,7 +6,7 @@ import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, etiquetaEstado, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import {
@@ -90,14 +90,14 @@ const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', oncl
 const reloj = h('span', { class: 'etiqueta' })
 
 // --- Predecí antes de correr: cada vez que se empieza de nuevo, la simulación espera la predicción ---
-const pred = prediccion<Respuesta, { pregunta: Pregunta; sus: Sustancia; config: Config }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; sus: Sustancia; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
   const pregunta = preguntaPara(sus, config)
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, sus, config })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, sus, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -110,10 +110,7 @@ function revelar(l: Lectura) {
 }
 
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 
@@ -169,6 +166,7 @@ lab.append(
       reloj,
       grupo('Romper el sistema', h('div', { class: 'grupo' }, interruptorConfig('Tapa de olla a presión', 'tapa'), interruptorConfig('Calor latente', 'latente'))),
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
   ),

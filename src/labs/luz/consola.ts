@@ -1,6 +1,7 @@
 // Consola de controles: escena, ángulo del láser, medio, "romper el sistema" e info avanzada.
 
 import { interruptorAvanzado } from '../../ui/avanzado'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { fila, grupo, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
@@ -60,6 +61,7 @@ export function crearConsola(a: Acciones, inicial: Config) {
     grupoMedio,
     grupoRomper,
     interruptorAvanzado(),
+    interruptorPreguntas(),
   )
 
   return {

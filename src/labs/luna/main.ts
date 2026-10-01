@@ -5,7 +5,7 @@ import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/compone
 import { h } from '../../ui/dom'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, PIE_AVANZADO, num, pieVista, relato, type Situacion } from './contenido'
 import { crearEscena, type Vista } from './escena'
 import { lineaDeTiempo } from './linea'
@@ -108,14 +108,14 @@ const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', oncl
 const reloj = h('span', { class: 'etiqueta' })
 
 // --- Predecí antes de correr: arranca pausado hasta que el usuario elige (o salta la pregunta) ---
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true))
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
 function seguir(va: boolean) {
   corriendo = va
   botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
   const pregunta = preguntaPara(config)
-  pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })
+  if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
 }
@@ -131,10 +131,7 @@ function revisarPrediccion(desdeElJuego: boolean) {
   pred.revelar(r.correcta, r.explicacion)
 }
 function alternar() {
-  if (pred.pendiente) {
-    pred.ocultar()
-    return seguir(true)
-  }
+  if (pred.pendiente) return pred.saltar()
   seguir(!corriendo)
 }
 function reiniciar() {
@@ -189,6 +186,7 @@ lab.append(
       grupo('Romper el sistema', h('div', { class: 'grupo' }, idea.el, plana.el)),
       irAlEclipse,
       interruptorAvanzado(),
+      interruptorPreguntas(),
     ),
     pred.el,
   ),

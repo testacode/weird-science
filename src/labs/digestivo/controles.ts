@@ -1,6 +1,7 @@
 // Consola de controles (arriba a la derecha). Devuelve los `set` de cada control para que
 // el teclado y el click en la vesícula mantengan la botonera sincronizada.
 import { interruptorAvanzado } from '../../ui/avanzado'
+import { interruptorPreguntas } from '../../ui/prediccion'
 import { grupo, interruptor, modal, segmentado } from '../../ui/componentes'
 import { h } from '../../ui/dom'
 import type { Bocados } from './bocados'
@@ -66,6 +67,7 @@ export function crearControles(ini: Inicial, a: Acciones) {
     grupo('Vista', vista.el),
     grupo('Romper el sistema', h('div', { class: 'grupo' }, bilis.el, acido.el)),
     interruptorAvanzado(),
+    interruptorPreguntas(),
     h('button', { class: 'boton boton-atajos', type: 'button', onclick: abrirAtajos }, '⌨ Atajos de teclado (H)'),
   )
 
