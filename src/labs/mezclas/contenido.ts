@@ -12,7 +12,8 @@ export const esp = (e: EspecieId, nombre = ESPECIES[e].nombre) => `<span style="
 const ART: Record<EspecieId, string> = { agua: 'el agua', arena: 'la arena', aceite: 'el aceite', sal: 'la sal', alcohol: 'el alcohol', hierro: 'el hierro' }
 const con = (e: EspecieId) => esp(e, ART[e])
 /** Concordancia con el artículo de cada componente: disuelto/disuelta, el mismo/la misma. */
-const fem = (e: EspecieId) => ART[e].startsWith('la')
+const FEMENINO: Record<EspecieId, boolean> = { agua: true, arena: true, sal: true, aceite: false, alcohol: false, hierro: false }
+const fem = (e: EspecieId) => FEMENINO[e]
 const Con = (e: EspecieId) => esp(e, ART[e][0].toUpperCase() + ART[e].slice(1))
 const mm = (v: number) => `${numero(v, v < 0.1 ? 2 : 1)} mm`
 const gramos = (g: number) => `${numero(g, g < 10 ? 1 : 0)} g`
@@ -58,7 +59,7 @@ function porqueDecantacion(c: Corrida, l: Lectura): string {
       : 'No hay un líquido que sostenga las capas: al abrir la llave sale todo junto, sin separarse.'
   }
   const solido = ESPECIES[sale].estado === 'solido'
-  return `${Con(sale)} (${num(ESPECIES[sale].densidad, 2)} g/mL) es más ${ART[sale].startsWith('la') ? 'densa' : 'denso'} que ${con(queda)} (${num(ESPECIES[queda].densidad, 2)} g/mL) y no ${solido ? 'se disuelve' : 'se mezcla'}: ${solido ? 'se hunde' : 'queda abajo'} en ${num(c.tAsentado, 0)} s${av(' (la velocidad sale de la ley de Stokes: depende de la diferencia de densidad y del tamaño)')}. Al abrir la llave sale la fase de abajo. En la interfase siempre se cuela un poquito (${gramos(l.salida.reduce((s, g, i) => s + (c.porciones[i].especie === queda ? g : 0), 0))} de ${ESPECIES[queda].nombre.toLowerCase()}).${c.porciones.some((p) => p.id.endsWith('-cristal')) ? ' La sal disuelta no se separa del agua: baja con ella.' : ''}`
+  return `${Con(sale)} (${num(ESPECIES[sale].densidad, 2)} g/mL) es más ${fem(sale) ? 'densa' : 'denso'} que ${con(queda)} (${num(ESPECIES[queda].densidad, 2)} g/mL) y no ${solido ? 'se disuelve' : 'se mezcla'}: ${solido ? 'se hunde' : 'queda abajo'} en ${num(c.tAsentado, 0)} s${av(' (la velocidad sale de la ley de Stokes: depende de la diferencia de densidad y del tamaño)')}. Al abrir la llave sale la fase de abajo.${solido ? '' : ` En la interfase siempre se cuela un poquito (${gramos(l.salida.reduce((s, g, i) => s + (c.porciones[i].especie === queda ? g : 0), 0))} de ${ESPECIES[queda].nombre.toLowerCase()}).`}${c.porciones.some((p) => p.id.endsWith('-cristal')) ? ' La sal disuelta no se separa del agua: baja con ella.' : ''}`
 }
 
 function porqueDestilacion(c: Corrida, l: Lectura): string {
