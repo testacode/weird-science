@@ -3,11 +3,12 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { segmento } from './rayos'
 import {
-  N_AIRE, O_ESPEJO, O_PECERA, PECERA_X, PISO_Y, SUPERFICIE_Y, indice,
+  N_AIRE, O_ESPEJO, O_PECERA, PECERA_X, PISO_Y, SUPERFICIE_Y, indice, sinEngano,
   type Config, type Punto, type ResLapiz,
 } from './model'
 
 const PECERA_Z = 1.2
+const BLANCO = new THREE.Color(0xffffff)
 export const COLOR_MEDIO = { aire: 0xffffff, agua: 0x4fb8ff, aceite: 0xf2c04a, vidrio: 0x8fe3c8, diamante: 0xdff3ff, inventado: 0xc08cff } as const
 /** Mitad del ancho del espejo. */
 export const ESPEJO_X = 2.2
@@ -56,7 +57,7 @@ export function crearPecera(scene: THREE.Scene) {
       const presencia = THREE.MathUtils.clamp((n - N_AIRE) / 0.3, 0, 1)
       color.set(COLOR_MEDIO[c.medio])
       medioMat.color.copy(color)
-      superficieMat.color.copy(color).lerp(new THREE.Color(0xffffff), 0.45)
+      superficieMat.color.copy(color).lerp(BLANCO, 0.45)
       medioMat.opacity = 0.2 * presencia
       superficieMat.opacity = 0.2 * presencia
       contornoMat.opacity = 0.5 * presencia
@@ -133,7 +134,7 @@ export function crearLapiz(scene: THREE.Scene) {
       segmento(puntaGrafito, lado(corte, r.puntaAparente, 0.7), r.puntaAparente, ancho * 0.32)
       // Dónde está de verdad (solo se muestra si no coincide con lo que se ve).
       segmento(fantasma, O_PECERA, r.puntaReal, ancho * 1.25)
-      fantasma.visible = r.profundidad - r.aparente > 0.03 * r.profundidad
+      fantasma.visible = !sinEngano(r)
     },
   }
 }

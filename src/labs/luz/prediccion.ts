@@ -4,10 +4,10 @@ import { av } from '../../ui/avanzado'
 import type { Opcion } from '../../ui/componentes'
 import { cm, kms, num } from './contenido'
 import {
-  N_AIRE, esAire, indice, nombreMedio, trazarEspejo, trazarLapiz, trazarRefraccion, velocidad, type Config,
+  N_AIRE, esAire, indice, nombreMedio, sinDesvio, sinEngano, trazarEspejo, trazarLapiz, trazarRefraccion, velocidad, type Config,
 } from './model'
 
-export type Respuesta = 'igual' | 'doble' | 'mitad' | 'cierra' | 'abre' | 'sale' | 'parte' | 'toda' | 'real' | 'arriba' | 'abajo'
+export type Respuesta = 'igual' | 'doble' | 'mitad' | 'cierra' | 'abre' | 'sale' | 'parte' | 'toda' | 'real' | 'poco' | 'mucho'
 
 export interface Pregunta {
   texto: string
@@ -16,14 +16,11 @@ export interface Pregunta {
   resolver: () => { correcta: Respuesta; explicacion: string }
 }
 
-/** Diferencia de ángulo (°) por debajo de la cual se considera que el rayo "no se dobló". */
-const SIN_DESVIO = 0.5
-/** Diferencia de profundidad (fracción) por debajo de la cual el lápiz "se ve donde está". */
-const SIN_ACHIQUE = 0.02
 /** Con más de esta fracción de luz reflejada (y sin llegar al 100 %), "una parte sale y otra se refleja". */
 const REFLEJO_NOTABLE = 0.25
+/** Fracción de la profundidad real por debajo de la cual el lápiz se ve "bastante más cerca". */
+const MUY_CERCA = 2 / 3
 
-/** Grados: sin decimales cuando el número es entero (10°) y con uno si no (28,8°). */
 const g = (n: number) => `${num(n, Math.abs(n - Math.round(n)) < 0.05 ? 0 : 1)}°`
 
 function preguntaEspejo(antes: Config, nueva: Config): Pregunta {
@@ -64,11 +61,11 @@ function preguntaEntra(nueva: Config): Pregunta {
     resolver: () => {
       const d = trazarRefraccion(nueva)
       const adentro = d.refraccion ?? d.incidencia
-      const cambio = adentro - d.incidencia
-      const correcta: Respuesta = Math.abs(cambio) < SIN_DESVIO ? 'igual' : cambio < 0 ? 'cierra' : 'abre'
+      // El desvío sale del cociente de índices (sen θ₂ / sen θ₁ = n₁ / n₂), no de cuántos grados cambió el ángulo.
+      const correcta: Respuesta = sinDesvio(d.n1, d.n2) ? 'igual' : d.n2 > d.n1 ? 'cierra' : 'abre'
       const hecho = `Pasó de <b>${g(d.incidencia)}</b> a <b>${g(adentro)}</b>.`
       const causa = correcta === 'igual'
-        ? d.incidencia < SIN_DESVIO ? ' Si llega de frente (por la normal) no se dobla en ningún medio.' : ' El medio tiene casi el mismo índice que el aire: la luz no cambia de velocidad y no hay desvío.'
+        ? ' El medio tiene casi el mismo índice que el aire: la luz no cambia de velocidad y no hay desvío.'
         : ` En un medio con más índice la luz va más lenta (${kms(velocidad(n))} contra ${kms(velocidad(N_AIRE))} en el aire) y se dobla hacia la normal.`
       return { correcta, explicacion: `${hecho}${causa}${av(` n₁ · sen θ₁ = n₂ · sen θ₂ → sen θ₂ = ${num(N_AIRE, 4)} · sen ${g(d.incidencia)} / ${num(n, 4)}.`)}` }
     },
@@ -78,7 +75,7 @@ function preguntaEntra(nueva: Config): Pregunta {
 function preguntaAdentro(nueva: Config): Pregunta {
   const medio = nombreMedio(nueva).toLowerCase()
   return {
-    texto: `Metemos el láser adentro del ${medio}, apuntando a la superficie con ${g(nueva.angulo)} desde la normal. Cuando la luz llega al aire, ¿qué pasa?`,
+    texto: `Metemos el láser adentro del ${medio} y lo dejamos apuntando a la superficie con ${g(nueva.angulo)} desde la normal (el que tenías puesto). Cuando la luz llega al aire, ¿qué pasa?`,
     opciones: [
       { valor: 'sale', texto: 'Sale casi toda al aire' },
       { valor: 'parte', texto: 'Una parte sale y otra se refleja' },
@@ -90,7 +87,7 @@ function preguntaAdentro(nueva: Config): Pregunta {
       const critico = d.critico ?? 0
       const explicacion = correcta === 'toda'
         ? `No sale nada: <b>${g(d.incidencia)}</b> es más que el ángulo crítico (<b>${g(critico)}</b>), así que no existe ángulo de refracción y se refleja el 100 %. Es la reflexión total interna, la que mantiene la luz adentro de una fibra óptica.${av(` Ángulo crítico = asen(n_aire / n) = asen(${num(N_AIRE, 4)} / ${num(indice(nueva), 4)}).`)}`
-        : `Todavía sale: <b>${g(d.incidencia)}</b> es menos que el ángulo crítico (<b>${g(critico)}</b>). Sale abriéndose a ${g(d.refraccion ?? 0)} y se refleja el ${num(d.reflectancia * 100, 0)} % de la luz. Probá abrir el ángulo.`
+        : `Todavía sale: <b>${g(d.incidencia)}</b> es menos que el ángulo crítico (<b>${g(critico)}</b>). Sale abriéndose a ${g(d.refraccion ?? 0)} y se refleja el ${num(d.reflectancia * 100, 0)} % de la luz. Probá abrir el ángulo hasta pasar el crítico.`
       return { correcta, explicacion }
     },
   }
@@ -100,20 +97,19 @@ function preguntaLapiz(nueva: Config): Pregunta {
   const medio = nombreMedio(nueva).toLowerCase()
   const real = trazarLapiz(nueva).profundidad
   return {
-    texto: `Hay un lápiz clavado en el ${medio} (n = ${num(indice(nueva), 3)}) y lo mirás con ${g(nueva.ojo)} desde la vertical. La punta está a ${cm(real)} de la superficie. ¿Dónde la ves?`,
+    texto: `Hay un lápiz clavado en el ${medio} (n = ${num(indice(nueva), 3)}) y lo mirás con ${g(nueva.ojo)} desde la vertical. La punta está a ${cm(real)} de la superficie. ¿A qué profundidad la ves?`,
     opciones: [
       { valor: 'real', texto: `Donde está: a ${cm(real)}` },
-      { valor: 'arriba', texto: 'Más cerca de la superficie' },
-      { valor: 'abajo', texto: 'Más profunda' },
+      { valor: 'poco', texto: 'Un poco más cerca de la superficie (más de 2/3 de la profundidad real)' },
+      { valor: 'mucho', texto: 'Bastante más cerca (menos de 2/3 de la profundidad real)' },
     ],
     resolver: () => {
       const d = trazarLapiz(nueva)
-      const cociente = d.aparente / d.profundidad
-      const correcta: Respuesta = Math.abs(cociente - 1) < SIN_ACHIQUE ? 'real' : cociente < 1 ? 'arriba' : 'abajo'
+      const correcta: Respuesta = sinEngano(d) ? 'real' : d.factor > MUY_CERCA ? 'poco' : 'mucho'
       const causa = correcta === 'real'
         ? ' La luz no se desvía al salir de un medio con el índice del aire, así que no hay engaño.'
-        : ' La luz que sale de la punta se dobla al pasar al aire y el ojo, que supone que la luz viajó derecho, la ve más cerca de la superficie. Por eso una pileta parece menos profunda de lo que es.'
-      return { correcta, explicacion: `La punta está a <b>${cm(d.profundidad)}</b> y se ve a <b>${cm(d.aparente)}</b>.${causa}${av(` Profundidad aparente = real · tan β / tan α = ${num(d.factor, 2)} × real; mirando de arriba, n_aire / n.`)}` }
+        : ' La luz que sale de la punta se dobla al pasar al aire y el ojo, que supone que la luz viajó derecho, la ve más cerca de la superficie. Cuanto más se mira de costado, más cerca parece; por eso una pileta parece menos profunda de lo que es.'
+      return { correcta, explicacion: `La punta está a <b>${cm(d.profundidad)}</b> y se ve a <b>${cm(d.aparente)}</b> (el ${num(d.factor * 100, 0)} % de su profundidad).${causa}${av(` Profundidad aparente = real · tan β / tan α = ${num(d.factor, 2)} × real; mirando de arriba, n_aire / n.`)}` }
     },
   }
 }
@@ -124,6 +120,7 @@ export function preguntaPara(antes: Config, nueva: Config): Pregunta | null {
   if (nueva.escena === 'lapiz' && (antes.escena !== 'lapiz' || antes.medio !== nueva.medio) && nueva.medio !== 'inventado') return preguntaLapiz(nueva)
   if (antes.escena !== 'refraccion' || nueva.escena !== 'refraccion') return null
   if (antes.desde === 'aire' && nueva.desde === 'medio' && !esAire(nueva)) return preguntaAdentro(nueva)
-  if (antes.desde === 'aire' && nueva.desde === 'aire' && antes.medio !== nueva.medio && nueva.medio !== 'inventado') return preguntaEntra(nueva)
+  // Con el láser de frente (0°) no hay desvío posible en ningún medio: no hay nada que predecir.
+  if (antes.desde === 'aire' && nueva.desde === 'aire' && antes.medio !== nueva.medio && nueva.medio !== 'inventado' && nueva.angulo > 0) return preguntaEntra(nueva)
   return null
 }

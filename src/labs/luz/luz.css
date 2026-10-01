@@ -22,3 +22,4 @@
 .interruptor.laser .segmentado { min-width: 236px; }
 .hud-der .saltar { justify-self: start; }
 .hud-der .consola { gap: 11px; padding: 12px 14px; }
+.c-apagado { color: var(--apagado); }

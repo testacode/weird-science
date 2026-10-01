@@ -9,7 +9,7 @@ import { crearConsola, ESCENAS } from './consola'
 import { COMO_FUNCIONA, GANCHO, num, relato } from './contenido'
 import { crearEscena } from './escena'
 import {
-  CONFIG_INICIAL, OJO_MAX, anguloAdentro, curva, esAire, resolver, trazarEspejo, trazarLapiz, type Config, type Resultado,
+  CONFIG_INICIAL, OJO_MAX, curva, esAire, ojoMax, resolver, trazarEspejo, trazarLapiz, type Config, type Resultado,
 } from './model'
 import { preguntaPara, type Pregunta, type Respuesta } from './prediccion'
 import { instalarTeclado } from './teclado'
@@ -85,7 +85,7 @@ const ayuda = modal()
 let temporizador = 0
 const saltar = h('button', { class: 'boton saltar', type: 'button', hidden: true, onclick: () => {
   const nueva = pred.datos?.nueva
-  descartarPendiente()
+  descartar()
   if (nueva) aplicar(nueva)
 } }, 'Saltar y hacerlo igual')
 const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => {
@@ -96,29 +96,28 @@ const pred = prediccion<Respuesta, { nueva: Config; pregunta: Pregunta }>(() => 
   const resultado = pregunta.resolver()
   temporizador = window.setTimeout(() => pred.revelar(resultado.correcta, resultado.explicacion), ESPERA_REVELAR_MS)
 })
-function descartarPendiente() {
-  if (!pred.pendiente) return
+/** Saca la tarjeta (pendiente, en curso o ya revelada) y cancela la revelación: la config cambió y no vale más. */
+function descartar() {
+  window.clearTimeout(temporizador)
   saltar.hidden = true
   pred.ocultar()
 }
 
 /** Todo cambio pasa por acá: si corresponde una predicción, primero se pregunta; si no, se aplica. */
 function pedir(cambio: Partial<Config>) {
-  descartarPendiente()
+  if ((Object.keys(cambio) as (keyof Config)[]).every((k) => cambio[k] === config[k])) return
+  descartar()
   let nueva = { ...config, ...cambio }
-  // Al meter el láser adentro del medio se lo apunta más allá del crítico, que es lo que vale la pena ver.
-  if (cambio.desde === 'medio' && config.desde === 'aire' && cambio.angulo === undefined) nueva = { ...nueva, angulo: anguloAdentro(nueva) }
+  // El ojo no puede mirar tan de costado que la luz salga por afuera de la pecera.
+  if (nueva.escena === 'lapiz') nueva = { ...nueva, ojo: Math.min(nueva.ojo, ojoMax(nueva)) }
   const pregunta = preguntaPara(config, nueva)
   if (!pregunta) return aplicar(nueva)
-  window.clearTimeout(temporizador)
   pred.preguntar(pregunta.texto, pregunta.opciones, { nueva, pregunta })
   saltar.hidden = false
   consola.sincronizar(config)
 }
 function reiniciar() {
-  descartarPendiente()
-  window.clearTimeout(temporizador)
-  pred.ocultar()
+  descartar()
   aplicar({ ...CONFIG_INICIAL })
 }
 

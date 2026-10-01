@@ -4,7 +4,9 @@
 //   Refracción  n1 · sen θ1 = n2 · sen θ2                                  (ley de Snell)
 //   Crítico     θc = asen(n2 / n1), solo si n1 > n2: más allá no sale nada (reflexión total interna)
 //   Reparto     ecuaciones de Fresnel (luz sin polarizar): cuánta luz se refleja y cuánta pasa
-//   Profundidad aparente (mirando con un ángulo α desde la normal): d_aparente = d · tan β / tan α, con sen β = sen α · n_aire / n
+//   Profundidad aparente (mirando con un ángulo α desde la normal): d_aparente = d · tan β / tan α, con sen β = sen α · n_aire / n.
+//                       Es una derivación propia con la ley de Snell (un ojo lejano, imagen sobre la vertical del punto real); mirando de
+//                       arriba (α → 0) da d · n_aire / n, que es lo que cita la bibliografía.
 //
 // Un solo rayo y un solo límite plano: no hay segundos rebotes ni dispersión de colores (todo a ≈ 589 nm).
 // Unidades del mundo: 1 unidad = 10 cm. Los ángulos de la API están en grados.
@@ -236,14 +238,28 @@ export function resolver(c: Config): Resultado {
   return c.escena === 'espejo' ? trazarEspejo(c) : c.escena === 'refraccion' ? trazarRefraccion(c) : trazarLapiz(c)
 }
 
-/** Ángulo del láser al meterlo adentro del medio: pasado el crítico, para que se vea qué pasa ahí. */
-export function anguloAdentro(c: Config): number {
-  const { critico } = interfaz(indice(c), N_AIRE, 0)
-  return critico === null ? c.angulo : Math.min(ANGULO_MAX, Math.round(critico + 11))
-}
+/** Diferencia relativa por debajo de la cual dos índices (o una profundidad aparente y la real) cuentan como "iguales". */
+export const TOLERANCIA_IGUAL = 0.01
 
-/** El medio es (prácticamente) igual al aire: el rayo no se dobla y la maqueta se vuelve invisible. */
-export const esAire = (c: Config) => Math.abs(indice(c) - N_AIRE) < 0.005
+/** Dos medios con casi el mismo índice: el rayo no se dobla (el desvío sale de n1 / n2, no de un ángulo). */
+export const sinDesvio = (n1: number, n2: number) => Math.abs(n1 / n2 - 1) < TOLERANCIA_IGUAL
+
+/** El medio es (prácticamente) igual al aire: el rayo no se dobla y la maqueta se vuelve casi invisible. */
+export const esAire = (c: Config) => sinDesvio(indice(c), N_AIRE)
+
+/** Lo sumergido se ve donde está (el ojo no se equivoca): una sola vara para el texto, el fantasma, el rótulo y la pregunta. */
+export const sinEngano = (r: ResLapiz) => Math.abs(1 - r.factor) < TOLERANCIA_IGUAL
+
+/** Margen (unidades) entre el punto donde la mirada sale del medio y la pared de la pecera. */
+const MARGEN_PARED = 0.15
+
+/** Ángulo máximo del ojo (grados) para que la mirada del extremo del lápiz salga por la superficie dentro de la pecera. */
+export function ojoMax(c: Config): number {
+  const fi = rad(LAPIZ.inclinacion)
+  const tanB = (PECERA_X - MARGEN_PARED - LAPIZ.sumergido * Math.sin(fi)) / (LAPIZ.sumergido * Math.cos(fi))
+  const senA = (indice(c) / N_AIRE) * (tanB / Math.sqrt(1 + tanB * tanB))
+  return senA >= 1 ? OJO_MAX : Math.min(OJO_MAX, Math.floor(deg(Math.asin(senA))))
+}
 
 /** Puntos de la curva "ángulo que sale según el que entra", de 0 hasta `hasta` grados (se corta en el crítico). */
 export function curva(c: Config, hasta: number): { x: number; refraccion: number }[] {

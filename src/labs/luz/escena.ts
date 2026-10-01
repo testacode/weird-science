@@ -8,7 +8,7 @@ import { h } from '../../ui/dom'
 import { cm, num } from './contenido'
 import { crearEspejo, crearLapiz, crearMesa, crearOjo, crearPecera } from './maqueta'
 import {
-  N_AIRE, O_ESPEJO, O_PECERA, PECERA_X, PISO_Y, SUPERFICIE_Y, indice, nombreMedio,
+  N_AIRE, O_ESPEJO, O_PECERA, PECERA_X, PISO_Y, SUPERFICIE_Y, indice, nombreMedio, sinEngano,
   type Config, type Punto, type Resultado, type Tramo,
 } from './model'
 import { crearArco, crearHaces, crearNormal, crearPunto, crearPuntero } from './rayos'
@@ -83,14 +83,20 @@ export function crearEscena(contenedor: HTMLElement) {
     p.el.dataset.clave = clave
     p.el.replaceChildren(h('span', {}, nombre), h('span', { class: 'avanzado' }, indiceTxt))
   }
+  /** Pone un rótulo en `a` (o lo esconde); el texto solo se reescribe si cambió. */
   const anclar = (p: Pildora, texto: string, a: Punto | null) => {
     p.el.hidden = a === null
     if (!a) return
-    p.texto(texto)
+    if (p.el.dataset.texto !== texto) {
+      p.el.dataset.texto = texto
+      p.texto(texto)
+    }
     p.ancla.set(a[0], a[1], 0)
   }
 
   function dibujarPlano(c: Config, r: Resultado) {
+    // Todo lo del plano arranca oculto: cada escena muestra solo lo suyo.
+    ;[arcoInc, arcoRefl, arcoRefr].forEach((a) => a.ocultar())
     const esEspejo = r.escena === 'espejo'
     const [centro, giro] = esEspejo ? [O_ESPEJO, THREE.MathUtils.degToRad(c.espejo)] : [O_PECERA, 0]
     normal.position.set(centro[0], centro[1], 0)
@@ -134,7 +140,7 @@ export function crearEscena(contenedor: HTMLElement) {
         anclar(pReal, `Real: ${cm(r.profundidad)}`, r.puntaReal)
         anclar(pAparente, `Parece: ${cm(r.aparente)}`, r.puntaAparente)
         anclar(pOjo, 'Ojo', r.ojo)
-        pReal.el.hidden = r.profundidad - r.aparente < 0.05 * r.profundidad
+        pReal.el.hidden = sinEngano(r)
       } else {
         for (const p of [pReal, pAparente, pOjo]) p.el.hidden = true
       }
