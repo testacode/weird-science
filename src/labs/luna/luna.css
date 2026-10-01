@@ -1,0 +1,61 @@
+/* Estilos propios del lab de la Luna (lo que el kit no cubre). */
+.c-luna { color: #e8e6d6; }
+
+.metrica.fase b { font-size: 12px; line-height: 1.2; white-space: normal; }
+.nota-mes { margin: 2px 0 0; font-size: 12px; line-height: 1.4; color: #cfdcd6; }
+.nota-mes b { color: var(--texto); }
+
+/* Vista desde la Tierra: círculos al pie del HUD izquierdo, lejos de la maqueta. */
+.vistas { display: flex; justify-content: center; gap: 14px; }
+.vista { display: grid; align-content: start; justify-items: center; gap: 6px; flex: 1; text-align: center; }
+.vista[hidden] { display: none; }
+.vista .disco {
+  border-radius: 50%; overflow: hidden; line-height: 0;
+  border: 2px solid rgba(190, 255, 220, 0.28); box-shadow: 0 0 0 5px rgba(7, 16, 15, 0.55), 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.vista.idea .disco { border-color: var(--magenta); }
+.vista .disco canvas { display: block; }
+.vista .pie { margin: 0; font: 600 10.5px/1.35 var(--mono); color: var(--apagado); }
+.vista.idea .etiqueta { color: var(--magenta); }
+.vista .pie-av { margin: 0; font-size: 11.5px; line-height: 1.35; color: var(--apagado); }
+
+/* Etiquetas de la maqueta, con el color de cada cuerpo. */
+.pildora.p-sol { color: var(--ambar); border-color: var(--ambar); }
+.pildora.p-tierra { color: var(--cielo); border-color: var(--cielo); }
+.pildora.p-luna { color: #e8e6d6; border-color: #e8e6d6; }
+.pildora.p-luna.eclipse { color: var(--magenta); border-color: var(--magenta); }
+.pildora.p-angulo { color: var(--texto); }
+.pildora.p-idea { color: var(--magenta); border-color: var(--magenta); }
+body.sin-avanzado .pildora.avanzado { display: none; }
+
+/* Línea de tiempo */
+.hud-linea { position: absolute; z-index: 2; bottom: 16px; left: 410px; right: 360px; }
+.linea { padding: 10px 22px 8px; display: grid; gap: 6px; }
+.linea-cabecera { display: flex; justify-content: space-between; align-items: baseline; }
+.linea-valor { font: 600 12px/1 var(--mono); color: var(--apagado); }
+.linea-valor b { font-size: 15px; color: var(--marca); }
+.linea input[type='range'] {
+  --p: 0%;
+  width: 100%; margin: 6px 0 0; height: 20px; background: transparent; appearance: none; cursor: grab;
+}
+.linea input[type='range']:active { cursor: grabbing; }
+.linea input[type='range']::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, var(--marca) var(--p), rgba(255, 255, 255, 0.15) var(--p));
+}
+.linea input[type='range']::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
+.linea input[type='range']::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--marca); }
+.linea input[type='range']::-webkit-slider-thumb {
+  appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
+  background: var(--texto); border: 3px solid var(--marca);
+}
+.linea input[type='range']::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--texto); border: 3px solid var(--marca); }
+.linea input[type='range']:focus-visible { outline: 2px solid var(--marca); outline-offset: 4px; border-radius: 4px; }
+.marcas { position: relative; height: 28px; margin: 0 9px; }
+.marca-fase {
+  position: absolute; top: 0; transform: translateX(-50%); padding: 2px; border: 0; border-radius: 50%;
+  background: transparent; line-height: 0; opacity: 0.8; transition: opacity 0.15s, transform 0.15s;
+}
+.marca-fase:hover { opacity: 1; transform: translateX(-50%) scale(1.18); }
+.icono-fase { width: 24px; height: 24px; }
+
