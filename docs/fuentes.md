@@ -248,3 +248,22 @@ Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, he
 - Ley de la reflexión. OK. El giro del rayo = 2 × giro del espejo sale del modelo vectorial. — "Reflection (physics)", Wikipedia — https://en.wikipedia.org/wiki/Reflection_(physics)
 - Profundidad aparente: desde arriba aparente/real = n_aire/n_agua (0,75), tiende a cero al mirar rasante. OK. La fórmula de costado d · tan β / tan α es derivación propia con la ley de Snell (no está en la fuente). — "Refraction", Wikipedia — https://en.wikipedia.org/wiki/Refraction
 - Parámetros: rango del medio inventado (1,00–2,50), medidas de pecera y lápiz, distancia del ojo, láser adentro en crítico + 11°, `TOLERANCIA_IGUAL` 1 %, umbral "una parte sale" 25 %, vara de "bastante más cerca" 2/3, margen del ojo a la pared (`ojoMax`). Se ignora la dispersión.
+
+## Célula y ósmosis (`src/labs/celula/constantes.ts` y `model.ts`)
+
+Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, hechas por el agente del lab.
+
+- Suero 0,9 % NaCl, 58,44 g/mol, coeficiente osmótico 0,93: 9 g/L = 154 mmol/L, 308 mOsm/L calculados y 286,4 mOsm/L con φ (≈ sangre 285). El código da 286,4. OK.
+  "Saline (medicine)", Wikipedia — https://en.wikipedia.org/wiki/Saline_(medicine)
+- Interior del glóbulo 286 mOsm/L: plasma humano 275–299 mOsm/kg. OK. — "Plasma osmolality", Wikipedia — https://en.wikipedia.org/wiki/Plasma_osmolality
+- Glóbulo rojo: volumen 90 fL, esfera de 150 fL sin distender la membrana (superficie 136 µm² → 149 fL), rotura en 150/90 = 1,67×. OK. — "Red blood cell", Wikipedia — https://en.wikipedia.org/wiki/Red_blood_cell
+- Fracción osmóticamente inactiva ≈ 0,5. OK. — Denysova y Nitsche, *J Theor Biol* 2022 — https://europepmc.org/article/MED/35051431
+- `K_AGUA_GLOBULO` 1,8 (ajustado): en agua pura rompe a los 0,62 s; la fuente da ≈ 0,6 s. OK (calibrado). — Anderson y Lovrien, *Biophys J* 1977 — https://europepmc.org/article/MED/911981
+- Rotura en la esfera (1,67×); alternativas publicadas: 6–12 % por encima de la esfera (Massaldi 1988) o 1,25× (Yang y Kamino 1995). Estimación declarada.
+  Massaldi et al., *Biophys J* 1988 — https://europepmc.org/article/MED/3207827
+  Yang y Kamino, *Jpn J Physiol* 1995 — https://europepmc.org/article/MED/8713172
+- Urea isoosmolar pero hipotónica para el glóbulo; plasmólisis con pared intacta. OK. — "Tonicity", Wikipedia — https://en.wikipedia.org/wiki/Tonicity
+- Plasmólisis con sal o sacarosa en Elodea o cebolla; la pared evita que estalle; presión de pared ≈ 0 plasmolizada. OK.
+  "Plasmolysis" y "Water potential", Wikipedia — https://en.wikipedia.org/wiki/Plasmolysis
+- Van't Hoff π = i·c·R·T, `PI0_VEGETAL_MPA` 0,91 MPa a 20 °C. OK. — "Osmotic pressure", Wikipedia — https://en.wikipedia.org/wiki/Osmotic_pressure
+- Sin verificar o parámetros: borde de plasmólisis de la cebolla 1,17 % (fuente bloqueada), `RIGIDEZ_PARED` 11 (orden de magnitud), `K_AGUA_VEGETAL`, `K_SOLUTO`, ritmos, rotura del protoplasto sin pared en 1,67× (supuesto), cantidades de partículas de la maqueta.
