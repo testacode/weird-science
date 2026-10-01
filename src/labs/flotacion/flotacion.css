@@ -1,0 +1,23 @@
+/* Estilos propios del lab de flotación. Colores con significado: magenta = peso, cielo = empuje, lima = lo sumergido. */
+
+/* Rótulos de las flechas */
+.pildora.peso { color: var(--magenta); border-color: var(--magenta); }
+.pildora.empuje { color: var(--cielo); border-color: var(--cielo); }
+.pildora.multilinea span:first-child { color: var(--texto); }
+
+/* Botones de objeto y de líquido en grilla, cada uno con una muestra de su color */
+.con-muestras { flex-wrap: wrap; }
+.con-muestras button { flex: 1 1 28%; white-space: nowrap; padding: 6px 4px; font-size: 12.5px; }
+.con-muestras.liquidos button { flex-basis: 45%; }
+.con-muestras button::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%;
+  background: var(--muestra); box-shadow: 0 0 5px var(--muestra);
+}
+
+.deslizador.sal .etiqueta { color: var(--cielo); }
+.interruptor .segmentado { min-width: 120px; }
+
+/* La consola de este lab es alta: se compacta. */
+.hud-der .consola { gap: 10px; padding: 12px 14px; }
+.hud-der .grupo .grupo { gap: 6px; font-size: 13.5px; }
+.hud-der .prediccion .boton { padding: 6px 10px; }
