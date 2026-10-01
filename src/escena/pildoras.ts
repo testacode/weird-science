@@ -5,14 +5,16 @@ const MARGEN = 6
 /** Hasta cuántos px fuera de la pantalla puede estar el punto anclado y la pastilla sigue visible (pegada al borde). */
 const TOLERANCIA = 80
 
+type Origen = 'centro' | 'izquierda' | 'derecha'
+
 export interface OpcionesPildora {
   clase?: string
   ancla?: THREE.Vector3
   /** Corrimiento en px desde el punto proyectado. */
   dx?: number
   dy?: number
-  /** `centro`: centrada en el punto. `izquierda`: el borde izquierdo en el punto (rótulo al costado). */
-  origen?: 'centro' | 'izquierda'
+  /** `centro`: centrada en el punto. `izquierda` / `derecha`: ese borde en el punto (rótulo a un costado). */
+  origen?: Origen
   /** Varias líneas, una por hijo (`el.replaceChildren(...)`). */
   multilinea?: boolean
 }
@@ -31,7 +33,7 @@ export interface Pildora {
  * las mantiene dentro de la pantalla. Si el punto queda lejos de la pantalla (o detrás de la cámara), se ocultan.
  */
 export function crearPildoras(contenedor: HTMLElement, camera: THREE.Camera) {
-  const lista: (Pildora & { origen: 'centro' | 'izquierda' })[] = []
+  const lista: (Pildora & { origen: Origen })[] = []
   const proyectado = new THREE.Vector3()
   return {
     crear(texto = '', { clase = '', ancla = new THREE.Vector3(), dx = 0, dy = 0, origen = 'centro', multilinea = false }: OpcionesPildora = {}): Pildora {
@@ -58,7 +60,7 @@ export function crearPildoras(contenedor: HTMLElement, camera: THREE.Camera) {
         const afuera = proyectado.z > 1 || x < -TOLERANCIA || x > ancho + TOLERANCIA || y < -TOLERANCIA || y > alto + TOLERANCIA
         p.el.style.visibility = afuera ? 'hidden' : ''
         if (afuera) return
-        const izq = p.origen === 'izquierda' ? x + p.dx : x + p.dx - w / 2
+        const izq = x + p.dx - { izquierda: 0, centro: w / 2, derecha: w }[p.origen]
         const arriba = y + p.dy - h / 2
         p.el.style.left = `${THREE.MathUtils.clamp(izq, MARGEN, ancho - w - MARGEN)}px`
         p.el.style.top = `${THREE.MathUtils.clamp(arriba, MARGEN, alto - h - MARGEN)}px`
