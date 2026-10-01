@@ -14,8 +14,14 @@ export function segmentado<T extends string>(
   const botones = opciones.map((o) =>
     h('button', { type: 'button', 'aria-pressed': String(o.valor === inicial), onclick: () => elegir(o.valor) }, o.texto),
   )
-  const set = (v: T) => botones.forEach((b, i) => b.setAttribute('aria-pressed', String(opciones[i].valor === v)))
+  let actual = inicial
+  const set = (v: T) => {
+    actual = v
+    botones.forEach((b, i) => b.setAttribute('aria-pressed', String(opciones[i].valor === v)))
+  }
+  // Volver a tocar la opción ya elegida no es un cambio: no avisa (si no, los labs reinician o descartan preguntas).
   const elegir = (v: T) => {
+    if (v === actual) return
     set(v)
     alElegir(v)
   }
