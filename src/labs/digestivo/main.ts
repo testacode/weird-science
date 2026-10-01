@@ -1,93 +1,61 @@
 import '../../ui/kit.css'
-import { interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, metrica, modal, segmentado } from '../../ui/componentes'
-import { h } from '../../ui/dom'
-import { grafico } from '../../ui/grafico'
+import './digestivo.css'
 import { prediccion } from '../../ui/prediccion'
-import { COMIDAS, COMO_FUNCIONA, GANCHO, RELATO, relatoFinal, type Comida } from './contenido'
+import { agregado, avanzar, foco, horasPorSegundo, nuevoFlujo, todosTerminaron, type Bocados } from './bocados'
+import { COMIDAS, type Comida } from './contenido'
+import { crearControles, VELOCIDADES, type Vista } from './controles'
 import { crearEscena } from './escena'
-import {
-  HORAS_TOTALES, KCAL_POR_GRAMO, MACROS, PASO_HORAS, SEGMENTOS, estadoInicial, kcalAbsorbidas, paso, phSegmento, type Config,
-} from './model'
+import { crearHud } from './hud'
+import { SEGMENTOS, phSegmento, type Config } from './model'
+import { leyendaPh } from './ph'
 import { preguntaPara, referencia, type Pregunta, type Respuesta } from './prediccion'
-
-/** Segundos reales que tarda cada órgano a velocidad 1×: el reloj se acelera distinto en cada uno. */
-const SEGUNDOS_POR_TRAMO = 7
-/** Cada cuántas horas simuladas se suma un punto al gráfico. */
-const MUESTREO_HORAS = 0.05
+import { h } from '../../ui/dom'
+import { instalarTeclado } from './teclado'
 
 const lab = document.querySelector<HTMLElement>('#lab')!
 let comida: Comida = COMIDAS[0]
 let config: Config = { bilis: true, acidoGastrico: true }
-let estado = estadoInicial(comida.gramos)
+let bocados: Bocados = 1
 let velocidad = 1
+let vista: Vista = 'normal'
 let corriendo = true
+let flujo = nuevoFlujo(comida.gramos, bocados)
+/** Reloj de animación: se frena con la pausa (vuelo de nutrientes, zoom). */
+let animacion = 0
 
 const escena = crearEscena(lab, SEGMENTOS.map((s) => s.nombre))
-escena.setComida(comida.gramos)
-
-// --- HUD izquierdo: título, métricas y relato en vivo ---
-const gancho = h('p', { class: 'gancho' })
-gancho.innerHTML = GANCHO
-const mTiempo = metrica('Tiempo')
-const mEnergia = metrica('Energía')
-const mPh = metrica('pH')
-const mDigerido = metrica('Digerido')
-mPh.el.classList.add('avanzado')
-const ahora = h('div', { class: 'panel ahora' })
-const curva = grafico(
-  [
-    { id: 'carbos', nombre: 'Carbos', color: 'ambar' },
-    { id: 'proteinas', nombre: 'Proteínas', color: 'magenta' },
-    { id: 'grasas', nombre: 'Grasas', color: 'cielo' },
-  ],
-  { titulo: 'Gramos absorbidos', unidadX: ' h', unidadY: 'g' },
-)
-let ultimoPunto = 0
-function reiniciarCurva() {
-  const mayor = Math.max(...MACROS.map((m) => comida.gramos[m]))
-  curva.limpiar({ xMax: HORAS_TOTALES, yMax: mayor })
-  curva.agregar(0, { carbos: 0, proteinas: 0, grasas: 0 })
-  ultimoPunto = 0
-}
-function sumarPunto() {
-  const n = estado.nutrientes
-  curva.agregar(estado.horas, { carbos: n.carbos.absorbido, proteinas: n.proteinas.absorbido, grasas: n.grasas.absorbido })
-  ultimoPunto = estado.horas
-}
-lab.append(
-  h('div', { class: 'hud hud-izq' },
-    h('a', { href: '../../', class: 'etiqueta' }, '← Weird Science'),
-    h('h1', { class: 'titulo' }, h('small', {}, 'Lab del sistema digestivo'), h('span', {}, 'De la boca a la sangre')),
-    gancho,
-    h('div', { class: 'metricas' }, mTiempo.el, mEnergia.el, mPh.el, mDigerido.el),
-    ahora,
-    curva.el,
-  ),
-)
-
-// --- Consola de controles ---
-const ayuda = modal()
-const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
-const reloj = h('span', { class: 'etiqueta' })
+escena.setComida(comida.gramos, bocados)
+const escalaPh = leyendaPh()
+const hud = crearHud(lab, [escalaPh.el])
+const pred = prediccion<Respuesta>(() => seguir(true))
+const controles = crearControles({ comida, config, velocidad, vista, bocados }, {
+  alternar,
+  reiniciar,
+  velocidad: cambiarVelocidad,
+  config: cambiarConfig,
+  vista: cambiarVista,
+  bocados: cambiarBocados,
+  comida: cambiarComida,
+})
+lab.append(h('div', { class: 'hud hud-der' }, controles.el, pred.el), controles.ayuda.el)
+hud.reiniciarCurva(comida, bocados)
 
 // --- Predecí antes de correr: al romper algo, la simulación espera la predicción ---
 let pregunta: Pregunta | null = null
-const pred = prediccion<Respuesta>(() => seguir(true))
 function seguir(va: boolean) {
   corriendo = va
-  botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
+  controles.botonPlay.textContent = va ? '⏸ Pausa' : '▶ Seguir'
 }
 function predecir() {
   pregunta = preguntaPara(config)
   if (!pregunta) return pred.ocultar()
   pred.preguntar(pregunta.texto, pregunta.opciones)
   corriendo = false
-  botonPlay.textContent = '▶ Saltar'
+  controles.botonPlay.textContent = '▶ Saltar'
 }
 function revelar() {
   if (!pregunta || !pred.enCurso) return
-  const r = pregunta.resolver(estado, referencia(comida.gramos))
+  const r = pregunta.resolver(agregado(flujo), referencia(comida.gramos))
   pred.revelar(r.correcta, r.explicacion)
 }
 
@@ -97,105 +65,76 @@ function alternar() {
     pregunta = null
     return seguir(true)
   }
-  if (estado.terminado) return reiniciar()
-  corriendo = !corriendo
-  botonPlay.textContent = corriendo ? '⏸ Pausa' : '▶ Seguir'
+  if (todosTerminaron(flujo)) return reiniciar()
+  seguir(!corriendo)
 }
 function reiniciar() {
-  estado = estadoInicial(comida.gramos)
-  escena.setComida(comida.gramos)
-  reiniciarCurva()
+  flujo = nuevoFlujo(comida.gramos, bocados)
+  escena.setComida(comida.gramos, bocados)
+  hud.reiniciarCurva(comida, bocados)
   seguir(true)
   predecir()
 }
 /** Romper algo (o tocar los controles con una predicción a la vista) reinicia el tránsito. */
 function cambiarConfig(clave: keyof Config, valor: boolean) {
   config = { ...config, [clave]: valor }
+  if (clave === 'bilis') controles.set.bilis(valor)
+  else controles.set.acido(valor)
   if (preguntaPara(config) || pregunta) reiniciar()
 }
-function interruptor(texto: string, clave: keyof Config) {
-  const s = segmentado(
-    [{ valor: 'si', texto: 'Sí' }, { valor: 'no', texto: 'No' }],
-    config[clave] ? 'si' : 'no',
-    (v) => cambiarConfig(clave, v === 'si'),
-  )
-  return { el: h('div', { class: 'interruptor' }, h('span', {}, texto), s.el), set: (on: boolean) => s.set(on ? 'si' : 'no') }
+function cambiarVelocidad(v: number) {
+  velocidad = v
+  controles.set.velocidad(v)
 }
-const bilis = interruptor('Bilis (vesícula)', 'bilis')
-const acido = interruptor('Ácido gástrico', 'acidoGastrico')
-escena.onVesicula(() => {
-  cambiarConfig('bilis', !config.bilis)
-  bilis.set(config.bilis)
+function cambiarBocados(n: Bocados) {
+  bocados = n
+  controles.set.bocados(n)
+  reiniciar()
+}
+function cambiarComida(id: Comida['id']) {
+  comida = COMIDAS.find((c) => c.id === id)!
+  reiniciar()
+}
+function cambiarVista(v: Vista) {
+  vista = v
+  escena.setVista(v === 'explotada')
+  controles.set.vista(v)
+}
+escena.onVesicula(() => cambiarConfig('bilis', !config.bilis))
+
+instalarTeclado({
+  alternar,
+  reiniciar,
+  velocidad: (i) => cambiarVelocidad(VELOCIDADES[i]),
+  bilis: () => cambiarConfig('bilis', !config.bilis),
+  acido: () => cambiarConfig('acidoGastrico', !config.acidoGastrico),
+  vista: () => cambiarVista(vista === 'normal' ? 'explotada' : 'normal'),
+  ayuda: () => (controles.ayuda.el.open ? controles.ayuda.el.close() : controles.abrirAyuda()),
+  modalAbierto: () => controles.ayuda.el.open,
 })
-
-lab.append(
-  h('div', { class: 'hud hud-der' },
-    h('div', { class: 'panel consola' },
-      h('div', { class: 'fila' }, botonPlay, h('button', { class: 'boton', type: 'button', onclick: reiniciar }, '↺ Otra vez'),
-        h('button', { class: 'boton', type: 'button', 'aria-label': 'Cómo funciona', onclick: () => ayuda.abrir(COMO_FUNCIONA) }, '?')),
-      grupo('Velocidad', segmentado([{ valor: '0.5', texto: '½×' }, { valor: '1', texto: '1×' }, { valor: '3', texto: '3×' }], '1', (v) => (velocidad = Number(v))).el),
-      reloj,
-      grupo('Comida', segmentado(COMIDAS.map((c) => ({ valor: c.id, texto: c.nombre })), comida.id, (id) => {
-        comida = COMIDAS.find((c) => c.id === id)!
-        reiniciar()
-      }).el),
-      grupo('Romper el sistema', h('div', { class: 'grupo' }, bilis.el, acido.el)),
-      interruptorAvanzado(),
-    ),
-    pred.el,
-  ),
-  ayuda.el,
-)
-
-reiniciarCurva()
-
-function horas(hs: number) {
-  const hh = Math.floor(hs)
-  const mm = Math.round((hs - hh) * 60)
-  return hh > 0 ? `${hh}<small>h</small> ${mm}` : `${mm}`
-}
-
-let relatoPrevio = ''
-function actualizarHud(horasPorSegundo: number) {
-  mTiempo.set(horas(estado.horas), 'min')
-  mEnergia.set(kcalAbsorbidas(estado.nutrientes).toFixed(0), 'kcal')
-  mPh.set(phSegmento(estado.segmento, config).toFixed(1))
-  const n = estado.nutrientes
-  const total = MACROS.reduce((s, m) => s + comida.gramos[m], 0)
-  const roto = MACROS.reduce((s, m) => s + n[m].digerido + n[m].absorbido, 0)
-  mDigerido.set(((roto / total) * 100).toFixed(0), '%')
-  reloj.textContent = corriendo && !estado.terminado ? `Reloj acelerado ×${Math.round(horasPorSegundo * 3600).toLocaleString('es-AR')}` : 'Reloj detenido'
-
-  const s = SEGMENTOS[estado.segmento]
-  const kcalTotal = MACROS.reduce((t, m) => t + comida.gramos[m] * KCAL_POR_GRAMO[m], 0)
-  const g = estado.nutrientes.grasas
-  const relato = estado.terminado
-    ? relatoFinal(kcalAbsorbidas(estado.nutrientes), kcalTotal, g.intacto + g.digerido)
-    : RELATO[s.id](s, estado, config, phSegmento(estado.segmento, config))
-  if (relato !== relatoPrevio) ahora.innerHTML = relatoPrevio = relato
-}
 
 let anterior = performance.now()
 function cuadro(t: number) {
   const dtReal = Math.min((t - anterior) / 1000, 0.1)
   anterior = t
-  const horasPorSegundo = (SEGMENTOS[estado.segmento].horas / SEGUNDOS_POR_TRAMO) * velocidad
   if (corriendo) {
-    let restante = dtReal * horasPorSegundo
-    while (restante > 0 && !estado.terminado) {
-      const dt = Math.min(restante, PASO_HORAS)
-      estado = paso(estado, config, dt)
-      restante -= dt
-    }
-    if (estado.horas - ultimoPunto >= MUESTREO_HORAS || (estado.terminado && estado.horas > ultimoPunto)) sumarPunto()
-    if (estado.terminado) {
+    animacion += dtReal
+    avanzar(flujo, config, dtReal, velocidad)
+    hud.muestrear(agregado(flujo))
+    if (todosTerminaron(flujo)) {
       corriendo = false
-      botonPlay.textContent = '↺ Repetir'
+      controles.botonPlay.textContent = '↺ Repetir'
       revelar()
     }
   }
-  actualizarHud(horasPorSegundo)
-  escena.dibujar(estado, config, t / 1000)
+  const estado = agregado(flujo)
+  escalaPh.set(phSegmento(estado.segmento, config))
+  controles.reloj.textContent =
+    corriendo && !estado.terminado
+      ? `Reloj acelerado ×${Math.round(horasPorSegundo(foco(flujo), velocidad) * 3600).toLocaleString('es-AR')}`
+      : 'Reloj detenido'
+  hud.actualizar(estado, config, comida)
+  escena.dibujar(flujo.estados, config, animacion)
   requestAnimationFrame(cuadro)
 }
 requestAnimationFrame(cuadro)
