@@ -1,6 +1,7 @@
 // Textos del lab. Todo el HTML de este archivo es estático y propio (se inyecta con innerHTML).
 
 import { av } from '../../ui/avanzado'
+import { fuentes } from '../../ui/fuentes'
 import { BRILLO_PELIGRO, R_CABLE, R_INTERNA, R_LAMPARA, V_NOMINAL, presentes, type Config, type Resultado } from './model'
 import { numero } from '../../ui/formato'
 
@@ -85,4 +86,8 @@ export const COMO_FUNCIONA = `
   <h3>Qué es real y qué no</h3>
   <p><b>Real:</b> ${av('la ley de Ohm (I = V ÷ R), las leyes de Kirchhoff (en serie la corriente es la misma y los voltajes se suman; en paralelo el voltaje es el mismo y las corrientes se suman) y la potencia P = V · I. ')}Si se corta un tramo en serie se apaga todo, la corriente de un cortocircuito es enorme y las pilas tienen resistencia interna.</p>
   <p><b>Simplificado:</b> la lamparita tiene una resistencia fija de ${R_LAMPARA} Ω (en una real crece mucho al calentarse) y es para ${num(V_NOMINAL)} V; el voltaje de la pila no baja al gastarse; los electrones van mucho más rápido que en la realidad (en un cable real avanzan unos milímetros por segundo: la energía llega rápido porque todos empujan a la vez); y mostramos el sentido de los electrones (− a +), mientras que en los libros la corriente se dibuja al revés. Las lamparitas incandescentes pierden casi toda la energía como calor; las LED rinden mucho mejor.</p>
-  <p>En una casa los artefactos se conectan en paralelo a 220 V de corriente alterna, con un tablero con llaves que cortan ante un cortocircuito. Modelo educativo: verificá los datos con tu docente o manual.</p>`
+  <p>En una casa los artefactos se conectan en paralelo a 220 V de corriente alterna, con un tablero con llaves que cortan ante un cortocircuito. Modelo educativo: verificá los datos con tu docente o manual.</p>
+  ${fuentes([
+  { texto: 'Energizer E95 (pila D), hoja de datos: 1,5 V por pila y resistencia interna de 173 mΩ.', url: 'https://assets.rs-online.com/v1698850014/Datasheets/fd367a14d9214aa9c2d082888803f824.pdf' },
+  { texto: 'Lamparita E10 de 4,5 V / 0,3 A / 1,35 W, la de los kits escolares de electricidad.', url: 'https://www.amazon.com/Miniature-Screw-Light-1-35W-Flashlight/dp/B076MGGHKS' },
+  ])}`

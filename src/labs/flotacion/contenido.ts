@@ -87,5 +87,6 @@ export const COMO_FUNCIONA = `
   { texto: 'The Engineering ToolBox, «Densities of Solids»: hielo, granito y acero.', url: 'https://www.engineeringtoolbox.com/density-solids-d_1265.html' },
   { texto: 'The Engineering ToolBox, «Wood Species - Densities»: madera de pino.', url: 'https://www.engineeringtoolbox.com/wood-density-d_40.html' },
   { texto: '«Polyethylene», Wikipedia: densidad del plástico de las tapitas.', url: 'https://en.wikipedia.org/wiki/Polyethylene' },
+  { texto: 'NASA NSSDCA, <i>Planetary Fact Sheets</i>: gravedad en la Tierra, Marte y la Luna.', url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/' },
   { texto: '«Physical quality of eggs of four strains of poultry», Redalyc: densidad del huevo.', url: 'https://www.redalyc.org/journal/3031/303168054052/html/' },
   ])}`

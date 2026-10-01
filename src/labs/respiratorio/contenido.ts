@@ -91,5 +91,6 @@ export const COMO_FUNCIONA = `
   { texto: 'Herrmann y otros, «2024 Adult Compendium of Physical Activities», <i>Journal of Sport and Health Science</i>: oxígeno que consume el cuerpo al correr.', url: 'https://pacompendium.com/running/' },
   { texto: 'Mismo Compendium, sección caminar: oxígeno que consume el cuerpo al caminar.', url: 'https://pacompendium.com/walking/' },
   { texto: 'Stock, Schisler y McSweeney, «The PaCO2 rate of rise in anesthetized patients with airway obstruction», <i>J Clin Anesth</i>, 1989: cuánto sube el CO₂ al no respirar.', url: 'https://pubmed.ncbi.nlm.nih.gov/2516732/' },
+  { texto: '«Alveolar gas equation» y «Hill equation (biochemistry)», Wikipedia: vapor de agua de las vías aéreas (47 mmHg) y coeficiente de Hill de la hemoglobina.', url: 'https://en.wikipedia.org/wiki/Alveolar_gas_equation' },
   { texto: 'MacIntosh y otros, <i>Open Textbook of Exercise Physiology</i>, cap. 7, LibreTexts: presión de O₂ de la sangre venosa.', url: 'https://med.libretexts.org/Bookshelves/Sports_and_Exercise/Open_Textbook_of_Exercise_Physiology_(MacIntosh)/02:_The_Fundamentals_of_Exercise_Physiology/2.05:_Chapter_7_-_Pulmonary_Function_Gas_Exchange_Between_the_Environment_and_Blood' },
   ])}`
