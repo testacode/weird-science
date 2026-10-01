@@ -1,0 +1,11 @@
+/* Ajustes propios del lab del eco, encima del kit. Ámbar = el grito que sale, magenta = el eco que vuelve, celeste = el sonómetro. */
+.hud-der .consola { gap: 8px; padding: 12px 14px; }
+.boton-gritar { background: var(--ambar); color: #0b1413; border-color: transparent; font-weight: 700; font-size: 15px; padding: 10px; }
+.boton-gritar:hover { background: #ffd981; }
+.deslizador .etiqueta { color: var(--marca); }
+.interruptor .segmentado { min-width: 130px; }
+.segmentado.compacto button { padding: 6px 2px; font-size: 12px; white-space: nowrap; }
+.boton:disabled { opacity: 0.45; cursor: default; }
+
+.pildora.p-fuente { color: var(--ambar); border-color: var(--ambar); }
+.pildora.p-eco { color: var(--magenta); border-color: var(--magenta); }
