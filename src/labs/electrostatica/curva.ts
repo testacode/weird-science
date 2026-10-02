@@ -3,8 +3,17 @@ import { grafico, type Serie } from '../../ui/grafico'
 import { RANGOS, resolver, type Config } from './model'
 
 const PUNTOS = 40
-/** Tope del gráfico de papelitos: sin él, la atracción cerca (miles de veces el peso) aplasta el umbral en 1. */
-const TECHO_PAPELITOS = 10
+/** Tope del gráfico de papelitos (veces el peso): sin él, la atracción cerca (miles de veces el peso) aplasta la línea del peso (1×) contra el cero. La leyenda muestra el valor real. */
+const TECHO_PAPELITOS = 4
+
+/** Distancias (cm) que se grafican. En papelitos va la curva completa, para ver dónde cruza el peso, y vuelve por la misma curva hasta la distancia actual: la leyenda muestra el último punto. */
+function distancias(c: Config, min: number, max: number): number[] {
+  const hasta = c.experimento === 'papelitos' ? c.dist.papelitos : Math.max(c.dist[c.experimento], min + 0.01)
+  const tramo = (a: number, b: number) => Array.from({ length: PUNTOS + 1 }, (_, i) => a + ((b - a) * i) / PUNTOS)
+  if (c.experimento !== 'papelitos') return tramo(min, hasta)
+  const completa = tramo(min, max)
+  return [...completa, ...completa.filter((d) => d > hasta).reverse(), hasta]
+}
 
 export function crearCurva() {
   const g = grafico([{ id: 'v', nombre: 'Fuerza', color: 'marca' }], { titulo: 'Fuerza según la distancia', unidadX: ' cm', unidadY: 'mN', alto: 100 })
@@ -28,9 +37,9 @@ export function crearCurva() {
         valor = (d) => ({ v: Math.abs(resolver(c, d).fuerza) * factor })
       } else if (c.experimento === 'papelitos') {
         series = [{ id: 'v', nombre: 'Atracción', color: 'marca' }, { id: 'peso', nombre: 'Peso', color: 'var(--apagado)' }]
-        titulo = 'Atracción sobre un papelito'
+        titulo = `Atracción sobre un papelito (hasta ${TECHO_PAPELITOS}×)`
         unidad = '× peso'
-        yMax = 4
+        yMax = TECHO_PAPELITOS
         yTecho = TECHO_PAPELITOS
         valor = (d) => ({ v: resolver(c, d).vecesPeso, peso: 1 })
       } else {
@@ -47,12 +56,7 @@ export function crearCurva() {
         g.cambiar(series, { titulo, unidadX: ' cm', unidadY: unidad, xMax: max, yMax, yTecho })
       }
       g.limpiar({ xMax: max, yMax })
-      // Se dibuja hasta la distancia actual: el valor de la leyenda es el del último punto.
-      const hasta = Math.max(c.dist[c.experimento], min + 0.01)
-      for (let i = 0; i <= PUNTOS; i++) {
-        const d = min + ((hasta - min) * i) / PUNTOS
-        g.agregar(d, valor(d))
-      }
+      for (const d of distancias(c, min, max)) g.agregar(d, valor(d))
     },
   }
 }
