@@ -303,3 +303,29 @@ Consultas en navegador real (agent-browser) el 2026-10-01, hechas por el agente 
   University of Iowa 5A10.15 — https://instructional-resources.physics.uiowa.edu/5a1015-triboelectric-series
   Wesleyan Physics Demos 5A10.15 — https://physicsdemos.site.wesleyan.edu/home/em/5a-electrostatics/5a10-15-triboelectric-series/
 - Parámetros: `Q_PUESTO` 15 nC por puesto (cargas de 15 a 255 nC); papelito de 3 mg y radio efectivo 0,7 cm con F = 2·k·a³·q²/d⁵ (esfera conductora; el factor (εr−1)/(εr+2) del papel queda absorbido en el radio); masa relativa 0,8–1,25; electroscopio η 0,02, d₀ 8 cm, hojas de 4 cm y 1,5 mg; cargas puntuales en el centro; frotado completo, sin humedad.
+
+## Volcanes (`src/labs/volcanes/model.ts` y `geometria.ts`)
+
+Consultas en navegador real (agent-browser) el 2026-10-01, hechas por el agente del lab.
+
+- Sílice por tipo de magma: basáltico 45–55 %, andesítico 55–65 %, riolítico 65–75 %. OK. El lab clasifica con los cortes 52 y 63 % (Wikipedia, Volcano). Presets 50 / 60 / 73 % (ejemplos de libro: 53,8 / 60,0 / 73,2; el 53,8 caería en andesítico con el clasificador).
+  Nelson, "Volcanoes, Magma, and Volcanic Eruptions", Tulane — https://www2.tulane.edu/~sanelson/Natural_Disasters/volcan&magma.htm
+  "Magma", Wikipedia (tabla de Philpotts y Ague 2009) — https://en.wikipedia.org/wiki/Magma
+  "Volcano", Wikipedia — https://en.wikipedia.org/wiki/Volcano
+- Temperatura de erupción: basáltico 1.000–1.200, andesítico 800–1.000, riolítico 650–800 °C (Tulane). El código usa 1.100 °C a 50 % y −18,75 °C por punto de sílice (puntos medios). OK.
+- Viscosidad: basalto 10–100 Pa·s, riolita fría hasta 10⁸ Pa·s (Wikipedia, Magma; Philpotts y Ague pp. 20 y 23). El código va de 10^1,5 (50 %) a 10^8 (73 %); lo intermedio es interpolación. Nelson da otros números (10⁴–10⁵ y 10⁶–10⁸ veces el agua).
+- Agua disuelta (Schmincke 2003, vía Wikipedia Magma): MORB 0,1–0,2 %, arco 2–4 %, andesitas de margen continental 2–5 %, riolitas hasta 7 %. Presets 0,5 / 4 / 5 % y rango 0,1–7 %. OK.
+- Efusivo contra explosivo según viscosidad y gas; el magma no viene del núcleo (Fe-Ni), se forma por descompresión o por agua. — Nelson (Tulane), misma URL.
+- Corteza oceánica ~5 km, continental ~30 km, litósfera ≥80 km, manto ~2.900 km. OK. — USGS, "Inside the Earth" — https://pubs.usgs.gov/gip/dynamic/inside.html
+- Velocidades: dorsal Atlántica ~2,5 cm/año, San Andrés ~5 cm/año; sismo de Bolivia 1994 a 636 km. OK. — USGS, "Understanding plate motions" — https://pubs.usgs.gov/gip/dynamic/understanding.html
+- Nazca 40–52 mm/año (código 4,6 cm/año, punto medio). — "Nazca Plate", Wikipedia — https://en.wikipedia.org/wiki/Nazca_Plate
+- Zona de Wadati–Benioff hasta ~670 km. — Wikipedia — https://en.wikipedia.org/wiki/Wadati%E2%80%93Benioff_zone
+- Arco volcánico sobre la placa a ~120 km (rango 60–173 km). Código 120 km. OK. — "Volcanic arc", Wikipedia — https://en.wikipedia.org/wiki/Volcanic_arc
+- Peridotita a ~100 km: funde a ~800 °C con agua contra ~1.500 °C seca. — "Igneous rock", Wikipedia — https://en.wikipedia.org/wiki/Igneous_rock
+- Fusión en dorsales: seca 0–60 km, húmeda 60–120 km, carbonatada 120–180 km. — Eilon y Abers 2017, *Science Advances* — https://pmc.ncbi.nlm.nih.gov/articles/PMC5443646/
+- ~19 km³/año de corteza nueva en dorsales, de 20–25 km³/año en el mundo. — "Mid-ocean ridge" y "Magma supply rate", Wikipedia — https://en.wikipedia.org/wiki/Mid-ocean_ridge
+- La gran mayoría de los sismos y erupciones, cerca de los bordes; Hawái a >3.200 km del borde más cercano. — USGS, "Hotspots" — https://pubs.usgs.gov/gip/dynamic/hotspots.html
+- Anillo de Fuego: ~2/3 de los volcanes del mundo. — "Ring of Fire", Wikipedia — https://en.wikipedia.org/wiki/Ring_of_Fire
+- Hawái y plumas (solo en el texto). — "Hawaii hotspot" y "Mantle plume", Wikipedia — https://en.wikipedia.org/wiki/Hawaii_hotspot
+- Parámetros: recta de viscosidad log₁₀η = 1,5 + 0,283·(SiO₂−50); explosividad 0–1 con gas 1 − e^(−agua/2) y corte de viscosidad 10^2,5 Pa·s, umbrales 0,3 y 0,6; producción por borde (solo el cero del transformante y el orden son datos); subducción a 45°; escalas de dibujo exageradas.
+- No verificados y no usados: fuente del Kīlauea a 80–100 km, Pacífico a 7,4 cm/año, proporciones de gas 0,5–2 / 5–8 %.
