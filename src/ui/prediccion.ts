@@ -1,5 +1,6 @@
 import { h } from './dom'
 import { interruptor, type Opcion } from './componentes'
+import { CAPTURA } from './captura'
 import { asomar } from './hud'
 
 const CLAVE = 'ws-preguntas'
@@ -7,6 +8,8 @@ const CLAVE = 'ws-preguntas'
 const abiertas = new Set<() => void>()
 
 function leer(): boolean {
+  // `?captura`: sin preguntas, sin tocar lo guardado.
+  if (CAPTURA) return false
   try {
     return localStorage.getItem(CLAVE) !== 'no'
   } catch {
