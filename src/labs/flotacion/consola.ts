@@ -1,11 +1,12 @@
 // Consola de controles: objeto, líquido, sal, tamaño, "romper el sistema" e info avanzada.
 
 import { av, interruptorAvanzado } from '../../ui/avanzado'
-import { grupo, interruptor, segmentado, type Opcion } from '../../ui/componentes'
+import { grupo, interruptor, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
+import { hex } from '../../ui/formato'
 import { interruptorPreguntas } from '../../ui/prediccion'
-import { COLOR_LIQUIDO, COLOR_OBJETO, hex } from './constantes'
+import { COLOR_LIQUIDO, COLOR_OBJETO } from './constantes'
 import { newtons, num } from './contenido'
 import {
   OBJETOS, ORDEN_OBJETOS, PLANETAS, SAL_MAR, SAL_MAX, VOLUMEN, dimensiones, densidadLiquido,
@@ -22,25 +23,25 @@ export interface Acciones {
 type Tipo = 'dulce' | 'salada' | 'aceite' | 'alcohol'
 const tipoDe = (c: Config): Tipo => (c.liquido === 'agua' ? (c.sal > 0 ? 'salada' : 'dulce') : c.liquido)
 
-/** Botonera con una muestra de color en cada botón. */
-function conMuestras<T extends string>(opciones: Opcion<T>[], colores: string[], inicial: T, alElegir: (v: T) => void, clase: string) {
-  const s = segmentado(opciones, inicial, alElegir)
-  s.el.classList.add('con-muestras', clase)
-  s.el.querySelectorAll('button').forEach((b, i) => b.style.setProperty('--muestra', colores[i]))
-  return s
-}
 
 export function crearConsola(a: Acciones, inicial: Config) {
   let config = inicial
-  const objeto = conMuestras(
-    ORDEN_OBJETOS.map((id) => ({ valor: id, texto: OBJETOS[id].nombre })),
-    ORDEN_OBJETOS.map((id) => hex(COLOR_OBJETO[id])), inicial.objeto, (v: IdObjeto) => a.cambiar({ objeto: v }), 'objetos',
+  const objeto = segmentado(
+    ORDEN_OBJETOS.map((id) => ({ valor: id, texto: OBJETOS[id].nombre, muestra: hex(COLOR_OBJETO[id]) })),
+    inicial.objeto, (v: IdObjeto) => a.cambiar({ objeto: v }),
   )
-  const liquido = conMuestras<Tipo>(
-    [{ valor: 'dulce', texto: 'Agua dulce' }, { valor: 'salada', texto: 'Agua salada' }, { valor: 'aceite', texto: 'Aceite' }, { valor: 'alcohol', texto: 'Alcohol' }],
-    [COLOR_LIQUIDO.agua, COLOR_LIQUIDO.agua, COLOR_LIQUIDO.aceite, COLOR_LIQUIDO.alcohol].map(hex), tipoDe(inicial),
-    (v) => a.cambiar(v === 'dulce' ? { liquido: 'agua', sal: 0 } : v === 'salada' ? { liquido: 'agua', sal: config.sal > 0 ? config.sal : SAL_MAR } : { liquido: v }), 'liquidos',
+  objeto.el.classList.add('objetos')
+  const liquido = segmentado<Tipo>(
+    [
+      { valor: 'dulce', texto: 'Agua dulce', muestra: hex(COLOR_LIQUIDO.agua) },
+      { valor: 'salada', texto: 'Agua salada', muestra: hex(COLOR_LIQUIDO.agua) },
+      { valor: 'aceite', texto: 'Aceite', muestra: hex(COLOR_LIQUIDO.aceite) },
+      { valor: 'alcohol', texto: 'Alcohol', muestra: hex(COLOR_LIQUIDO.alcohol) },
+    ],
+    tipoDe(inicial),
+    (v) => a.cambiar(v === 'dulce' ? { liquido: 'agua', sal: 0 } : v === 'salada' ? { liquido: 'agua', sal: config.sal > 0 ? config.sal : SAL_MAR } : { liquido: v }),
   )
+  liquido.el.classList.add('liquidos')
   const sal = deslizador({
     titulo: 'Agregar sal', min: 0, max: SAL_MAX, paso: 0.5, valor: inicial.sal, color: 'var(--cielo)', clase: 'sal',
     formato: (v) => `${num(v, 1)} %`,

@@ -104,6 +104,12 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 }
 .segmentado button:hover { color: var(--texto); }
 .segmentado button[aria-pressed='true'] { background: var(--texto); color: #0b1413; font-weight: 600; }
+/* Botones de un `segmentado` con `muestra` en sus opciones: un punto del color de cada opción. */
+.con-muestras button { white-space: nowrap; }
+.con-muestras button::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%;
+  background: var(--muestra); box-shadow: 0 0 5px var(--muestra);
+}
 
 .fila { display: flex; gap: 8px; }
 .boton {

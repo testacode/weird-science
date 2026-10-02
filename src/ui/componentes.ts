@@ -3,17 +3,21 @@ import { h } from './dom'
 export interface Opcion<T extends string> {
   valor: T
   texto: string
+  /** Color CSS: el botón de un `segmentado` lo muestra como un punto. */
+  muestra?: string
 }
 
-/** Botonera segmentada: una opción activa a la vez. */
+/** Botonera segmentada: una opción activa a la vez. Las opciones con `muestra` llevan un punto de color. `texto` cambia el rótulo de una opción. */
 export function segmentado<T extends string>(
   opciones: Opcion<T>[],
   inicial: T,
   alElegir: (v: T) => void,
-): { el: HTMLElement; set: (v: T) => void } {
-  const botones = opciones.map((o) =>
-    h('button', { type: 'button', 'aria-pressed': String(o.valor === inicial), onclick: () => elegir(o.valor) }, o.texto),
-  )
+): { el: HTMLElement; set: (v: T) => void; texto: (v: T, t: string) => void } {
+  const botones = opciones.map((o) => {
+    const b = h('button', { type: 'button', 'aria-pressed': String(o.valor === inicial), onclick: () => elegir(o.valor) }, o.texto)
+    if (o.muestra) b.style.setProperty('--muestra', o.muestra)
+    return b
+  })
   let actual = inicial
   const set = (v: T) => {
     actual = v
@@ -25,7 +29,12 @@ export function segmentado<T extends string>(
     set(v)
     alElegir(v)
   }
-  return { el: h('div', { class: 'segmentado', role: 'group' }, ...botones), set }
+  const texto = (v: T, t: string) => {
+    const i = opciones.findIndex((o) => o.valor === v)
+    if (i >= 0) botones[i].textContent = t
+  }
+  const conMuestras = opciones.some((o) => o.muestra)
+  return { el: h('div', { class: conMuestras ? 'segmentado con-muestras' : 'segmentado', role: 'group' }, ...botones), set, texto }
 }
 
 /** Fila de la consola: texto a la izquierda y un control a la derecha. */
@@ -56,10 +65,11 @@ function ajustar(valor: HTMLElement) {
   if (valor.scrollWidth > valor.clientWidth) valor.classList.add('dos-lineas')
 }
 
-/** Tarjeta de métrica con valor actualizable. Un valor largo se achica para no desbordar. */
-export function metrica(nombre: string): { el: HTMLElement; set: (valor: string, unidad?: string) => void } {
+/** Tarjeta de métrica con valor (y rótulo) actualizable. Un valor largo se achica para no desbordar. */
+export function metrica(nombre: string): { el: HTMLElement; set: (valor: string, unidad?: string) => void; rotulo: (t: string) => void } {
   const valor = h('b')
-  const el = h('div', { class: 'panel metrica' }, h('span', { class: 'etiqueta' }, nombre), valor)
+  const etiqueta = h('span', { class: 'etiqueta' }, nombre)
+  const el = h('div', { class: 'panel metrica' }, etiqueta, valor)
   // La fuente es monoespaciada: si el largo del texto no cambió, el ancho tampoco (no hace falta medir).
   let largo = -1
   return {
@@ -70,6 +80,9 @@ export function metrica(nombre: string): { el: HTMLElement; set: (valor: string,
       if (nuevo === largo || !valor.clientWidth) return
       largo = nuevo
       ajustar(valor)
+    },
+    rotulo: (t) => {
+      if (etiqueta.textContent !== t) etiqueta.textContent = t
     },
   }
 }

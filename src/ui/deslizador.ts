@@ -17,9 +17,14 @@ export interface OpcionesDeslizador {
   alCambiar: (v: number) => void
 }
 
-/** Deslizador con título, valor vivo y nota opcional. `set` lo mueve sin disparar `alCambiar`. */
+/**
+ * Deslizador con título, valor vivo y nota opcional. `set` lo mueve sin disparar `alCambiar`.
+ * `rango` cambia los límites y el paso (y reubica el valor); `rotulo`, el título.
+ */
 export function deslizador(o: OpcionesDeslizador) {
   const formato = o.formato ?? String
+  let { min, max } = o
+  const titulo = h('span', { class: 'etiqueta' }, o.titulo)
   const lectura = h('b')
   const nota = h('small')
   const input = h('input', {
@@ -33,10 +38,10 @@ export function deslizador(o: OpcionesDeslizador) {
   function pintar(v: number) {
     lectura.textContent = formato(v)
     if (o.nota) nota.innerHTML = o.nota(v)
-    input.style.setProperty('--p', `${((v - o.min) / (o.max - o.min)) * 100}%`)
+    input.style.setProperty('--p', `${((v - min) / (max - min)) * 100}%`)
   }
   const el = h('div', { class: `deslizador ${o.clase ?? ''}`.trim() },
-    h('div', { class: 'cabeza' }, h('span', { class: 'etiqueta' }, o.titulo), h('span', {}, lectura, o.nota && nota)),
+    h('div', { class: 'cabeza' }, titulo, h('span', {}, lectura, o.nota && nota)),
     input,
   )
   if (o.color) el.style.setProperty('--acento', o.color)
@@ -46,7 +51,18 @@ export function deslizador(o: OpcionesDeslizador) {
     input,
     set(v: number) {
       input.value = String(v)
-      pintar(v)
+      // Lo que quedó en el input (el navegador lo ajusta al rango y al paso).
+      pintar(Number(input.value))
+    },
+    rango(nuevoMin: number, nuevoMax: number, paso: number) {
+      min = nuevoMin
+      max = nuevoMax
+      Object.assign(input, { min: String(min), max: String(max), step: String(paso) })
+      pintar(Number(input.value))
+    },
+    rotulo(t: string) {
+      titulo.textContent = t
+      input.setAttribute('aria-label', t)
     },
   }
 }
