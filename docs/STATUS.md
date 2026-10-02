@@ -14,7 +14,7 @@
    - Circulatorio, respiratorio, estaciones y luna siguen con su propio `revelar`: los dos primeros guardan una foto del estado al responder (`antes`), que no está en `pred.datos`; estaciones y luna revelan "Sin predicción" al mover la línea de tiempo con la pregunta abierta, y `revisar()` exige una predicción hecha. Migrarlos pide decidir esos dos casos.
    - Sin uso hoy (se agregan cuando un lab los necesite): `segmentado` deshabilitado (volcanes usa `hidden`), deslizador logarítmico (sonido tiene el suyo, que se clava en las notas), `origen` y quitar en `crearPildoras` (volcanes reutiliza pastillas).
    - `cambiar()` + `cargar()` del gráfico dibujan dos veces al cambiar de series (barato; se evitaría con puntos opcionales en `cambiar`).
-3. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
+3. **Portada:** loop de video por lab (descartado por ahora: los posters alcanzan). Posters más lindos en eco, electrostática y luna (objetos chicos, mucho fondo): encuadre propio para `?captura` o una acción antes de la foto (en eco, gritar). "Energía" está en 12 de 18 labs: el recorrido por tema se diluye; revisar los tags.
 4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
 5. **Detalles:**
    - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
@@ -30,6 +30,7 @@
 
 ## Hecho reciente
 
+- 2026-10-02 — Portada: selector "Por eje (NAP) / Por tema" (vista en el hash `#temas` y en localStorage) y un poster por lab en cada tarjeta (tarjetas de 400 px mínimo). Los posters salen de `scripts/posters.sh` (modo `?captura`: solo la escena 3D, sin preguntas) y viven en `src/posters/`; la portada importa solo los que existen.
 - 2026-10-02 — Kit K4: opciones `resolver` y `pred.revisar()` en la predicción; 11 labs sin su `revelar` propio (célula, ciclo del agua, eco, electrostática, partículas, sonido, volcanes, flotación, fotosíntesis, digestivo, mezclas). Mezclas: "Separar" con la pregunta abierta la deja de lado.
 - 2026-10-02 — Kit K3: `grafico.cargar(puntos)` dibuja una curva calculada de una vez (estaciones pasó de ~95 redibujos por cambio a 1); migrados 7 labs.
 - 2026-10-02 — Kit K2: `Opcion.muestra` (punto de color), `segmentado.texto`, `metrica.rotulo`, `deslizador.rango` y `rotulo`, `hex` en `ui/formato`; migrados electrostática, eco, flotación, luz y fotosíntesis.

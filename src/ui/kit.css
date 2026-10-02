@@ -23,6 +23,8 @@
 * { box-sizing: border-box; }
 /* El atributo `hidden` gana siempre: `.fila`, `.deslizador`, `.grupo`… declaran su propio display. */
 [hidden] { display: none !important; }
+/* `?captura` (ui/captura.ts): solo la escena 3D, para los posters de la portada. */
+.captura .lab > :not(canvas) { display: none !important; }
 
 body {
   margin: 0;
