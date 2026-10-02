@@ -3,6 +3,7 @@
 // no hay una cuenta que finja decidir. La lección va en el texto, el reveal muestra los números del momento y el orden de las opciones se mezcla.
 
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { cargaTexto, cientifica, conSigno, de, fuerzaTexto, mayus, neg, nombreDe, num, pos } from './contenido'
 import { DIST_PREGUNTA_PAPEL, MASA_RELATIVA, RANGOS, electrones, polaridad, resolver, type Config } from './model'
@@ -16,15 +17,6 @@ export interface Pregunta {
   /** Distancia (cm) a la que queda el experimento al responder. */
   distancia?: number
   resolver: () => { correcta: Respuesta; explicacion: string }
-}
-
-function mezclar<T>(lista: T[]): T[] {
-  const r = [...lista]
-  for (let i = r.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[r[i], r[j]] = [r[j], r[i]]
-  }
-  return r
 }
 
 function preguntaFrotar(c: Config): Pregunta {

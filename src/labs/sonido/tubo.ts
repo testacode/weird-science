@@ -1,6 +1,7 @@
 // Un tubo de 10 m de un medio: fuente (pistón) a la izquierda, partículas adentro y un micrófono-anillo.
 
 import * as THREE from 'three'
+import { mezclar } from '../../ui/azar'
 import { L_TUBO, medio, senal, type Config, type Estado, type MedioId } from './model'
 import { U_POR_M, campo, golpe, tono, visibilidad } from './onda'
 
@@ -35,11 +36,7 @@ function posiciones(id: MedioId): number[][] {
     lista.push([((i + Math.random()) / n) * L_U, r * Math.cos(a), r * Math.sin(a)])
   }
   // El aire se vacía quitando partículas del final de la lista: que no sea siempre del lado derecho.
-  for (let i = lista.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[lista[i], lista[j]] = [lista[j], lista[i]]
-  }
-  return lista
+  return mezclar(lista)
 }
 
 export function crearTubo(id: MedioId, y: number) {

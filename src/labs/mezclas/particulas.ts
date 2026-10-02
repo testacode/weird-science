@@ -2,6 +2,7 @@
 // una región (vaso, origen o salida de la estación) acomodada en capas por densidad; cuando el modelo
 // dice que ya salió, vuela por la ruta de la estación hasta la región de salida.
 import * as THREE from 'three'
+import { mezclar } from '../../ui/azar'
 import { ESPECIES } from './datos'
 import { BOCA_VASO, VASO } from './estaciones'
 import type { Corrida, Lectura } from './model'
@@ -93,7 +94,7 @@ export function crearParticulas(scene: THREE.Scene) {
     let i = 0
     cuentas.forEach((k, pi) => {
       // Rangos estratificados y mezclados: lo que sale en cada momento se reparte parejo entre las partículas.
-      const orden = Array.from({ length: k }, (_, j) => (j + 0.5) / k).sort(() => Math.random() - 0.5)
+      const orden = mezclar(Array.from({ length: k }, (_, j) => (j + 0.5) / k))
       for (let j = 0; j < k; j++, i++) {
         porcion[i] = pi
         rango[i] = orden[j]

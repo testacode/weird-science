@@ -67,12 +67,14 @@ button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 .hud-izq { top: 20px; left: 20px; width: min(380px, calc(100vw - 40px)); display: grid; gap: 10px; }
 .hud-der { top: 20px; right: 20px; width: 330px; display: grid; gap: 10px; }
 /* Si la columna no entra en la ventana, hace scroll. `hud()` marca `.mas-abajo` y aparece la pista al pie. */
+/* `--franja`: alto de la pista "más ↓"; `asomar` (hud.ts) la descuenta. */
 .hud-izq, .hud-der {
+  --franja: 38px;
   max-height: calc(100vh - 40px); overflow-y: auto; overscroll-behavior: contain;
   scrollbar-width: thin; scrollbar-color: rgba(190, 255, 220, 0.22) transparent;
 }
 .hud.mas-abajo::after {
-  content: 'más ↓'; position: sticky; bottom: 0; z-index: 1; height: 38px; margin-top: -48px;
+  content: 'más ↓'; position: sticky; bottom: 0; z-index: 1; height: var(--franja); margin-top: calc(-10px - var(--franja));
   display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px; pointer-events: none;
   font: 600 10px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--marca);
   background: linear-gradient(to bottom, transparent, rgba(7, 16, 15, 0.92) 70%);

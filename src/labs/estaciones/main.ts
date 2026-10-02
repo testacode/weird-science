@@ -147,11 +147,6 @@ function revisarPrediccion(desdeElJuego: boolean) {
   }
   const r = datos.pregunta.resolver(datos.eps)
   pred.revelar(r.correcta, r.explicacion)
-  // En pantallas bajas la tarjeta queda debajo de la consola: se desplaza solo el HUD (con scrollIntoView se movería toda la página).
-  const columna = pred.el.parentElement!
-  const { offsetTop: arriba, offsetHeight: alto } = pred.el
-  const entra = arriba >= columna.scrollTop && arriba + alto <= columna.scrollTop + columna.clientHeight
-  if (!entra) columna.scrollTo({ top: Math.max(0, Math.min(arriba + alto - columna.clientHeight + 56, arriba - 10)), behavior: 'smooth' })
 }
 /** La pregunta se armó para otra inclinación: se retira (la respuesta no coincidiría con lo que se vio). */
 function descartarPregunta() {

@@ -3,6 +3,7 @@
 // - volcanes: depende del borde (producción de magma: cero solo en el transformante).
 // - erupcion: depende del magma (explosividad); se pregunta solo con los magmas de referencia, lejos de los cortes.
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { exp10, num } from './contenido'
 import {
@@ -19,15 +20,6 @@ export interface Pregunta {
   /** Lo que se ve en pantalla ya coincide con el veredicto. */
   listo: (e: Estado) => boolean
   resolver: () => { correcta: Respuesta; explicacion: string }
-}
-
-function mezclar<T>(lista: T[]): T[] {
-  const a = [...lista]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
 }
 
 const NOMBRE_BORDE: Record<Borde, string> = {

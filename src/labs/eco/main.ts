@@ -94,7 +94,6 @@ function revelar() {
   if (!pred.listo || !d) return
   const r = resolver(d)
   pred.revelar(r.correcta, r.explicacion)
-  mostrarTarjeta()
 }
 /** Qué se pregunta antes de este grito (o `null` si va directo). */
 function elegir(): Datos | null {
@@ -126,11 +125,7 @@ function gritar() {
   const d = elegir()
   if (!d) return lanzar()
   const p = armar(d)
-  if (pred.preguntar(p.texto, p.opciones, d)) mostrarTarjeta()
-}
-/** La tarjeta queda abajo de la consola: se acerca para que se vea la pregunta y el veredicto. */
-function mostrarTarjeta() {
-  pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  pred.preguntar(p.texto, p.opciones, d)
 }
 
 // --- Cambios de la config ---
