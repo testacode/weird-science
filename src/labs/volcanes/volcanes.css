@@ -1,0 +1,29 @@
+/* Estilos propios del lab de volcanes. Los colores salen de las variables del kit. */
+
+/* Qué decide la erupción */
+.decide { padding: 10px 14px 12px; display: grid; gap: 7px; }
+.barra-fila { display: grid; grid-template-columns: 108px 1fr 44px; align-items: center; gap: 8px; font: 600 11px/1 var(--mono); }
+.barra-fila .nombre { white-space: nowrap; }
+.barra-fila .barra { height: 7px; border-radius: 99px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.barra-fila .barra i { display: block; height: 100%; border-radius: 99px; background: currentColor; transition: width 0.2s; }
+.barra-fila .valor { text-align: right; color: var(--apagado); }
+.metrica b sup { font-size: 0.7em; }
+
+/* Consola compacta */
+.hud-der .consola { gap: 10px; padding: 12px 14px; }
+.hud-der .interruptor .segmentado button { padding: 4px 8px; }
+.nota-borde { margin: 0; font-size: 12px; color: var(--apagado); }
+.consola .nota { margin: 0; font-size: 13px; color: var(--apagado); }
+.deslizador.silice .etiqueta { color: var(--cielo); }
+.deslizador.gas .etiqueta { color: var(--ambar); }
+
+/* Rótulos del corte */
+.pildora.capa { color: var(--apagado); font-style: italic; }
+.pildora.lugar { color: var(--texto); }
+
+@media (max-height: 940px) {
+  .hud-der .consola { gap: 6px; padding: 9px 12px; }
+  .hud-der .deslizador input[type='range'] { height: 16px; }
+  .hud-der .prediccion { padding: 10px 12px; gap: 6px; }
+  .hud-der .prediccion .boton { padding: 6px 10px; }
+}
