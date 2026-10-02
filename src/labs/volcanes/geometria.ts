@@ -31,8 +31,6 @@ export interface Geo {
   flechas: { p: [number, number, number]; dir: [number, number, number] }[]
   /** Dónde nace un sismo: devuelve un punto del corte. */
   sismo: () => Pt
-  /** Altura de la superficie en x (para apoyar rótulos y flechas). */
-  superficie: number
 }
 
 const COLOR = { oceanica: 0x2c3a3c, continental: 0x7d6c52, manto: 0x5c4636, astenosfera: 0x7a2c12, placa: 0x35586a }
@@ -72,7 +70,6 @@ function divergente(): Geo {
     camara: { x: 0, y: fondo - 0.5, rx: 0.34, ry: 0.15 },
     flechas: [{ p: [-2.6, 0.12, -0.5], dir: [-1, 0, 0] }, { p: [2.6, 0.12, -0.5], dir: [1, 0, 0] }],
     sismo: () => [aleatorio(-0.5, 0.5), aleatorio(fondo - 0.1, fondo - 0.45)],
-    superficie: fondo,
   }
 }
 
@@ -108,7 +105,6 @@ function convergente(): Geo {
       const x = aleatorio(XT, XT + (-0.3 - FONDO_Y - 1))
       return [x, placa(x) - aleatorio(0.05, 0.9)]
     },
-    superficie: TOPE,
   }
 }
 
@@ -126,7 +122,6 @@ function transformante(): Geo {
     camara: null,
     flechas: [{ p: [-2.4, 0.1, 0.4], dir: [0, 0, 1] }, { p: [2.4, 0.1, -1.6], dir: [0, 0, -1] }],
     sismo: () => [aleatorio(-0.15, 0.15), -aleatorio(0.05, 15 * K)],
-    superficie: 0,
   }
 }
 

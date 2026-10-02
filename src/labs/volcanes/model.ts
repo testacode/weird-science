@@ -16,10 +16,13 @@ export interface Config {
 /** Rangos de los deslizadores. Sílice: de los basaltos (≥45 %) a las riolitas (≤75 %); agua: de los basaltos de dorsal (0,1 %) a las riolitas (hasta 7 %). */
 export const LIMITES = { silice: [45, 75], gas: [0.1, 7] } as const
 
-/** Magmas de referencia: sílice del ejemplo de libro (basalto 53,8 / andesita 60,0 / riolita 73,2 %); el agua cae dentro de los rangos de Schmincke (2003). */
+/**
+ * Magmas de referencia: sílice típica de cada tipo (basalto 50 %, dentro de 45–52 %; andesita 60,0 y riolita 73,2 % como en el ejemplo de libro,
+ * redondeada la riolita) y agua dentro de los rangos de Schmincke (2003): isla toleítica 0,3–0,6; andesitas de margen continental 2–5; riolitas hasta 7 %.
+ */
 export const PRESETS: Record<TipoMagma, { silice: number; gas: number }> = {
   basaltico: { silice: 50, gas: 0.5 },
-  andesitico: { silice: 60, gas: 3.5 },
+  andesitico: { silice: 60, gas: 4 },
   riolitico: { silice: 73, gas: 5 },
 }
 
@@ -58,9 +61,6 @@ export const FUSION: Record<Borde, Fusion> = {
   transformante: { mecanismo: 'ninguno', origenKm: 0, produccion: 0, velocidad: 5, tipico: null },
 }
 
-/** Sismos más profundos del borde, en km (Wadati–Benioff: hasta 670 km; los otros bordes, poco profundos). */
-export const SISMOS_MAX_KM: Record<Borde, number | null> = { divergente: null, convergente: 670, transformante: null }
-
 export function tipoMagma(silice: number): TipoMagma {
   return silice < 52 ? 'basaltico' : silice < 63 ? 'andesitico' : 'riolitico'
 }
@@ -76,14 +76,14 @@ export function temperatura(silice: number): number {
 }
 
 /**
- * Qué tan explosiva es la erupción, de 0 a 1. El gas hace falta (sin gas no hay explosión) y la
- * viscosidad decide si las burbujas escapan (magma fluido) o quedan atrapadas (magma pastoso). Parámetros del modelo.
+ * Qué tan explosiva es la erupción, de 0 a 1. El gas hace falta (sin gas no hay explosión) y suma en todo el rango, con rendimientos
+ * decrecientes; la viscosidad decide si las burbujas escapan (magma fluido) o quedan atrapadas (magma pastoso). Parámetros del modelo.
  */
-const GAS_REFERENCIA = 3
-const VISCOSIDAD_CORTE = 3
+const GAS_ESCALA = 2
+const VISCOSIDAD_CORTE = 2.5
 export function explosividad(silice: number, gas: number): number {
   const atrapa = 1 / (1 + Math.exp(-(logViscosidad(silice) - VISCOSIDAD_CORTE) / 0.7))
-  return Math.min(gas / GAS_REFERENCIA, 1) * (0.1 + 0.9 * atrapa)
+  return (1 - Math.exp(-gas / GAS_ESCALA)) * (0.1 + 0.9 * atrapa)
 }
 
 export function tipoErupcion(e: number): Erupcion {

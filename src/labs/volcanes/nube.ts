@@ -4,7 +4,7 @@ import * as THREE from 'three'
 
 export interface Particula {
   x: number; y: number; z: number
-  vx: number; vy: number; vz: number
+  vx: number; vy: number
   edad: number; vida: number
   tam: number
   r: number; g: number; b: number; a: number
@@ -14,7 +14,7 @@ export interface Particula {
   u: number; v: number
 }
 
-const nueva = (): Particula => ({ x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, edad: 0, vida: 0, tam: 0, r: 1, g: 1, b: 1, a: 1, tipo: 0, u: 0, v: 0 })
+const nueva = (): Particula => ({ x: 0, y: 0, z: 0, vx: 0, vy: 0, edad: 0, vida: 0, tam: 0, r: 1, g: 1, b: 1, a: 1, tipo: 0, u: 0, v: 0 })
 
 function sprite(): THREE.CanvasTexture {
   const c = document.createElement('canvas')
@@ -99,10 +99,9 @@ export function crearNube(scene: THREE.Scene, max: number, aditiva: boolean) {
       geometria.attributes.aColor.needsUpdate = true
       geometria.attributes.aTam.needsUpdate = true
     },
-    /** Píxeles por unidad a distancia 1, para que el tamaño sea en unidades de la escena. */
-    escala(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera) {
-      const alto = renderer.getDrawingBufferSize(new THREE.Vector2()).y
-      material.uniforms.escala.value = alto / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)))
+    /** Píxeles por unidad a distancia 1, para que el tamaño sea en unidades de la escena (se recalcula al cambiar el tamaño). */
+    escala(valor: number) {
+      material.uniforms.escala.value = valor
     },
     limpiar() {
       pool.forEach((p) => (p.edad = p.vida))

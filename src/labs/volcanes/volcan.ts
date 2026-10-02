@@ -33,6 +33,7 @@ export function crearVolcan(scene: THREE.Scene, brillo: Nube, humo: Nube) {
   let forma = perfil(0)
   let etaForma = -1
   let activo = false
+  let mostrando = true
   let limites = { izq: -Infinity, der: Infinity }
   let fraccion = { lava: 0, fuente: 0, ceniza: 0, bomba: 0 }
   const material = new THREE.MeshStandardMaterial({ color: 0x4a3f36, roughness: 0.95, side: THREE.DoubleSide })
@@ -68,11 +69,16 @@ export function crearVolcan(scene: THREE.Scene, brillo: Nube, humo: Nube) {
   return {
     colocar(volcan: { x: number; base: number; izq: number; der: number } | null) {
       activo = volcan !== null
-      grupo.visible = activo
+      grupo.visible = activo && mostrando
       if (volcan) {
         grupo.position.set(volcan.x, volcan.base, 0)
         limites = { izq: volcan.izq, der: volcan.der }
       }
+    },
+    /** Esconde o muestra el volcán (mientras una pregunta espera, el borde sin volcán no tiene que delatarse). */
+    mostrar(si: boolean) {
+      mostrando = si
+      grupo.visible = activo && si
     },
     /** Cuánto del conducto se ve prendido (0 → 1) mientras el magma sube. */
     conducto(v: number) {
@@ -92,7 +98,7 @@ export function crearVolcan(scene: THREE.Scene, brillo: Nube, humo: Nube) {
       const ritmos = {
         lava: 26 * I * (1 - rampa(e, 0.25, 0.7)),
         fuente: 22 * I * (0.35 + 0.65 * Math.min(1, e / 0.4)) * (1 - rampa(e, 0.55, 0.9)),
-        ceniza: 70 * I * rampa(e, 0.12, 0.6),
+        ceniza: 70 * I * rampa(e, 0.3, 0.6),
         bomba: 7 * I * rampa(e, 0.45, 0.9),
       }
       for (const k of ['lava', 'fuente', 'ceniza', 'bomba'] as const) {
@@ -160,13 +166,6 @@ export function crearVolcan(scene: THREE.Scene, brillo: Nube, humo: Nube) {
         default:
           return false
       }
-    },
-    quitar() {
-      scene.remove(grupo)
-      cuerpo.children.forEach((o) => o instanceof THREE.Mesh && o.geometry.dispose())
-      material.dispose()
-      corte.dispose()
-      conductoMaterial.dispose()
     },
     /** Rebobina la erupción (cambió el borde o el magma). */
     reiniciar() {

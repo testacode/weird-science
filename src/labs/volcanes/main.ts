@@ -20,6 +20,8 @@ const CLARIDAD_MINIMA = 0.15
 const lab = document.querySelector<HTMLElement>('#lab')!
 let config: Config = { ...CONFIG_INICIAL }
 let estado: Estado = estadoInicial()
+/** Composición que se muestra (cono, métrica y barra de erupción): se congela mientras espera la pregunta de la erupción, para no adelantar la respuesta. */
+let vista = { silice: config.silice, gas: config.gas }
 
 const escena = crearEscena(lab)
 
@@ -89,7 +91,9 @@ const borde = segmentado<Borde>(
   config.borde,
   (b) => {
     pred.ocultar()
-    config = { ...config, borde: b }
+    // Cada borde trae su magma típico (el transformante no tiene: conserva el actual). Cargarlo no abre otra pregunta: la del borde ya es una.
+    const tipico = FUSION[b].tipico
+    config = { ...config, borde: b, ...(tipico ? PRESETS[tipico] : {}) }
     estado = estadoInicial()
     escena.cambiarBorde(b)
     sincronizar()
@@ -97,10 +101,14 @@ const borde = segmentado<Borde>(
   },
 )
 const notaBorde = h('p', { class: 'nota-borde' })
-const magma = segmentado<TipoMagma>(
+/** El magma de referencia elegido, o `otro` si se movió algún deslizador (así cualquier referencia se puede volver a elegir). */
+const presetActivo = (c: Config): TipoMagma | 'otro' =>
+  (Object.keys(PRESETS) as TipoMagma[]).find((t) => PRESETS[t].silice === c.silice && PRESETS[t].gas === c.gas) ?? 'otro'
+const magma = segmentado<TipoMagma | 'otro'>(
   [{ valor: 'basaltico', texto: 'Basalto' }, { valor: 'andesitico', texto: 'Andesita' }, { valor: 'riolitico', texto: 'Riolita' }],
-  tipoMagma(config.silice),
+  presetActivo(config),
   (t) => {
+    if (t === 'otro') return
     pred.ocultar()
     config = { ...config, ...PRESETS[t] }
     estado = { ...estado, erupcion: 0 }
@@ -124,16 +132,12 @@ const gas = deslizador({
 const sinMagma = h('p', { class: 'nota' }, 'Sin magma no hay composición que elegir.')
 const grupoMagma = grupo('Magma', h('div', { class: 'grupo' }, magma.el, silice.el, gas.el))
 
-/** Deja todo lo que se ve en pantalla igual que `config`. */
+/** Deja los controles iguales que `config`. El resto (métricas, notas) lo sigue `actualizarHud`. */
 function sincronizar() {
   borde.set(config.borde)
-  magma.set(tipoMagma(config.silice))
+  magma.set(presetActivo(config))
   silice.set(config.silice)
   gas.set(config.gas)
-  const hayMagma = FUSION[config.borde].produccion > 0
-  grupoMagma.hidden = !hayMagma
-  sinMagma.hidden = hayMagma
-  notaBorde.textContent = { divergente: 'Borde divergente: dorsal oceánica', convergente: 'Borde convergente: subducción', transformante: 'Borde transformante: falla' }[config.borde]
 }
 sincronizar()
 
@@ -155,26 +159,40 @@ lab.append(
 
 preguntar(preguntaOrigen(config))
 
+const NOTA_BORDE = { divergente: 'Borde divergente: dorsal oceánica', convergente: 'Borde convergente: subducción', transformante: 'Borde transformante: falla' }
+const NOTA_TIPICO = { basaltico: 'basalto', andesitico: 'andesita', riolitico: 'riolita' }
+
+let hudClave = ''
 let relatoPrevio = ''
 let ultimoRelato = 0
+/** Con una pregunta abierta nada de lo que se ve da la respuesta: origen, erupción y "sin magma" quedan en "?". Solo toca el DOM si algo cambió. */
 function actualizarHud(t: number) {
+  const espera = pred.pendiente
   const f = FUSION[config.borde]
-  const e = explosividad(config.silice, config.gas)
   const hayMagma = f.produccion > 0
-  decide.hidden = !hayMagma
-  mOrigen.set(hayMagma ? num(f.origenKm, 0) : '—', hayMagma ? 'km' : '')
-  mTemp.set(hayMagma ? num(temperatura(config.silice), 0) : '—', hayMagma ? '°C' : '')
-  mVisc.set(hayMagma ? `10<sup>${exp10(logViscosidad(config.silice))}</sup>` : '—', hayMagma ? 'Pa·s' : '')
-  mErupcion.set(hayMagma ? NOMBRE_ERUPCION[tipoErupcion(e)] : '—')
-  barras.visc.style.width = `${Math.max(viscosidadNormal(config.silice) * 100, 2)}%`
-  barras.gas.style.width = `${Math.max((config.gas / LIMITES.gas[1]) * 100, 2)}%`
-  barras.expl.style.width = `${Math.max(e * 100, 2)}%`
-  valores.visc.textContent = `10^${exp10(logViscosidad(config.silice))}`
-  valores.gas.textContent = `${num(config.gas, 1)}%`
-  valores.expl.textContent = num(e, 2)
+  const clave = [config.borde, config.silice, config.gas, vista.silice, vista.gas, espera].join('|')
+  if (clave !== hudClave) {
+    hudClave = clave
+    const conMagma = hayMagma || espera
+    const e = explosividad(vista.silice, vista.gas)
+    decide.hidden = !conMagma
+    grupoMagma.hidden = !conMagma
+    sinMagma.hidden = conMagma
+    notaBorde.textContent = NOTA_BORDE[config.borde] + (f.tipico && !espera ? `. Magma típico: ${NOTA_TIPICO[f.tipico]}` : '')
+    mOrigen.set(espera ? '?' : hayMagma ? num(f.origenKm, 0) : '—', !espera && hayMagma ? 'km' : '')
+    mTemp.set(conMagma ? num(temperatura(config.silice), 0) : '—', conMagma ? '°C' : '')
+    mVisc.set(conMagma ? `10<sup>${exp10(logViscosidad(config.silice))}</sup>` : '—', conMagma ? 'Pa·s' : '')
+    mErupcion.set(espera ? '?' : hayMagma ? NOMBRE_ERUPCION[tipoErupcion(e)] : '—')
+    barras.visc.style.width = `${Math.max(viscosidadNormal(config.silice) * 100, 2)}%`
+    barras.gas.style.width = `${Math.max((config.gas / LIMITES.gas[1]) * 100, 2)}%`
+    barras.expl.style.width = espera ? '0' : `${Math.max(e * 100, 2)}%`
+    valores.visc.textContent = `10^${exp10(logViscosidad(config.silice))}`
+    valores.gas.textContent = `${num(config.gas, 1)}%`
+    valores.expl.textContent = espera ? '?' : num(e, 2)
+  }
   if (t - ultimoRelato < 150) return
   ultimoRelato = t
-  const texto = relato(estado, config)
+  const texto = relato(estado, config, espera)
   if (texto !== relatoPrevio) ahora.innerHTML = relatoPrevio = texto
 }
 
@@ -182,10 +200,13 @@ let anterior = performance.now()
 function cuadro(t: number) {
   const dt = Math.max(0, Math.min((t - anterior) / 1000, 0.1))
   anterior = t
-  if (!pred.pendiente) estado = paso(estado, config, dt)
+  const espera = pred.pendiente
+  const esperaErupcion = espera && pred.datos?.pregunta.id === 'erupcion'
+  if (!esperaErupcion) vista = { silice: config.silice, gas: config.gas }
+  if (!espera) estado = paso(estado, config, dt)
   revelar()
   actualizarHud(t)
-  escena.dibujar(estado, config, t / 1000)
+  escena.dibujar(estado, vista, dt, !espera || esperaErupcion)
   requestAnimationFrame(cuadro)
 }
 requestAnimationFrame(cuadro)

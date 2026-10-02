@@ -53,7 +53,6 @@ export function crearFlujo(scene: THREE.Scene, brillo: Nube) {
       geo = g
       borde = b
       ruta = g.conducto
-      brillo.limpiar()
       acum = { manto: 0, placa: 0, agua: 0, magma: 0, sismo: 0 }
     },
     /** `fusion` (0 → 1) manda cuándo empieza a subir el magma; el manto, la placa, el agua y los sismos corren siempre. */
@@ -143,13 +142,6 @@ export function crearFlujo(scene: THREE.Scene, brillo: Nube) {
         ;(a.m.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - k)
         if (k >= 1) a.m.visible = false
       }
-    },
-    quitar() {
-      anillos.forEach((a) => {
-        scene.remove(a.m)
-        a.m.geometry.dispose()
-        ;(a.m.material as THREE.Material).dispose()
-      })
     },
   }
 }

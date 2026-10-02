@@ -103,8 +103,8 @@ export function preguntaErupcion(c: Config): Pregunta {
       const correcta = tipoErupcion(e)
       const dato = `Con <b>${num(c.silice, 0)} %</b> de sílice el magma tiene <b>${potencia(c.silice)}</b> (unas ${num(vecesAgua(c.silice), 0)} veces el agua) a ~${num(temperatura(c.silice), 0)} °C, y lleva <b>${num(c.gas, 1)} %</b> de agua.`
       const porQue = {
-        efusiva: 'Es fluido y casi sin gas: las burbujas escapan sin romper nada y la lava corre por las laderas. Por eso los volcanes de basalto, como los de Hawái, forman coladas y no explotan.',
-        explosiva: 'Es pastoso y con mucho gas: las burbujas no pueden escapar, la presión crece y al llegar arriba la espuma revienta y rompe el magma en ceniza y fragmentos. Es lo típico de los volcanes andesíticos y de las riolitas. No todos los volcanes explotan: depende del magma.',
+        efusiva: `Es fluido${c.gas < 1 ? ' y casi no tiene gas:' : ` y, aunque lleva ${num(c.gas, 1)} % de agua,`} las burbujas escapan sin romper nada y la lava corre por las laderas. Por eso los volcanes de basalto, como los de Hawái, forman coladas y no explotan.`,
+        explosiva: 'Es pastoso y lleva gas: las burbujas no pueden escapar, la presión crece y al llegar arriba la espuma revienta y rompe el magma en ceniza y fragmentos. Es lo típico de los volcanes andesíticos y de las riolitas. No todos los volcanes explotan: depende del magma.',
         mixta: 'Su viscosidad y su gas están a medio camino: la lava sale en fuentes y parte se fragmenta en ceniza.',
       }[correcta]
       return { correcta, explicacion: `${dato} ${porQue}${av(` Explosividad del modelo: ${num(e, 2)} de 1.`)}` }

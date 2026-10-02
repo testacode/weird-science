@@ -41,6 +41,8 @@ export function crearEscena(contenedor: HTMLElement) {
   let polarObjetivo = POLAR.normal
   let inclinando = false
   controles.addEventListener('start', () => (inclinando = false))
+  const brillo = crearNube(scene, 1600, true)
+  const humo = crearNube(scene, 700, false)
   encuadrarEntreHuds(camera, contenedor, ({ libre, alto }) => {
     const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
     const distancia = Math.max((ANCHO_MUNDO * alto) / (Math.max(libre, 420) * 2 * tanV), ALTO_MUNDO / (2 * tanV)) * 1.04
@@ -49,15 +51,15 @@ export function crearEscena(contenedor: HTMLElement) {
     controles.minDistance = distancia * 0.55
     controles.maxDistance = distancia * 1.3
     scene.fog = new THREE.Fog(FONDO, distancia + 20, distancia + 60)
+    // Tamaño de las partículas en unidades de la escena: píxeles de alto por unidad a distancia 1.
+    const escala = (alto * renderer.getPixelRatio()) / (2 * tanV)
+    brillo.escala(escala)
+    humo.escala(escala)
   })
-
-  const brillo = crearNube(scene, 1600, true)
-  const humo = crearNube(scene, 700, false)
   const flujo = crearFlujo(scene, brillo)
   const volcan = crearVolcan(scene, brillo, humo)
   let bloque: Bloque | null = null
   let geo: Geo = GEO.convergente()
-  let borde: Borde = 'convergente'
 
   // Rótulos HTML anclados al corte.
   const rotulos = crearPildoras(contenedor, camera)
@@ -101,7 +103,6 @@ export function crearEscena(contenedor: HTMLElement) {
 
   function cambiarBorde(b: Borde) {
     bloque?.quitar()
-    borde = b
     geo = GEO[b]()
     bloque = crearBloque(scene, b, geo)
     flujo.colocar(geo, b)
@@ -113,27 +114,23 @@ export function crearEscena(contenedor: HTMLElement) {
     polarObjetivo = b === 'transformante' ? POLAR.transformante : POLAR.normal
     inclinando = true
   }
-  cambiarBorde(borde)
+  cambiarBorde('convergente')
 
-  let anterior = 0
   return {
     cambiarBorde,
-    /** `ahora` en segundos reales. */
-    dibujar(e: Estado, c: Config, ahora: number) {
-      const dt = THREE.MathUtils.clamp(ahora - anterior, 0, 0.1)
-      anterior = ahora
+    /** `dt` en segundos reales. `magma` es la composición que se muestra; `mostrarVolcan` lo esconde mientras una pregunta no se respondió. */
+    dibujar(e: Estado, magma: Pick<Config, 'silice' | 'gas'>, dt: number, mostrarVolcan: boolean) {
+      volcan.mostrar(mostrarVolcan)
       bloque?.actualizar(e.fusion)
       volcan.conducto(rampa(e.fusion, 0.5, 0.9))
       flujo.emitir(dt, e.fusion)
-      volcan.emitir(dt, { nivel: e.erupcion, e: explosividad(c.silice, c.gas), eta: viscosidadNormal(c.silice) })
+      volcan.emitir(dt, { nivel: e.erupcion, e: explosividad(magma.silice, magma.gas), eta: viscosidadNormal(magma.silice) })
       const mover = (p: Parameters<typeof flujo.mover>[0], paso: number) => {
         if (!flujo.mover(p, paso)) volcan.mover(p, paso)
       }
       brillo.paso(dt, mover)
       humo.paso(dt, mover)
       flujo.anillos(dt)
-      brillo.escala(renderer, camera)
-      humo.escala(renderer, camera)
       zona.el.hidden = geo.fusion.length === 0 || e.fusion < 0.4
       if (inclinando) {
         const desde = camera.position.clone().sub(controles.target)
@@ -145,9 +142,6 @@ export function crearEscena(contenedor: HTMLElement) {
       controles.update()
       rotulos.ubicar()
       render()
-    },
-    get borde() {
-      return borde
     },
   }
 }

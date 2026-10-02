@@ -9,17 +9,24 @@ import { FUSION, PROFUNDIDAD, explosividad, tipoErupcion, tipoMagma, type Config
 export const num = numero
 
 /** Exponente de la viscosidad: sin decimal cuando es redondo (10⁸ y no 10⁸,0). */
-export const exp10 = (l: number) => num(l, Number.isInteger(l) ? 0 : 1)
+export const exp10 = (l: number) => {
+  const r = Math.round(l * 10) / 10
+  return num(r, Number.isInteger(r) ? 0 : 1)
+}
 
 export const NOMBRE_MAGMA = { basaltico: 'basáltico', andesitico: 'andesítico', riolitico: 'riolítico' } as const
 export const NOMBRE_ERUPCION = { efusiva: 'efusiva', mixta: 'mixta', explosiva: 'explosiva' } as const
 
 export const GANCHO = `Un corte de la Tierra hasta ${PROFUNDIDAD.corte} km de profundidad. Cuando las placas se <span class="c-cielo">separan</span>, <span class="c-ambar">chocan</span> o se <span class="c-magenta">rozan</span>, a veces la roca se funde y nace un volcán. ¿De dónde sale ese magma? ¿Y por qué algunos volcanes explotan y otros solo largan lava?`
 
-/** Frase de lo que pasa "ahora", según el borde, el avance del experimento y el magma. */
-export function relato(e: Estado, c: Config): string {
+/** Frase de lo que pasa "ahora", según el borde, el avance del experimento y el magma. Con una pregunta abierta, no adelanta el resultado. */
+export function relato(e: Estado, c: Config, preguntaAbierta: boolean): string {
   const f = FUSION[c.borde]
   const v = `${num(f.velocidad, Number.isInteger(f.velocidad) ? 0 : 1)} cm por año`
+  if (preguntaAbierta) {
+    const mov = { divergente: 'Las placas se separan', convergente: 'Una placa se hunde bajo la otra', transformante: 'Las placas se rozan' }[c.borde]
+    return `<strong>${mov}</strong> (~${v}). Elegí una respuesta y mirá qué pasa.`
+  }
   if (c.borde === 'transformante') {
     return `<strong>Las placas se rozan</strong> (~${v}). No sube manto ni entra agua, así que <span class="c-magenta">no se forma magma</span>. La roca se traba, acumula tensión y se rompe en <span class="c-magenta">sismos poco profundos</span>.`
   }
@@ -37,7 +44,7 @@ export function relato(e: Estado, c: Config): string {
   const tipo = tipoErupcion(explosividad(c.silice, c.gas))
   if (e.erupcion < 0.3) return `<strong>El magma llega arriba.</strong> Es un magma ${magma}: ahora depende de cuán viscoso es y de cuánto gas lleva.`
   return {
-    efusiva: `<strong>Erupción efusiva.</strong> Magma ${magma} fluido y casi sin gas: las burbujas escapan, la <span class="c-ambar">lava</span> corre por las laderas y el volcán se vuelve ancho y bajo.`,
+    efusiva: `<strong>Erupción efusiva.</strong> Magma ${magma} fluido${c.gas < 1 ? ' y casi sin gas' : ` (aunque lleva ${num(c.gas, 1)} % de agua)`}: las burbujas escapan, la <span class="c-ambar">lava</span> corre por las laderas y el volcán se vuelve ancho y bajo.`,
     mixta: `<strong>Erupción mixta.</strong> Magma ${magma} a medio camino: fuentes de <span class="c-ambar">lava</span> y algo de ceniza.`,
     explosiva: `<strong>Erupción explosiva.</strong> Magma ${magma} pastoso con gas atrapado: la presión revienta el magma y lanza <span class="c-ambar">ceniza y fragmentos</span> en una columna alta. El volcán es empinado.`,
   }[tipo]
@@ -55,7 +62,7 @@ export const COMO_FUNCIONA = `
   </ul>
   <h3>Controles</h3>
   <ul>
-    <li><b>Borde:</b> elegí cómo se mueven las placas.</li>
+    <li><b>Borde:</b> elegí cómo se mueven las placas. El magma pasa al típico de ese borde (dorsal: basalto; subducción: andesita) y después podés cambiarlo.</li>
     <li><b>Magma:</b> basáltico, andesítico o riolítico. Cambian la <b>sílice</b> (SiO₂, % del peso) y el <b>agua disuelta</b>; podés ajustarlos por separado.</li>
     <li>Más sílice, más <b>viscosidad</b> (el magma fluye peor)${av(' (de unos 10–100 Pa·s en un basalto a ~10⁸ Pa·s en una riolita fría; el agua tiene 0,001 Pa·s)')}. Con el magma pastoso y con gas, las burbujas no escapan: la presión crece y revienta.</li>
   </ul>
@@ -73,5 +80,7 @@ export const COMO_FUNCIONA = `
     { texto: 'Eilon y Abers (2017), <i>Science Advances</i>: fusión bajo una dorsal (seca 0–60 km, húmeda 60–120 km)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5443646/' },
     { texto: 'Volcanic arc, Wikipedia: el arco se forma sobre la placa a ~120 km (60–173 km)', url: 'https://en.wikipedia.org/wiki/Volcanic_arc' },
     { texto: 'Igneous rock, Wikipedia: la peridotita funde a ~800 °C con agua y a ~1.500 °C sin agua, a ~100 km', url: 'https://en.wikipedia.org/wiki/Igneous_rock' },
+    { texto: 'Mid-ocean ridge y Magma supply rate, Wikipedia: ~2,7 km²/año de piso nuevo × 7 km de corteza ≈ 19 km³/año en las dorsales; 20–25 km³/año de magma en todo el planeta', url: 'https://en.wikipedia.org/wiki/Mid-ocean_ridge' },
+    { texto: 'Nazca plate, Wikipedia: velocidad de 40–52 mm/año (borde convergente del lab)', url: 'https://en.wikipedia.org/wiki/Nazca_Plate' },
     { texto: 'Ring of Fire, Wikipedia: 750–915 volcanes, ~2/3 del total mundial', url: 'https://en.wikipedia.org/wiki/Ring_of_Fire' },
   ])}`
