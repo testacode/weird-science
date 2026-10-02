@@ -95,7 +95,6 @@ function revelar() {
   if (!datos || !pred.enCurso) return
   const r = datos.pregunta.resolver(datos.config)
   pred.revelar(r.correcta, r.explicacion)
-  pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 }
 function alternar() {
   if (pred.pendiente) return pred.saltar()
@@ -120,8 +119,7 @@ function aplicar(parcial: Partial<Config>) {
   if (nueva && !yaPreguntada) {
     // Con las preguntas apagadas, el kit suelta directo (vía `saltar`).
     if (!pred.preguntar(nueva.texto, nueva.opciones, { pregunta: nueva, config })) return
-    soltar(true)
-    return pred.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    return soltar(true)
   }
   const esperaba = pred.pendiente
   pred.ocultar()

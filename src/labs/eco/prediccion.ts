@@ -3,6 +3,7 @@
 // La tercera ("¿siempre hay eco?") se resuelve con magnitudes continuas: tiempo de ida y vuelta contra 0,1 s y nivel del eco contra el ruido.
 
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { numero } from '../../ui/formato'
 import { UMBRAL, distanciaMinima, ms } from './contenido'
@@ -21,15 +22,6 @@ export interface Datos {
 }
 
 const el = (c: Config) => (c.superficie === 'fondo' ? 'el fondo del mar' : `la ${superficie(c.superficie).nombre.toLowerCase()}`)
-
-function mezclar<T>(lista: T[]): T[] {
-  const m = [...lista]
-  for (let i = m.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[m[i], m[j]] = [m[j], m[i]]
-  }
-  return m
-}
 
 /** Texto y opciones (en orden al azar) de la pregunta. */
 export function armar(d: Datos): { texto: string; opciones: Opcion<Respuesta>[] } {

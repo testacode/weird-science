@@ -1,5 +1,6 @@
 import { h } from './dom'
 import { interruptor, type Opcion } from './componentes'
+import { asomar } from './hud'
 
 const CLAVE = 'ws-preguntas'
 /** Predicciones de la página: al apagar las preguntas, cada una salta la que tenga abierta. */
@@ -136,6 +137,8 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
         botonSaltar.hidden = !t
       }
       el.hidden = false
+      // Con la columna del HUD en scroll, la tarjeta puede quedar abajo, fuera de vista.
+      asomar(el)
       return true
     },
     /** Programa el reveal: se cancela solo si la tarjeta se oculta o llega otra pregunta. */
@@ -154,6 +157,7 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
       el.classList.add(elegida === null ? 'sin-respuesta' : acerto ? 'acierto' : 'error')
       const veredicto = elegida === null ? 'Sin predicción' : acerto ? '¡Acertaste!' : 'No era esa'
       resultado.innerHTML = `<p class="veredicto">${veredicto}</p><p>${explicacion}</p>`
+      asomar(resultado)
     },
     ocultar,
     /** Saltea la pregunta abierta, como el botón "Saltar". */

@@ -1,6 +1,7 @@
 // Preguntas de "Predecí antes de correr". La respuesta sale del modelo: se resuelve el equilibrio
 // (o la rotura) y se mide el volumen final; no está escrita a mano.
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { numero } from '../../ui/formato'
 import { V_ROTURA, osmolaridad } from './constantes'
@@ -71,8 +72,6 @@ const preguntaDestino = (ent: Entorno): Pregunta => ({
     return { correcta: l.forma, explicacion: EXPLICACION[l.forma](e, l.v, l.presion) }
   },
 })
-
-const mezclar = <T>(lista: T[]): T[] => lista.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x)
 
 /** Para el mito "la sal entra y la arruga": lo que cruza la membrana en el primer instante. */
 const preguntaCruza = (ent: Entorno): Pregunta => ({

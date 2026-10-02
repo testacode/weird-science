@@ -2,6 +2,7 @@
 // (tiempos de llegada y niveles calculados, no escritos a mano). Se resuelven con las magnitudes continuas.
 
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { numero } from '../../ui/formato'
 import { AIRE_MIN, L_TUBO, MEDIOS, P_ATM, UMBRAL_DB, golpeTerminado, llegada, medio, nivelAire, oido, vacioLogrado, type Config, type Estado } from './model'
@@ -84,16 +85,6 @@ const BOMBA: Pregunta = {
       explicacion: `${hecho}${causa}${persona} En el agua y el acero no hace falta aire, solo un medio.${av(' La presión sonora es p = ρ · c · v, con v la velocidad de las partículas: con la misma vibración y la misma c (que en el aire no depende de la presión), p baja junto con la densidad ρ.')}`,
     }
   },
-}
-
-/** Orden al azar: la opción correcta no tiene posición fija. */
-function mezclar<T>(lista: T[]): T[] {
-  const m = [...lista]
-  for (let i = m.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[m[i], m[j]] = [m[j], m[i]]
-  }
-  return m
 }
 
 export const preguntaPara = (tipo: Pregunta['tipo']): Pregunta => {
