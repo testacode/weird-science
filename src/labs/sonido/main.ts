@@ -86,6 +86,7 @@ const pred = prediccion<Respuesta, { pregunta: Pregunta; datos: Datos }>(() => {
   saltar: (d) => d && hacer(d.pregunta.tipo),
   textoSaltar: 'Saltar y hacerlo igual',
   listo: (d) => d.pregunta.listo(config, estado),
+  resolver: (d) => d.pregunta.resolver(d.datos),
 })
 function descartarPendiente() {
   if (pred.pendiente) pred.ocultar()
@@ -103,12 +104,6 @@ function hacer(tipo: Pregunta['tipo']) {
 function preguntar(tipo: Pregunta['tipo']) {
   const p = preguntaPara(tipo)
   pred.preguntar(p.texto, p.opciones, { pregunta: p, datos: { distancia: config.distancia, amplitud: config.amplitud, frecuencia: frecuenciaOida(config) } })
-}
-function revelar() {
-  const d = pred.datos
-  if (!pred.listo || !d) return
-  const r = d.pregunta.resolver(d.datos)
-  pred.revelar(r.correcta, r.explicacion)
 }
 /** Un cambio que se contradice con lo que la pregunta abierta supone la descarta. */
 function invalidar(cambio: Partial<Config>) {
@@ -222,7 +217,7 @@ function cuadro(t: number) {
     const rel = (id: MedioId) => (config.amplitud > 0 ? senal(id, config, estado.aire, estado.golpe!) / config.amplitud : 0)
     curva.agregar(estado.golpe * 1000, { aire: rel('aire'), agua: rel('agua'), acero: rel('acero') })
   }
-  revelar()
+  pred.revisar()
   sonar(previo)
   actualizarHud(t)
   escena.dibujar(config, estado, corriendo, t)

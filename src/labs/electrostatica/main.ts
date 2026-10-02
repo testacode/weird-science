@@ -91,13 +91,8 @@ const pred = prediccion<Respuesta, Datos>(() => pred.datos && ejecutar(pred.dato
   textoSaltar: 'Saltar y hacerlo igual',
   listo: ({ intencion }) =>
     intencion === 'frotar' ? !frote : intencion === 'duplicar' ? !animacion && escena.asentada() : escena.papeles.pegados >= escena.papeles.total * 0.8,
+  resolver: (d) => d.pregunta.resolver(),
 })
-/** Cuando lo que se ve coincide con lo que se corrige, se revela (se llama en cada cuadro). */
-function revelar() {
-  if (!pred.listo || !pred.datos) return
-  const { correcta, explicacion } = pred.datos.pregunta.resolver()
-  pred.revelar(correcta, explicacion)
-}
 /** Si la config cambia, la pregunta abierta (o ya respondida y sin revelar) deja de valer. */
 const descartarPendiente = () => (pred.pendiente || pred.enCurso) && pred.ocultar()
 
@@ -272,7 +267,7 @@ function cuadro(t: number) {
     aplicar({ ...config, dist: { ...config.dist, [exp]: desde + (hasta - desde) * e } }, true)
     if (!animacion) sincronizar()
   }
-  revelar()
+  pred.revisar()
   if (escena.papeles.pegados !== pegadosPrevio) {
     pegadosPrevio = escena.papeles.pegados
     refrescar()

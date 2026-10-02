@@ -10,15 +10,10 @@
 ## Backlog
 
 1. **Próxima ola de labs:** sin definir (ver `docs/temario.md`).
-2. **Kit, pedidos de las olas 5 y 6:**
-   - La tarjeta de predicción queda fuera de vista cuando la columna derecha hace scroll (célula, imanes y electrostática en una ventana de 727 px de alto): `preguntar` debería hacer `scrollIntoView({ block: 'nearest' })`.
-   - `mezclar` (orden de opciones al azar) copiado en sonido, eco, electrostática y volcanes: llevarlo al kit.
-   - Rótulo de `metrica` y texto de una opción de `segmentado` actualizables (electrostática los toca por DOM); `rango` actualizable en `deslizador` (eco lo recrea); `crearPildoras` sin forma de cambiar `origen` ni quitar pastillas (volcanes).
-   - Pensar `resolver` + `pred.revisar()` en el kit para sacar las 6 líneas de `revelar` que repite cada lab (cambia la API).
-   - Pasar a la opción `listo` (+ `if (!pred.listo) return` en el `revelar` del lab) los labs que todavía deciden el reveal a mano en el loop: flotación (`terminado`), circulatorio, respiratorio y fotosíntesis (ventana de tiempo), digestivo, mezclas (`progreso`), estaciones y luna (`tRevela`).
-   - `grafico.cargar(puntos)` para dibujar de una vez (sonido, estaciones).
-   - `segmentado` con estado deshabilitado; `deslizador` logarítmico y deshabilitado.
-   - Botones con muestra de color (luz, flotación) como componente.
+2. **Kit, lo que queda:**
+   - Circulatorio, respiratorio, estaciones y luna siguen con su propio `revelar`: los dos primeros guardan una foto del estado al responder (`antes`), que no está en `pred.datos`; estaciones y luna revelan "Sin predicción" al mover la línea de tiempo con la pregunta abierta, y `revisar()` exige una predicción hecha. Migrarlos pide decidir esos dos casos.
+   - Sin uso hoy (se agregan cuando un lab los necesite): `segmentado` deshabilitado (volcanes usa `hidden`), deslizador logarítmico (sonido tiene el suyo, que se clava en las notas), `origen` y quitar en `crearPildoras` (volcanes reutiliza pastillas).
+   - `cambiar()` + `cargar()` del gráfico dibujan dos veces al cambiar de series (barato; se evitaría con puntos opcionales en `cambiar`).
 3. **Portada:** poster y loop de video por lab (como sael.net), y recorridos transversales por tema (energía, ciclos, sistemas; los tags ya están en cada `meta.ts`).
 4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
 5. **Detalles:**
@@ -26,7 +21,7 @@
    - sonido: franja negra arriba de la escena;
    - célula: con la vegetal sin pared al borde de la rotura, el reveal puede tardar ~71 s a 1× (espera el equilibrio real);
    - preguntas al borde de su umbral (imanes "alejar al doble" con banda muerta; luz, lápiz en aceite a 20° da 66 % contra la vara de 2/3);
-   - estaciones: `llenarCurva` redibuja el gráfico una vez por punto (~95 veces por cambio de ciudad o modo); un `cargar(puntos)` en el kit lo dejaría en una;
+   - fotosíntesis: con la pregunta del verde abierta el reloj del experimento sigue (marca 2:00 al responder) y el reveal sale al instante (pasa igual en `main` antes del kit K4);
    - estaciones: mover la inclinación con la pregunta sin responder la descarta pero deja el año en pausa (ciclo del agua, en el mismo caso, sigue corriendo);
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
    - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
@@ -35,6 +30,10 @@
 
 ## Hecho reciente
 
+- 2026-10-02 — Kit K4: opciones `resolver` y `pred.revisar()` en la predicción; 11 labs sin su `revelar` propio (célula, ciclo del agua, eco, electrostática, partículas, sonido, volcanes, flotación, fotosíntesis, digestivo, mezclas). Mezclas: "Separar" con la pregunta abierta la deja de lado.
+- 2026-10-02 — Kit K3: `grafico.cargar(puntos)` dibuja una curva calculada de una vez (estaciones pasó de ~95 redibujos por cambio a 1); migrados 7 labs.
+- 2026-10-02 — Kit K2: `Opcion.muestra` (punto de color), `segmentado.texto`, `metrica.rotulo`, `deslizador.rango` y `rotulo`, `hex` en `ui/formato`; migrados electrostática, eco, flotación, luz y fotosíntesis.
+- 2026-10-02 — Kit K1: `asomar(el)` en `ui/hud` (la tarjeta de predicción y su resultado se ven aunque la columna haga scroll, sin mover la página) y `mezclar` en `ui/azar` (7 copias, una con sort sesgado).
 - 2026-10-01 — Ola 6: eco, electrostática y volcanes (18 labs), cada uno con code review, arreglos del mismo agente y prueba en CDP; fuentes integradas en `docs/fuentes.md`.
 - 2026-10-01 — Kit: opción `listo` de `prediccion` y getter `pred.listo` (hay predicción en curso y la pantalla ya muestra lo que se corrige); célula, sonido, partículas y ciclo del agua migrados (`resolver` corre una sola vez). `[hidden] { display: none !important }` global en `kit.css` y fuera los parches (10 en labs y 3 en el kit).
 - 2026-10-01 — Kit de predicción: modo libre (interruptor "Preguntas" junto a "Info avanzada", en localStorage), `revelarEn` (el timer lo cancela la tarjeta), botón "Saltar y hacerlo igual" en la tarjeta y `saltar(datos)` como único camino para seguir sin predecir; los 15 labs migrados.
