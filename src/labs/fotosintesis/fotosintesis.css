@@ -7,12 +7,6 @@
 .deslizador.co2 .etiqueta { color: var(--magenta); }
 .deslizador.luz .etiqueta { color: var(--luz); }
 
-/* Muestra del color de la luz dentro de cada botón */
-.colores button::before {
-  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%;
-  background: var(--muestra); box-shadow: 0 0 6px var(--muestra);
-}
-
 /* Qué frena a la planta */
 .factores { padding: 10px 14px 12px; display: grid; gap: 7px; }
 .factor { display: grid; grid-template-columns: 92px 1fr 38px; align-items: center; gap: 8px; font: 600 11px/1 var(--mono); }

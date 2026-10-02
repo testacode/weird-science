@@ -19,4 +19,3 @@ export const COLOR_EMPUJE = 0x5ec8ff
 export const COLOR_LIQUIDO: Record<IdLiquido, number> = { agua: 0x35a4de, aceite: 0xffc857, alcohol: 0xb9a8ff }
 export const COLOR_AGUA_SALADA = 0x2f95b8
 
-export const hex = (c: number) => `#${c.toString(16).padStart(6, '0')}`

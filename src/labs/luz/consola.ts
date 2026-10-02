@@ -5,6 +5,7 @@ import { interruptorPreguntas } from '../../ui/prediccion'
 import { fila, grupo, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
+import { hex } from '../../ui/formato'
 import { num } from './contenido'
 import { ANGULO_MAX, MEDIOS, N_AIRE, sinDesvio, N_INVENTADO, OJO_MAX, ORDEN_MEDIOS, type Config, type Desde, type Escena, type IdMedio } from './model'
 import { COLOR_MEDIO } from './maqueta'
@@ -34,11 +35,10 @@ export function crearConsola(a: Acciones, inicial: Config) {
   })
   const desde = segmentado<Desde>([{ valor: 'aire', texto: 'En el aire' }, { valor: 'medio', texto: 'Adentro del medio' }], inicial.desde, (v) => a.cambiar({ desde: v }))
   const medios = segmentado<IdMedio>(
-    ORDEN_MEDIOS.map((id) => ({ valor: id, texto: id === 'inventado' ? 'Inventado' : MEDIOS[id].nombre })),
+    ORDEN_MEDIOS.map((id) => ({ valor: id, texto: id === 'inventado' ? 'Inventado' : MEDIOS[id].nombre, muestra: hex(COLOR_MEDIO[id]) })),
     inicial.medio, (v) => a.cambiar({ medio: v }),
   )
   medios.el.classList.add('medios')
-  medios.el.querySelectorAll('button').forEach((b, i) => b.style.setProperty('--muestra', `#${COLOR_MEDIO[ORDEN_MEDIOS[i]].toString(16).padStart(6, '0')}`))
   const giro = segmentado(GIROS.map((g) => ({ valor: String(g), texto: g === 0 ? 'Derecho' : `${g}°` })), String(inicial.espejo), (v) => a.cambiar({ espejo: Number(v) }))
   const nInventado = deslizador({
     titulo: 'Índice inventado', min: N_INVENTADO.min, max: N_INVENTADO.max, paso: 0.01, valor: inicial.nInventado, color: 'var(--magenta)',

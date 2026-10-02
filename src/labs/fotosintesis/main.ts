@@ -4,6 +4,7 @@ import { interruptorAvanzado } from '../../ui/avanzado'
 import { grupo, interruptor, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
+import { hex } from '../../ui/formato'
 import { grafico } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
 import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
@@ -174,16 +175,14 @@ function rango(clave: keyof typeof LIMITES) {
 const COLORES_UI: { valor: ColorLuz; texto: string }[] = [
   { valor: 'blanca', texto: 'Blanca' }, { valor: 'roja', texto: 'Roja' }, { valor: 'azul', texto: 'Azul' }, { valor: 'verde', texto: 'Verde' },
 ]
-const color = segmentado(COLORES_UI, config.color, (c) => aplicar({ color: c }))
-color.el.classList.add('colores')
-color.el.querySelectorAll('button').forEach((b, i) => b.style.setProperty('--muestra', `#${LUZ_HEX[COLORES_UI[i].valor].toString(16).padStart(6, '0')}`))
+const color = segmentado(COLORES_UI.map((c) => ({ ...c, muestra: hex(LUZ_HEX[c.valor]) })), config.color, (c) => aplicar({ color: c }))
 
 const apagar = interruptor('Apagar la luz', false, (si) => aplicar({ encendida: !si }))
 /** Deja todo lo que se ve en pantalla igual que `config` (también cuando el cambio vino de otro control). */
 function sincronizar() {
   color.set(config.color)
   apagar.set(!config.encendida)
-  document.documentElement.style.setProperty('--luz', `#${LUZ_HEX[config.color].toString(16).padStart(6, '0')}`)
+  document.documentElement.style.setProperty('--luz', hex(LUZ_HEX[config.color]))
 }
 sincronizar()
 

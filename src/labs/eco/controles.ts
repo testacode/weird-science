@@ -41,26 +41,17 @@ export function crearControles(inicial: Config, m: Manejadores) {
   const modo = segmentado<Modo>([{ valor: 'explorar', texto: 'Explorar' }, { valor: 'medir', texto: 'Medir' }], inicial.modo, (v) => m.pedir({ modo: v }))
   const botonGritar = h('button', { class: 'boton boton-gritar', type: 'button', onclick: m.gritar }, '¡Gritar!')
 
-  // Los rangos de distancia cambian con la superficie: el deslizador se vuelve a armar.
-  const cajaDistancia = h('div')
-  const cajaEstimacion = h('div')
-  let distancia = deslizador({ titulo: '', min: 0, max: 1, paso: 1, valor: 0, alCambiar: () => {} })
-  let estimacion = distancia
-  let armadoPara: SuperficieId | null = null
-  function armarDistancias(id: SuperficieId, c: Config, v: Vista) {
-    armadoPara = id
-    const r = superficie(id).distancia
-    distancia = deslizador({
-      titulo: 'Distancia a la superficie', min: r.min, max: r.max, paso: r.paso, valor: c.distancia, color: 'var(--ambar)',
-      formato: (x) => `${numero(x, 0)} m`, alCambiar: (x) => m.pedir({ distancia: x }),
-    })
-    estimacion = deslizador({
-      titulo: 'Tu estimación', min: r.min, max: r.max, paso: 1, valor: v.estimacion, color: 'var(--magenta)',
-      formato: (x) => `${numero(x, 0)} m`, alCambiar: m.estimar,
-    })
-    cajaDistancia.replaceChildren(distancia.el)
-    cajaEstimacion.replaceChildren(estimacion.el)
-  }
+  // Los rangos de distancia cambian con la superficie (`rango`).
+  const r0 = superficie(inicial.superficie).distancia
+  const distancia = deslizador({
+    titulo: 'Distancia a la superficie', min: r0.min, max: r0.max, paso: r0.paso, valor: inicial.distancia, color: 'var(--ambar)',
+    formato: (x) => `${numero(x, 0)} m`, alCambiar: (x) => m.pedir({ distancia: x }),
+  })
+  const estimacion = deslizador({
+    titulo: 'Tu estimación', min: r0.min, max: r0.max, paso: 1, valor: r0.min, color: 'var(--magenta)',
+    formato: (x) => `${numero(x, 0)} m`, alCambiar: m.estimar,
+  })
+  let rangoDe: SuperficieId = inicial.superficie
   const botonComprobar = h('button', { class: 'boton boton-marca', type: 'button', onclick: m.comprobar }, 'Comprobar')
   const botonOtra = h('button', { class: 'boton', type: 'button', onclick: m.otraDistancia }, 'Otra distancia')
   const filaMedir = h('div', { class: 'fila' }, botonComprobar, botonOtra)
@@ -71,7 +62,6 @@ export function crearControles(inicial: Config, m: Manejadores) {
     titulo: 'Volumen (a 1 m)', min: VOLUMEN.min, max: VOLUMEN.max, paso: 1, valor: inicial.volumen, color: 'var(--cielo)',
     formato: (x) => `${x} dB`, nota: (x) => (sonar ? 'relativos' : referenciaVolumen(x)), alCambiar: (x) => m.pedir({ volumen: x }),
   })
-  const tituloVolumen = volumen.el.querySelector<HTMLElement>('.etiqueta')!
   const temperatura = deslizador({
     titulo: 'Temperatura del aire', min: TEMPERATURA.min, max: TEMPERATURA.max, paso: 1, valor: inicial.temperatura,
     formato: (x) => `${x} °C`, nota: (x) => `${numero(velocidadAire(x), 0)} m/s`, alCambiar: (x) => m.pedir({ temperatura: x }),
@@ -84,8 +74,8 @@ export function crearControles(inicial: Config, m: Manejadores) {
     grupo('Superficie', lugar.el),
     fila('Modo', modo.el),
     botonGritar,
-    cajaDistancia,
-    cajaEstimacion,
+    distancia.el,
+    estimacion.el,
     filaMedir,
     volumen.el,
     temperatura.el,
@@ -97,18 +87,23 @@ export function crearControles(inicial: Config, m: Manejadores) {
   return {
     el,
     sincronizar(c: Config, v: Vista) {
-      if (armadoPara !== c.superficie) armarDistancias(c.superficie, c, v)
+      if (rangoDe !== c.superficie) {
+        rangoDe = c.superficie
+        const r = superficie(c.superficie).distancia
+        distancia.rango(r.min, r.max, r.paso)
+        estimacion.rango(r.min, r.max, 1)
+      }
       sonar = superficie(c.superficie).medio === 'agua'
       lugar.set(c.superficie)
       modo.set(c.modo)
       distancia.set(c.distancia)
       estimacion.set(v.estimacion)
-      tituloVolumen.textContent = sonar ? 'Potencia del ping' : 'Volumen (a 1 m)'
+      volumen.rotulo(sonar ? 'Potencia del ping' : 'Volumen (a 1 m)')
       volumen.set(c.volumen)
       temperatura.set(c.temperatura)
       const medir = c.modo === 'medir'
-      cajaDistancia.hidden = medir
-      cajaEstimacion.hidden = !medir
+      distancia.el.hidden = medir
+      estimacion.el.hidden = !medir
       filaMedir.hidden = !medir
       botonComprobar.disabled = !v.puedeComprobar
       estimacion.input.disabled = v.comprobada

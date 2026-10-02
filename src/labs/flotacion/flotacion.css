@@ -9,10 +9,6 @@
 .con-muestras { flex-wrap: wrap; }
 .con-muestras button { flex: 1 1 28%; white-space: nowrap; padding: 6px 4px; font-size: 12.5px; }
 .con-muestras.liquidos button { flex-basis: 45%; }
-.con-muestras button::before {
-  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%;
-  background: var(--muestra); box-shadow: 0 0 5px var(--muestra);
-}
 
 .deslizador.sal .etiqueta { color: var(--cielo); }
 .interruptor .segmentado { min-width: 120px; }
