@@ -2,7 +2,7 @@ import '../../ui/kit.css'
 import './luz.css'
 import { metrica, modal } from '../../ui/componentes'
 import { h } from '../../ui/dom'
-import { grafico, type Serie } from '../../ui/grafico'
+import { grafico, type Punto, type Serie } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { crearConsola, ESCENAS } from './consola'
@@ -53,6 +53,8 @@ lab.append(
 
 // --- Gráfico: se dibuja hasta donde está el control, así el extremo de la curva es el estado actual ---
 let escenaGrafico: Config['escena'] | null = null
+/** Enteros de 0 a `n` (los grados del espejo o del ojo). */
+const hasta = (n: number) => Array.from({ length: n + 1 }, (_, x) => x)
 const SERIES: Record<Config['escena'], Serie[]> = {
   espejo: [{ id: 'espejo', nombre: 'Espejo giró', color: 'ambar' }, { id: 'rayo', nombre: 'Rayo giró', color: 'magenta' }],
   refraccion: [{ id: 'sinDesvio', nombre: 'Sin doblarse', color: 'ambar' }, { id: 'refraccion', nombre: 'Refracción', color: 'cielo' }],
@@ -67,17 +69,17 @@ function dibujarGrafico() {
       lapiz: { titulo: 'Profundidad de la punta según desde dónde se mira', unidadX: '°', unidadY: 'cm', xMax: OJO_MAX, yMax: 20 },
     }
     curvaGrafico.cambiar(SERIES[config.escena], escalas[config.escena])
-  } else curvaGrafico.limpiar()
-  if (config.escena === 'espejo') {
-    for (let x = 0; x <= config.espejo; x++) curvaGrafico.agregar(x, { espejo: x, rayo: trazarEspejo({ ...config, espejo: x }).giroRayo })
-  } else if (config.escena === 'refraccion') {
-    for (const p of curva(config, config.angulo)) curvaGrafico.agregar(p.x, { sinDesvio: p.x, refraccion: p.refraccion })
-  } else {
-    for (let x = 0; x <= config.ojo; x++) {
-      const t = trazarLapiz({ ...config, ojo: x })
-      curvaGrafico.agregar(x, { real: t.profundidad, parece: t.aparente })
-    }
   }
+  let puntos: Punto[]
+  if (config.escena === 'espejo') puntos = hasta(config.espejo).map((x) => ({ x, v: { espejo: x, rayo: trazarEspejo({ ...config, espejo: x }).giroRayo } }))
+  else if (config.escena === 'refraccion') puntos = curva(config, config.angulo).map((p) => ({ x: p.x, v: { sinDesvio: p.x, refraccion: p.refraccion } }))
+  else {
+    puntos = hasta(config.ojo).map((x) => {
+      const t = trazarLapiz({ ...config, ojo: x })
+      return { x, v: { real: t.profundidad, parece: t.aparente } }
+    })
+  }
+  curvaGrafico.cargar(puntos)
 }
 
 // --- Predecí antes de correr: la pregunta va antes del cambio; el cambio se hace al responder ---

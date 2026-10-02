@@ -55,8 +55,7 @@ export function crearCurva() {
         clave = nueva
         g.cambiar(series, { titulo, unidadX: ' cm', unidadY: unidad, xMax: max, yMax, yTecho })
       }
-      g.limpiar({ xMax: max, yMax })
-      for (const d of distancias(c, min, max)) g.agregar(d, valor(d))
+      g.cargar(distancias(c, min, max).map((d) => ({ x: d, v: valor(d) })), { xMax: max, yMax })
     },
   }
 }

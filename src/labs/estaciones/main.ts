@@ -43,9 +43,10 @@ function valoresCurva(x: number) {
 }
 /** Dibuja el año completo con la escala de la ciudad y la inclinación actuales. */
 function llenarCurva(g: ReturnType<typeof grafico>) {
-  g.limpiar({ yMax: rangoAnual(ciudad.lat, eps, modoGrafico === 'luz' ? 'horas' : 'energia').max })
-  for (let x = 0; x < YEAR; x += MUESTREO_DIAS) g.agregar(x, valoresCurva(x))
-  g.agregar(YEAR, valoresCurva(YEAR))
+  const puntos = []
+  for (let x = 0; x < YEAR; x += MUESTREO_DIAS) puntos.push({ x, v: valoresCurva(x) })
+  puntos.push({ x: YEAR, v: valoresCurva(YEAR) })
+  g.cargar(puntos, { yMax: rangoAnual(ciudad.lat, eps, modoGrafico === 'luz' ? 'horas' : 'energia').max })
 }
 function seriesCurva() {
   return modoGrafico === 'luz'

@@ -23,6 +23,12 @@ export interface EscalaGrafico {
   yTecho?: number
 }
 
+export interface Punto {
+  x: number
+  /** Valor de cada serie (por `id`). */
+  v: Record<string, number>
+}
+
 export interface OpcionesGrafico extends EscalaGrafico {
   titulo?: string
   unidadX?: string
@@ -53,7 +59,8 @@ function resolver(c: string): string {
 
 /**
  * Gráfico de líneas en el tiempo sobre canvas 2D, en un panel de vidrio con leyenda viva.
- * `agregar(x, { serie: valor })` suma un punto; `limpiar()` lo reinicia y puede cambiar la escala
+ * `agregar(x, { serie: valor })` suma un punto; `cargar(puntos)` reemplaza todos y dibuja una sola vez;
+ * `limpiar()` lo reinicia. `cargar` y `limpiar` pueden cambiar la escala
  * (lo que no se pase queda como en las opciones iniciales). `cambiar()` reemplaza series, textos y escala
  * sin crear otro gráfico.
  */
@@ -62,7 +69,7 @@ export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
   let { titulo, unidadX = '', unidadY = '' } = opciones
   let inicial: EscalaGrafico = { xMax: opciones.xMax, yMax: opciones.yMax, yMin: opciones.yMin, yTecho: opciones.yTecho }
   let escala = inicial
-  let puntos: { x: number; v: Record<string, number> }[] = []
+  let puntos: Punto[] = []
   let valores: HTMLElement[] = []
 
   const canvas = h('canvas', { class: 'grafico-lienzo', role: 'img' })
@@ -144,6 +151,16 @@ export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
     }
   }
 
+  /** Leyenda con los valores de un punto. */
+  const leer = (v: Record<string, number>) => series.forEach((s, i) => (valores[i].textContent = corto(v[s.id] ?? 0)))
+
+  function cargar(nuevos: Punto[], nuevaEscala?: EscalaGrafico) {
+    if (nuevaEscala) escala = { ...inicial, ...nuevaEscala }
+    puntos = nuevos
+    leer(puntos[puntos.length - 1]?.v ?? {})
+    dibujar()
+  }
+
   new ResizeObserver(dibujar).observe(canvas)
   document.fonts?.load(`600 10px ${MONO}`).then(dibujar, () => {})
 
@@ -151,9 +168,11 @@ export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
     el,
     agregar(x: number, v: Record<string, number>) {
       puntos.push({ x, v })
-      series.forEach((s, i) => (valores[i].textContent = corto(v[s.id] ?? 0)))
+      leer(v)
       dibujar()
     },
+    /** Reemplaza todos los puntos (una curva calculada de una) y dibuja una sola vez; la leyenda muestra el último. Se queda con el array. */
+    cargar,
     /** Otras series y textos (cambió la mezcla, la ciudad o el tipo de gráfico): arranca vacío con la escala nueva. */
     cambiar(nuevas: Serie[], nuevasOpciones: Omit<OpcionesGrafico, 'alto'> = {}) {
       series = nuevas
@@ -164,11 +183,6 @@ export function grafico(series: Serie[], opciones: OpcionesGrafico = {}) {
       armar()
       dibujar()
     },
-    limpiar(nuevaEscala?: EscalaGrafico) {
-      if (nuevaEscala) escala = { ...inicial, ...nuevaEscala }
-      puntos = []
-      valores.forEach((b) => (b.textContent = '0'))
-      dibujar()
-    },
+    limpiar: (nuevaEscala?: EscalaGrafico) => cargar([], nuevaEscala),
   }
 }
