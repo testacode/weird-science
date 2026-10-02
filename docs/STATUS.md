@@ -9,8 +9,12 @@
 
 ## Backlog
 
-1. **Próxima ola de labs:** volcanes y placas; electrostática (quedó fuera de imanes); eco (quedó fuera de sonido).
-2. **Kit, pedidos de la ola 5:**
+1. **Próxima ola de labs:** sin definir (ver `docs/temario.md`).
+2. **Kit, pedidos de las olas 5 y 6:**
+   - La tarjeta de predicción queda fuera de vista cuando la columna derecha hace scroll (célula, imanes y electrostática en una ventana de 727 px de alto): `preguntar` debería hacer `scrollIntoView({ block: 'nearest' })`.
+   - `mezclar` (orden de opciones al azar) copiado en sonido, eco, electrostática y volcanes: llevarlo al kit.
+   - Rótulo de `metrica` y texto de una opción de `segmentado` actualizables (electrostática los toca por DOM); `rango` actualizable en `deslizador` (eco lo recrea); `crearPildoras` sin forma de cambiar `origen` ni quitar pastillas (volcanes).
+   - Pensar `resolver` + `pred.revisar()` en el kit para sacar las 6 líneas de `revelar` que repite cada lab (cambia la API).
    - Pasar a la opción `listo` (+ `if (!pred.listo) return` en el `revelar` del lab) los labs que todavía deciden el reveal a mano en el loop: flotación (`terminado`), circulatorio, respiratorio y fotosíntesis (ventana de tiempo), digestivo, mezclas (`progreso`), estaciones y luna (`tRevela`).
    - `grafico.cargar(puntos)` para dibujar de una vez (sonido, estaciones).
    - `segmentado` con estado deshabilitado; `deslizador` logarítmico y deshabilitado.
@@ -26,10 +30,12 @@
    - estaciones: mover la inclinación con la pregunta sin responder la descarta pero deja el año en pausa (ciclo del agua, en el mismo caso, sigue corriendo);
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
    - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
-   - archivos de más de 200 líneas: `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`, `flotacion/model.ts`, `ciclo-agua/main.ts`.
+   - volcanes: la barra "¿Fluye o explota?" escribe "10^8" y la métrica "10⁸";
+   - archivos de más de 200 líneas: `electrostatica/escena.ts` y `main.ts`, `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`, `flotacion/model.ts`, `ciclo-agua/main.ts`.
 
 ## Hecho reciente
 
+- 2026-10-01 — Ola 6: eco, electrostática y volcanes (18 labs), cada uno con code review, arreglos del mismo agente y prueba en CDP; fuentes integradas en `docs/fuentes.md`.
 - 2026-10-01 — Kit: opción `listo` de `prediccion` y getter `pred.listo` (hay predicción en curso y la pantalla ya muestra lo que se corrige); célula, sonido, partículas y ciclo del agua migrados (`resolver` corre una sola vez). `[hidden] { display: none !important }` global en `kit.css` y fuera los parches (10 en labs y 3 en el kit).
 - 2026-10-01 — Kit de predicción: modo libre (interruptor "Preguntas" junto a "Info avanzada", en localStorage), `revelarEn` (el timer lo cancela la tarjeta), botón "Saltar y hacerlo igual" en la tarjeta y `saltar(datos)` como único camino para seguir sin predecir; los 15 labs migrados.
 - 2026-10-01 — Ola 5 completa: imanes, sonido, circulatorio, luz y célula, cada uno con code review, arreglos y prueba en CDP; fuentes integradas en `docs/fuentes.md`.

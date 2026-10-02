@@ -8,7 +8,8 @@ Acordado el 2026-09-30. El objetivo es que varios agentes trabajen a la vez sin 
 - Cada agente trabaja en su worktree `.worktrees/<slug>`, en la branch `feat/<slug>`, y commitea ahí. Carlos (vía Claude principal) revisa, mergea a `main` y pushea; cada push publica en Vercel.
 - Cada agente edita solo `src/labs/<slug>/` y `labs/<slug>/`. Si necesita algo de `src/ui/` o `src/escena/`, lo reporta y no lo toca.
 - `docs/STATUS.md` y `docs/GOTCHAS.md` los edita solo el agente principal.
-- Puertos fijos por agente (5181-5185, `--strictPort`) y sesión headless propia de agent-browser (`--session <slug>`). Nunca el CDP personal.
+- Puertos fijos por agente (5181-5185, `--strictPort`) y sesión headless propia de agent-browser (`--session <slug>` con `--profile /tmp/<slug>-wk/profile` en el primer comando; si la URL no es la suya, frenar, nunca reabrir). Archivos temporales solo en `/tmp/<slug>-wk/`. Nunca el CDP personal.
+- Brief de predicciones: revelar con `listo`; mientras `pred.pendiente`, nada en pantalla delata la respuesta; magnitud continua lejos del umbral o pregunta honesta con opciones al azar.
 
 ## Antes de cada merge
 1. Code review del branch (agente Opus, solo lectura): modelo, predicciones, estado de la UI y datos. Con scripts descartables que barren combinaciones.
@@ -24,6 +25,8 @@ Acordado el 2026-09-30. El objetivo es que varios agentes trabajen a la vez sin 
 | 2 | 5 agentes | digestivo-extras · fotosíntesis · partículas · circuito · luna |
 | 3 | después del merge | kit unificado (hecho) · posters y loops de la portada · recorridos transversales · accesibilidad |
 | 4 | 5 agentes | respiratorio · flotación · ciclo del agua · mezclas · estaciones (hecho) |
+| 5 | 5 agentes | imanes · sonido · circulatorio · luz · célula (hecho) |
+| 6 | 3 agentes | eco · electrostática · volcanes (hecho) |
 
 ## Receta de un lab (ola 2)
 1. `model.ts`: simulación pura, sin Three.js.

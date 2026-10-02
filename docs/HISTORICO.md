@@ -145,6 +145,28 @@ Los 5 reviews encontraron problemas, casi siempre de coherencia didáctica:
 
 **Aprendido:** el review mejoró el diseño, no solo arregló bugs. Que `preguntar()` devolviera `false` obligaba a cada lab a repetir su lógica de "seguir" en un segundo lugar; con el kit llamando a `saltar`, esa decisión vive en un solo lugar.
 
+## 2026-10-01 · `listo` y `[hidden]` en el kit
+
+`d2ef2d4`. La opción `listo` de `prediccion` y el getter `pred.listo`: el `revelar` de cada lab arranca con `if (!pred.listo) return`, así el reveal sale solo cuando la pantalla ya muestra lo que se corrige y `resolver` corre una sola vez. Migrados célula, sonido, partículas y ciclo del agua. `[hidden] { display: none !important }` global reemplazó 13 parches.
+
+**Aprendido:** la primera versión ponía el criterio adentro de `revelar`, pero para entonces el lab ya había calculado la corrección (una bisección por cuadro durante hasta 71 s). Preguntar primero "¿ya se ve?" y recién después resolver es lo que hacían a mano los 3 labs que ya tenían su `listo`.
+
+## 2026-10-01 · Ola 6: eco, electrostática y volcanes
+
+3 agentes Sonnet en paralelo. Merges: eco `c468765`, electrostática `727d422`, volcanes (este cierre). Quedaron 18 labs.
+
+| Lab | Lo más serio del review |
+|---|---|
+| Eco | en "Medir", el eje del gráfico delataba la distancia escondida; el sonar mezclaba dB absolutos y relativos |
+| Electrostática | "Alejar al doble" durante el frotado congelaba una carga parcial; la pregunta de papelitos no salía con el par más fuerte; el gráfico quedaba fuera de escala |
+| Volcanes | las 3 preguntas mostraban la respuesta en el HUD mientras esperaban; una dorsal erupcionaba andesita explosiva; el agua saturaba al 3 % |
+
+**Aprendido:**
+- Error nuevo: la pantalla delataba la respuesta antes de que el usuario eligiera. `listo` cuida que el reveal no salga antes de verse; falta la otra mitad: mientras `pred.pendiente`, nada en pantalla (métricas, barras, maqueta, relato) puede mostrar el resultado.
+- Varios agentes con agent-browser se pisaron las sesiones headless; un wrapper que "reabría" su URL lo empeoraba. Perfil propio por agente y frenar si la URL no es la suya.
+- `/tmp` compartido: un agente corrió el script de otro. Cada uno en `/tmp/<slug>-wk/`.
+- Varias preguntas son constantes honestas (en electrostática, las tres): está bien cuando la lección es la constante (Coulomb, conservación de la carga).
+
 ## Modelos y agentes
 
 - **Sonnet 5.5 con effort high** (agente `sonnet-worker`, en dotfiles) para labs nuevos dentro de su carpeta. Anduvo bien.
