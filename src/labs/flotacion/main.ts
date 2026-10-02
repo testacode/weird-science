@@ -75,7 +75,11 @@ lab.append(
 
 // --- Predecí antes de correr: al elegir algo para romper, el objeto espera la respuesta antes de soltarse ---
 const ayuda = modal()
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => soltar() })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), {
+  saltar: () => soltar(),
+  listo: () => terminado(config, estado),
+  resolver: (d) => d.pregunta.resolver(d.config),
+})
 
 function seguir(va: boolean) {
   corriendo = va
@@ -89,12 +93,6 @@ function soltar(esperando = false) {
   soltado = !esperando
   seguir(!esperando)
   if (esperando) consola.setPlay('▶ Soltar')
-}
-function revelar() {
-  const datos = pred.datos
-  if (!datos || !pred.enCurso) return
-  const r = datos.pregunta.resolver(datos.config)
-  pred.revelar(r.correcta, r.explicacion)
 }
 function alternar() {
   if (pred.pendiente) return pred.saltar()
@@ -156,7 +154,7 @@ function cuadro(t: number) {
       restante -= dt
     }
     if (estado.t - ultimoPunto >= MUESTREO_S) muestrear()
-    if (pred.enCurso && terminado(config, estado)) revelar()
+    pred.revisar()
   }
   const d = derivar(config, estado)
   actualizarHud(d)

@@ -96,6 +96,8 @@ const reloj = h('span', { class: 'etiqueta' })
 const pred = prediccion<Respuesta, { pregunta: Pregunta; sus: Sustancia; config: Config }>(() => seguir(true), {
   saltar: () => seguir(true),
   listo: (d) => d.pregunta.listo(lectura),
+  // La potencia solo cambia los segundos de la explicación: se usa la de ahora.
+  resolver: (d) => d.pregunta.resolver({ sus: d.sus, config: d.config, potencia: potencia() > 0 ? potencia() : POTENCIA_INICIAL_W }),
 })
 function seguir(va: boolean) {
   corriendo = va
@@ -106,13 +108,6 @@ function predecir() {
   if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, sus, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
-}
-function revelar() {
-  const datos = pred.datos
-  if (!pred.listo || !datos) return
-  // La potencia solo cambia los segundos de la explicación: se usa la de ahora.
-  const r = datos.pregunta.resolver({ sus: datos.sus, config: datos.config, potencia: potencia() > 0 ? potencia() : POTENCIA_INICIAL_W })
-  pred.revelar(r.correcta, r.explicacion)
 }
 
 function alternar() {
@@ -225,7 +220,7 @@ function cuadro(t: number) {
     curva.agregar(estado.t, { temp: lectura.temp })
     ultimoPunto = estado.t
   }
-  revelar()
+  pred.revisar()
   actualizarHud(lectura, t)
   escena.dibujar(lectura, sus, config, potencia(), t)
   requestAnimationFrame(cuadro)

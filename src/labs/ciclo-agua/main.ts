@@ -106,6 +106,7 @@ const reloj = h('span', { class: 'etiqueta' })
 const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config; arranque: Estado }>(() => seguir(true), {
   saltar: () => seguir(true),
   listo: (d) => d.pregunta.listo(estado, d.config),
+  resolver: (d) => d.pregunta.resolver(d.config, d.arranque),
 })
 
 function seguir(va: boolean) {
@@ -121,12 +122,6 @@ function preguntar(pregunta: Pregunta) {
   if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config, arranque })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
-}
-function revelar() {
-  const datos = pred.datos
-  if (!pred.listo || !datos) return
-  const r = datos.pregunta.resolver(datos.config, datos.arranque)
-  pred.revelar(r.correcta, r.explicacion)
 }
 /** Si algo está roto, el ciclo ya venía andando; si no, arranca de cero y pregunta por el agua total. */
 function empezar() {
@@ -244,7 +239,7 @@ function cuadro(t: number) {
       restante -= dt
     }
     if (estado.horas - ultimoPunto >= MUESTREO_H) muestrear()
-    revelar()
+    pred.revisar()
   }
   const f = flujos(estado, config)
   actualizarHud(f, t)

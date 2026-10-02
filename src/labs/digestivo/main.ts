@@ -27,7 +27,10 @@ const escena = crearEscena(lab, SEGMENTOS.map((s) => s.nombre))
 escena.setComida(comida.gramos, bocados)
 const escalaPh = leyendaPh()
 const hud = crearHud(lab, [escalaPh.el])
-const pred = prediccion<Respuesta, { pregunta: Pregunta; ref: ReturnType<typeof referencia> }>(() => seguir(true), { saltar: () => seguir(true) })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; ref: ReturnType<typeof referencia> }>(() => seguir(true), {
+  saltar: () => seguir(true),
+  resolver: (d) => d.pregunta.resolver(agregado(flujo), d.ref),
+})
 const controles = crearControles({ comida, config, velocidad, vista, bocados }, {
   alternar,
   reiniciar,
@@ -51,12 +54,6 @@ function predecir() {
   if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ref: referencia(comida.gramos) })) return
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
-}
-function revelar() {
-  const datos = pred.datos
-  if (!datos || !pred.enCurso) return
-  const r = datos.pregunta.resolver(agregado(flujo), datos.ref)
-  pred.revelar(r.correcta, r.explicacion)
 }
 
 function alternar() {
@@ -123,7 +120,7 @@ function cuadro(t: number) {
     if (todosTerminaron(flujo)) {
       corriendo = false
       controles.botonPlay.textContent = '↺ Repetir'
-      revelar()
+      pred.revisar()
     }
   }
   escalaPh.set(phSegmento(estado.segmento, config))

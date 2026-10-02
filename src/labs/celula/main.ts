@@ -26,6 +26,7 @@ const hud = crearHud(lab)
 const pred = prediccion<Respuesta, { pregunta: Pregunta; ent: Entorno }>(() => seguir(true), {
   saltar: () => seguir(true),
   listo: () => lectura.listo,
+  resolver: (d) => d.pregunta.resolver(d.ent),
 })
 const controles = crearControles(ent, velocidad, {
   alternar,
@@ -49,12 +50,6 @@ function predecir() {
   if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, ent })) return
   corriendo = false
   controles.botonPlay.textContent = '▶ Saltar'
-}
-function revelar() {
-  const datos = pred.datos
-  if (!pred.listo || !datos) return
-  const r = datos.pregunta.resolver(datos.ent)
-  pred.revelar(r.correcta, r.explicacion)
 }
 
 function alternar() {
@@ -123,7 +118,7 @@ function cuadro(t: number) {
     ultimoPunto = est.t
     graficoCortado = est.rota
   }
-  revelar()
+  pred.revisar()
   controles.reloj.textContent = corriendo
     ? p.ritmo * velocidad < 1 ? `Cámara lenta ×${numero(1 / (p.ritmo * velocidad), 1)}` : `Reloj acelerado ×${numero(p.ritmo * velocidad, 1)}`
     : 'Reloj detenido'

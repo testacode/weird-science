@@ -95,7 +95,11 @@ lab.append(
 const ayuda = modal()
 const botonPlay = h('button', { class: 'boton boton-marca', type: 'button', onclick: () => alternar() }, '⏸ Pausa')
 const reloj = h('span', { class: 'etiqueta' })
-const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), { saltar: () => seguir(true) })
+const pred = prediccion<Respuesta, { pregunta: Pregunta; config: Config }>(() => seguir(true), {
+  saltar: () => seguir(true),
+  listo: () => estado.minutos >= VENTANA_MIN,
+  resolver: (d) => d.pregunta.resolver(d.config),
+})
 
 function seguir(va: boolean) {
   corriendo = va
@@ -112,12 +116,6 @@ function preguntar(pregunta: Pregunta | null) {
   if (!pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta, config })) return
   corriendo = false
   botonPlay.textContent = '▶ Saltar'
-}
-function revelar() {
-  const datos = pred.datos
-  if (!datos || !pred.enCurso) return
-  const r = datos.pregunta.resolver(datos.config)
-  pred.revelar(r.correcta, r.explicacion)
 }
 /** Repite el experimento con los mismos controles; si hay algo roto, vuelve a preguntar. */
 function otraVez() {
@@ -239,7 +237,7 @@ function cuadro(t: number) {
       restante -= dt
     }
     if (estado.minutos - ultimoPunto >= MUESTREO_MIN) muestrear()
-    if (pred.enCurso && estado.minutos >= VENTANA_MIN) revelar()
+    pred.revisar()
   }
   actualizarHud()
   escena.dibujar(estado, config, tasas(config), t / 1000)

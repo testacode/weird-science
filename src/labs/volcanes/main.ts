@@ -65,16 +65,11 @@ const ayuda = modal()
 const pred = prediccion<Respuesta, { pregunta: Pregunta }>(undefined, {
   textoSaltar: 'Saltar y ver qué pasa',
   listo: (d) => d.pregunta.listo(estado),
+  resolver: (d) => d.pregunta.resolver(),
 })
 
 function preguntar(pregunta: Pregunta) {
   pred.preguntar(pregunta.texto, pregunta.opciones, { pregunta })
-}
-function revelar() {
-  const datos = pred.datos
-  if (!pred.listo || !datos) return
-  const r = datos.pregunta.resolver()
-  pred.revelar(r.correcta, r.explicacion)
 }
 
 /** Empieza de cero con la pregunta del origen del magma (o la de volcanes, si el borde no tiene magma). */
@@ -204,7 +199,7 @@ function cuadro(t: number) {
   const esperaErupcion = espera && pred.datos?.pregunta.id === 'erupcion'
   if (!esperaErupcion) vista = { silice: config.silice, gas: config.gas }
   if (!espera) estado = paso(estado, config, dt)
-  revelar()
+  pred.revisar()
   actualizarHud(t)
   escena.dibujar(estado, vista, dt, !espera || esperaErupcion)
   requestAnimationFrame(cuadro)

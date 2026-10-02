@@ -88,13 +88,8 @@ const pred = prediccion<Respuesta, Datos>(() => {
   saltar: (d) => d && lanzar(preguntasActivas() ? d.tipo : undefined),
   textoSaltar: 'Saltar y gritar igual',
   listo: (d) => ecoPasado(estado, d.config),
+  resolver,
 })
-function revelar() {
-  const d = pred.datos
-  if (!pred.listo || !d) return
-  const r = resolver(d)
-  pred.revelar(r.correcta, r.explicacion)
-}
 /** Qué se pregunta antes de este grito (o `null` si va directo). */
 function elegir(): Datos | null {
   if (config.modo !== 'explorar') return null
@@ -223,7 +218,7 @@ function cuadro(t: number) {
   anterior = t
   if (corriendo) estado = paso(estado, config, dt)
   if (estado.t !== null) graficarHasta(estado.t)
-  revelar()
+  pred.revisar()
   actualizarHud(t)
   escena.dibujar(config, estado, config.modo !== 'medir' || medir.comprobada)
   requestAnimationFrame(cuadro)

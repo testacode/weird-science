@@ -42,7 +42,7 @@ export function interruptorPreguntas(): HTMLElement {
   return s.el
 }
 
-export interface OpcionesPrediccion<D> {
+export interface OpcionesPrediccion<D, T extends string = string> {
   /**
    * Qué hace el lab cuando no se predice: botón "Saltar", apagar las preguntas con una abierta, o preguntar en modo libre.
    * Seguir corriendo, aplicar el cambio pendiente… Recibe los datos de la pregunta.
@@ -50,8 +50,10 @@ export interface OpcionesPrediccion<D> {
   saltar?: (datos: D | null) => void
   /** Si se da, la tarjeta muestra un botón con este texto que llama a `saltar` (función: según la pregunta; `null` = sin botón). */
   textoSaltar?: string | ((datos: D | null) => string | null)
-  /** Si lo que se ve ya coincide con lo que se va a corregir (llegó al equilibrio, terminó el golpe…). Ver `pred.listo`. */
+  /** Si lo que se ve ya coincide con lo que se va a corregir (llegó al equilibrio, terminó el golpe…). Sin `listo`, en cuanto hay una predicción hecha. Ver `pred.revisar`. */
   listo?: (datos: D) => boolean
+  /** Qué era lo correcto para la pregunta congelada en `datos`, y por qué (HTML). Ver `pred.revisar`. */
+  resolver?: (datos: D) => { correcta: T; explicacion: string }
 }
 
 /**
@@ -63,9 +65,9 @@ export interface OpcionesPrediccion<D> {
  * Se guarda por referencia: el lab no debe mutar lo que pasa (reemplazar la config, no editarla).
  * Con las preguntas apagadas (`interruptorPreguntas`), `preguntar` no muestra nada, llama a `saltar` y devuelve `false`.
  * `revelarEn` deja el reveal en manos de la tarjeta: `ocultar` o una pregunta nueva lo cancelan.
- * Labs que revelan desde el loop: el `revelar` del lab arranca con `if (!pred.listo) return` (criterio en la opción `listo`); así `resolver` corre una sola vez.
+ * Labs que revelan desde el loop: opciones `listo` y `resolver`, y `pred.revisar()` en el loop (`resolver` corre una sola vez, al revelar).
  */
-export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) => void, { saltar, textoSaltar, listo: criterio }: OpcionesPrediccion<D> = {}) {
+export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) => void, { saltar, textoSaltar, listo: criterio, resolver }: OpcionesPrediccion<D, T> = {}) {
   let elegida: T | null = null
   let respondida = false
   let datos: D | null = null
@@ -104,6 +106,19 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
     ocultar()
     saltar?.(d)
   }
+  function revelar(correcta: T, explicacion: string) {
+    if (respondida || el.hidden) return
+    window.clearTimeout(timer)
+    respondida = true
+    datos = null
+    const acerto = elegida === correcta
+    marcar(botones, lista, correcta)
+    el.classList.add(elegida === null ? 'sin-respuesta' : acerto ? 'acierto' : 'error')
+    const veredicto = elegida === null ? 'Sin predicción' : acerto ? '¡Acertaste!' : 'No era esa'
+    resultado.innerHTML = `<p class="veredicto">${veredicto}</p><p>${explicacion}</p>`
+    asomar(resultado)
+  }
+  const listoParaRevelar = () => enCurso() && (!criterio || criterio(datos as D))
   abiertas.add(saltarAhora)
 
   return {
@@ -147,17 +162,12 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
       timer = window.setTimeout(fn, ms)
     },
     /** Cierra la tarjeta diciendo si acertó. `explicacion` es HTML propio del lab. */
-    revelar(correcta: T, explicacion: string) {
-      if (respondida || el.hidden) return
-      window.clearTimeout(timer)
-      respondida = true
-      datos = null
-      const acerto = elegida === correcta
-      marcar(botones, lista, correcta)
-      el.classList.add(elegida === null ? 'sin-respuesta' : acerto ? 'acierto' : 'error')
-      const veredicto = elegida === null ? 'Sin predicción' : acerto ? '¡Acertaste!' : 'No era esa'
-      resultado.innerHTML = `<p class="veredicto">${veredicto}</p><p>${explicacion}</p>`
-      asomar(resultado)
+    revelar,
+    /** Llamar desde el loop: con una predicción hecha y `listo`, revela con `resolver` (sin `resolver` no hace nada). */
+    revisar() {
+      if (!resolver || !listoParaRevelar()) return
+      const r = resolver(datos as D)
+      revelar(r.correcta, r.explicacion)
     },
     ocultar,
     /** Saltea la pregunta abierta, como el botón "Saltar". */
@@ -173,10 +183,6 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
     /** Hay una predicción hecha y todavía sin revelar. */
     get enCurso() {
       return enCurso()
-    },
-    /** Hay una predicción en curso y la pantalla ya muestra lo que se va a corregir (opción `listo`; sin ella, en cuanto está en curso). */
-    get listo() {
-      return enCurso() && (!criterio || criterio(datos as D))
     },
   }
 }
