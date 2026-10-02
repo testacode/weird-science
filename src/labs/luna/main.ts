@@ -47,10 +47,11 @@ function valoresCurva(dia: number) {
   return { real: iluminada(elongacion(g)) * 100, ...(config.sombraTierra && { idea: ideaSombra(g).iluminada * 100 }) }
 }
 function reconstruirCurva(dia: number) {
-  curva.limpiar()
   const paso = Math.max(0.5, dia / 40)
-  for (let x = 0; x < dia; x += paso) curva.agregar(x, valoresCurva(x))
-  curva.agregar(dia, valoresCurva(dia))
+  const puntos = []
+  for (let x = 0; x < dia; x += paso) puntos.push({ x, v: valoresCurva(x) })
+  puntos.push({ x: dia, v: valoresCurva(dia) })
+  curva.cargar(puntos)
   curvaDia = dia
 }
 function actualizarCurva(dia: number, ciclo: number) {

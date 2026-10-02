@@ -4,7 +4,7 @@ import { interruptorAvanzado } from '../../ui/avanzado'
 import { fila, grupo, metrica, modal, segmentado } from '../../ui/componentes'
 import { deslizador } from '../../ui/deslizador'
 import { h } from '../../ui/dom'
-import { grafico, type Serie } from '../../ui/grafico'
+import { grafico, type Punto, type Serie } from '../../ui/grafico'
 import { hud } from '../../ui/hud'
 import { interruptorPreguntas, prediccion } from '../../ui/prediccion'
 import { COMO_FUNCIONA, GANCHO, campoPartes, fuerzaPartes, num, relato } from './contenido'
@@ -163,13 +163,13 @@ function pintarCurva() {
     claveCurva = clave
     curva.cambiar(series, { titulo: dos ? 'Fuerza según la distancia' : 'Atracción según la distancia', unidadX: ' cm', unidadY: unidad, xMax: GAP_MAX, yMax: dos ? 1e-9 : 4, yTecho: dos ? undefined : TECHO_UMBRAL })
   }
-  curva.limpiar({ xMax: GAP_MAX, yMax: dos ? Math.max(tope * factor, 1e-9) : 4 })
   const hasta = Math.max(config.gap, xMin + 0.01)
-  for (let i = 0; i <= PUNTOS_CURVA; i++) {
+  const puntos = Array.from({ length: PUNTOS_CURVA + 1 }, (_, i): Punto => {
     const g = xMin + ((hasta - xMin) * i) / PUNTOS_CURVA
     const r = resolver(config, g)
-    curva.agregar(g, dos ? { fuerza: Math.abs(r.fuerza) * factor } : { fuerza: Math.max(r.relativa, 0), roz: 1 })
-  }
+    return { x: g, v: dos ? { fuerza: Math.abs(r.fuerza) * factor } : { fuerza: Math.max(r.relativa, 0), roz: 1 } }
+  })
+  curva.cargar(puntos, { xMax: GAP_MAX, yMax: dos ? Math.max(tope * factor, 1e-9) : 4 })
 }
 
 let relatoPrevio = ''

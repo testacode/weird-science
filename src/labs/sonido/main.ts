@@ -41,14 +41,17 @@ const SERIES_GOLPE: Serie[] = [{ id: 'aire', nombre: 'Aire', color: 'cielo' }, {
 const curva = grafico(SERIE_TONO, { titulo: 'Vibración de la fuente · 4 ciclos', unidadX: ' ms', yMax: 1, yMin: -1, alto: 130 })
 let ultimoT = -1
 let retraso = 0
-/** El tono se dibuja de una (4 ciclos): se junta lo que se mueva en 120 ms para no redibujar con cada paso del deslizador. */
+/** El tono se dibuja de una (4 ciclos): se junta lo que se mueva en 120 ms para no rearmar el gráfico con cada paso del deslizador. */
 function graficarTono() {
   clearTimeout(retraso)
   retraso = window.setTimeout(() => {
     if (config.modo !== 'tono') return
     const xMax = 4000 / config.frecuencia
     curva.cambiar(SERIE_TONO, { titulo: 'Vibración de la fuente · 4 ciclos', unidadX: ' ms', xMax, yMax: 1, yMin: -1 })
-    for (let i = 0; i <= 64; i++) curva.agregar((i / 64) * xMax, { v: config.amplitud * Math.sin(2 * Math.PI * config.frecuencia * ((i / 64) * xMax / 1000)) })
+    curva.cargar(Array.from({ length: 65 }, (_, i) => {
+      const x = (i / 64) * xMax
+      return { x, v: { v: config.amplitud * Math.sin(2 * Math.PI * config.frecuencia * (x / 1000)) } }
+    }))
   }, 120)
 }
 /** El golpe se va dibujando a medida que avanza la animación; vale 1 la amplitud de la fuente. */

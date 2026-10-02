@@ -67,8 +67,7 @@ let historial: { h: number; v: Record<string, number> }[] = []
 let ultimoPunto = 0
 function redibujarCurva() {
   const desde = historial[0]?.h ?? 0
-  curva.limpiar()
-  for (const p of historial) curva.agregar((p.h - desde) / 24, p.v)
+  curva.cargar(historial.map((p) => ({ x: (p.h - desde) / 24, v: p.v })))
 }
 function reiniciarCurva() {
   historial = []
