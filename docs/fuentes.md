@@ -287,3 +287,19 @@ Consultas en navegador real (agent-browser, Chromium headless) el 2026-10-01, he
   Frontiers in Marine Science 2023 (Tabla 1, área B) — https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1195651/full
   Frontiers in Marine Science 2025 (Tabla 1) — https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2025.1635127/full
 - Parámetros: `UMBRAL_ECO` 0,1 s, ruido del aire 25 dB, umbral del sonar 0 dB y potencia del ping 50–100 dB (relativos), `SIGMA` 30 ms, rango de volumen 50–100 dB, temperatura 0–40 °C, α de la roca = α del ladrillo.
+
+## Electrostática (`src/labs/electrostatica/model.ts`)
+
+Consultas en navegador real (agent-browser) el 2026-10-01, hechas por el agente del lab. Serie de Carolina (globo 13, PVC 21) rechequeada por el code review el mismo día.
+
+- Carga elemental 1,602176634e-19 C (exacta). OK. — NIST CODATA 2022 — https://physics.nist.gov/cgi-bin/cuu/Value?e
+- ε₀ 8,8541878188e-12 F/m. OK. — NIST CODATA 2022 — https://physics.nist.gov/cgi-bin/cuu/Value?ep0
+- k = 1/(4π ε₀) = 8,98755179e9 N·m²/C² (derivada). OK. — "Coulomb's law", Wikipedia — https://en.wikipedia.org/wiki/Coulomb%27s_law#Coulomb_constant
+- F = k|q₁q₂|/r², 1/r² verificado a 1 parte en 10¹⁶ (por eso "al doble de distancia" es constante: ¼). — College Physics (OpenStax) 18.3 — https://courses.lumenlearning.com/atd-austincc-physics2/chapter/18-3-coulombs-law/
+- Carga estática común: de nC a µC; conservación de la carga; ámbar frotado con seda gana electrones. — OpenStax 18.1 — https://courses.lumenlearning.com/atd-austincc-physics2/chapter/18-1-static-electricity-and-charge-conservation-of-charge/
+- Polarización: separación de cargas en un objeto que sigue neutro. — OpenStax 18.2 — https://courses.lumenlearning.com/atd-austincc-physics2/chapter/18-2-conductors-and-insulators/
+- Serie triboeléctrica (más positivo arriba): vidrio 1, pelo 2, lana 4, seda 6, globo de goma 13, PVC 21. Carolina es la única fuente consultada que ubica el globo (supuesto: látex). — Carolina Knowledge Center — https://knowledge.carolina.com/discipline/physical-science/the-triboelectric-series-an-introduction-for-static-electricity-labs/
+- El orden varía entre fuentes (lana y vidrio se invierten entre listas); declarado en "Qué es real y qué no".
+  University of Iowa 5A10.15 — https://instructional-resources.physics.uiowa.edu/5a1015-triboelectric-series
+  Wesleyan Physics Demos 5A10.15 — https://physicsdemos.site.wesleyan.edu/home/em/5a-electrostatics/5a10-15-triboelectric-series/
+- Parámetros: `Q_PUESTO` 15 nC por puesto (cargas de 15 a 255 nC); papelito de 3 mg y radio efectivo 0,7 cm con F = 2·k·a³·q²/d⁵ (esfera conductora; el factor (εr−1)/(εr+2) del papel queda absorbido en el radio); masa relativa 0,8–1,25; electroscopio η 0,02, d₀ 8 cm, hojas de 4 cm y 1,5 mg; cargas puntuales en el centro; frotado completo, sin humedad.
