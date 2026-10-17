@@ -2,7 +2,7 @@
 
 Laboratorios 3D interactivos de ciencias naturales. Cada lab es un modelo que funciona de verdad: tocás, rompés y mirás qué pasa. Los temas siguen los Núcleos de Aprendizaje Prioritarios (NAP) de Argentina.
 
-**Sitio:** https://weird-science.vercel.app
+**Sitio:** https://weird-science.xmontc.xyz
 
 ## Labs
 
