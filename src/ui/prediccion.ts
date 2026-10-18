@@ -1,3 +1,4 @@
+import { anunciar } from './anunciar'
 import { h } from './dom'
 import { interruptor, type Opcion } from './componentes'
 import { CAPTURA } from './captura'
@@ -80,7 +81,7 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
   const opciones = h('div', { class: 'opciones' })
   const resultado = h('div', { class: 'resultado', 'aria-live': 'polite' })
   const botonSaltar = textoSaltar ? h('button', { type: 'button', class: 'boton saltar', onclick: () => saltarAhora() }) : null
-  const el = h('div', { class: 'panel prediccion', hidden: true }, titulo, texto, opciones, ...(botonSaltar ? [botonSaltar] : []), resultado)
+  const el = h('div', { class: 'panel prediccion', role: 'group', 'aria-label': 'Predecí antes de correr', hidden: true }, titulo, texto, opciones, ...(botonSaltar ? [botonSaltar] : []), resultado)
 
   function marcar(botones: HTMLButtonElement[], lista: Opcion<T>[], correcta: T | null) {
     botones.forEach((b, i) => {
@@ -155,6 +156,7 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
         botonSaltar.hidden = !t
       }
       el.hidden = false
+      anunciar(`Predecí antes de correr: ${pregunta}`)
       // Con la columna del HUD en scroll, la tarjeta puede quedar abajo, fuera de vista.
       asomar(el)
       return true

@@ -36,7 +36,10 @@ export function deslizador(o: OpcionesDeslizador) {
     },
   })
   function pintar(v: number) {
-    lectura.textContent = formato(v)
+    const texto = formato(v)
+    lectura.textContent = texto
+    // El lector de pantalla dice el valor con su unidad ("37 °C") y no el número crudo.
+    input.setAttribute('aria-valuetext', texto)
     if (o.nota) nota.innerHTML = o.nota(v)
     input.style.setProperty('--p', `${((v - min) / (max - min)) * 100}%`)
   }
