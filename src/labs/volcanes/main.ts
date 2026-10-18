@@ -181,7 +181,7 @@ function actualizarHud(t: number) {
     barras.visc.style.width = `${Math.max(viscosidadNormal(config.silice) * 100, 2)}%`
     barras.gas.style.width = `${Math.max((config.gas / LIMITES.gas[1]) * 100, 2)}%`
     barras.expl.style.width = espera ? '0' : `${Math.max(e * 100, 2)}%`
-    valores.visc.textContent = `10^${exp10(logViscosidad(config.silice))}`
+    valores.visc.innerHTML = `10<sup>${exp10(logViscosidad(config.silice))}</sup>`
     valores.gas.textContent = `${num(config.gas, 1)}%`
     valores.expl.textContent = espera ? '?' : num(e, 2)
   }

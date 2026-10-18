@@ -13,6 +13,8 @@ import { L_U, crearTubo } from './tubo'
 const ANCHO_MAQUETA = 11.4
 const Y: Record<MedioId, number> = { aire: 3.4, agua: 1.7, acero: 0 }
 const num = numero
+/** Alto de la pared del fondo, desde el borde de la mesada (y = −1,6). */
+const ALTO_PARED = 30
 /** Corrimiento del banco a la izquierda: a la derecha del tubo va la bomba, que pesa más que la caja de la fuente. */
 const BANCO_X = 0.35
 /** Dónde cae en la escena el extremo izquierdo de los tubos. */
@@ -37,8 +39,9 @@ export function crearEscena(contenedor: HTMLElement) {
   banco.position.x = X0
   scene.add(banco)
 
-  const fondo = new THREE.Mesh(new THREE.BoxGeometry(44, 6.6, 0.12), new THREE.MeshStandardMaterial({ color: 0x0f1b19, roughness: 0.7, metalness: 0.2 }))
-  fondo.position.set(L_U / 2, 1.7, -0.95)
+  // La pared sube mucho más que lo que ve la cámara: si no, arriba se ve el fondo negro del escenario.
+  const fondo = new THREE.Mesh(new THREE.BoxGeometry(44, ALTO_PARED, 0.12), new THREE.MeshStandardMaterial({ color: 0x0f1b19, roughness: 0.7, metalness: 0.2 }))
+  fondo.position.set(L_U / 2, -1.6 + ALTO_PARED / 2, -0.95)
   const borde = new THREE.Mesh(new THREE.BoxGeometry(44, 0.03, 0.03), new THREE.MeshBasicMaterial({ color: 0xc6f35e }))
   borde.position.set(L_U / 2, -1.6, -0.88)
   const piso = new THREE.Mesh(new THREE.CircleGeometry(40, 48), new THREE.MeshStandardMaterial({ color: 0x0a1413, roughness: 0.9 }))

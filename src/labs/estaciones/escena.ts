@@ -19,6 +19,9 @@ const MESADA_Y = -1
 /** La órbita real es casi un círculo (e = 0,0167): en la maqueta se dibuja con una excentricidad ×5 para que se note. */
 const EXAGERACION_E = 5
 const E_VISUAL = EXCENTRICIDAD * EXAGERACION_E
+/** Mitad de la altura de la pastilla de la Tierra (dos líneas) y aire entre su borde y el globo, en px. */
+const MITAD_PASTILLA_TIERRA = 26
+const AIRE_PASTILLA = 8
 
 export interface Cuadro {
   d: number
@@ -114,7 +117,7 @@ export function crearEscena(contenedor: HTMLElement) {
 
   const pildoras = crearPildoras(contenedor, camera)
   pildoras.crear('Sol', { clase: 'p-sol', ancla: new THREE.Vector3(0, 0, 0), dy: 42 })
-  const pTierra = pildoras.crear('', { clase: 'p-tierra', dy: 44, multilinea: true })
+  const pTierra = pildoras.crear('', { clase: 'p-tierra', multilinea: true })
   const nombreTierra = h('span', {}, 'Tierra')
   const distanciaTierra = h('span', { class: 'p-dist' })
   pTierra.el.append(nombreTierra, distanciaTierra)
@@ -132,6 +135,8 @@ export function crearEscena(contenedor: HTMLElement) {
   const haciaSol = new THREE.Vector3()
   const ciudadMundo = new THREE.Vector3()
   const norte = new THREE.Vector3()
+  const centro = new THREE.Vector3()
+  const borde = new THREE.Vector3()
   let epsPrevio = NaN
 
   return {
@@ -167,6 +172,11 @@ export function crearEscena(contenedor: HTMLElement) {
       a.needsUpdate = true
 
       pTierra.ancla.copy(pos)
+      // La pastilla queda justo debajo del globo, sea cual sea su tamaño en pantalla (no tapa la ciudad ni su rótulo).
+      centro.copy(pos).project(camera)
+      borde.setFromMatrixColumn(camera.matrixWorld, 1).multiplyScalar(R_TIERRA).add(pos).project(camera)
+      const radioPx = (Math.abs(borde.y - centro.y) / 2) * contenedor.clientHeight
+      pTierra.dy = radioPx + AIRE_PASTILLA + MITAD_PASTILLA_TIERRA
       pCiudad.ancla.copy(ciudadMundo)
       pCiudad.texto(c.ciudad.nombre)
       pNorte.ancla.copy(tierra.poloEnMundo(norte))

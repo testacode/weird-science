@@ -54,14 +54,14 @@ const EXPLICACION: Record<Forma, (ent: Entorno, v: number, presion: number) => s
     `Estalló: el volumen llegó a <b>${numero(V_ROTURA, 2)}×</b> el normal, el límite de la membrana${av(ent.celula === 'globulo' ? ' (una esfera de 150 fL, contra 90 fL del glóbulo normal)' : ' (se supone el mismo que el del glóbulo)')}.${causaRotura(ent)}`,
   hincha: (ent, v, presion) =>
     conPared(ent)
-      ? `El volumen subió a <b>${numero(v, 2)}×</b>: entró agua y ${causaTurgencia(ent, presion)}`
-      : `El volumen subió a <b>${numero(v, 2)}×</b>: entró agua, pero no llegó al límite de la membrana (${numero(V_ROTURA, 2)}×).`,
+      ? `El volumen se asienta en <b>${numero(v, 2)}×</b>: entró agua y ${causaTurgencia(ent, presion)}`
+      : `El volumen se asienta en <b>${numero(v, 2)}×</b>: entró agua, pero no llega al límite de la membrana (${numero(V_ROTURA, 2)}×).`,
   igual: (ent, v, presion) =>
     presion > 0.05
-      ? `El volumen quedó en <b>${numero(v, 2)}×</b>, casi igual, pero no por falta de diferencia: ${causaTurgencia(ent, presion)}`
-      : `El volumen quedó en <b>${numero(v, 2)}×</b>: adentro y afuera hay casi lo mismo, el agua cruza en los dos sentidos al mismo ritmo y no hay cambio neto.`,
+      ? `El volumen se asienta en <b>${numero(v, 2)}×</b>, casi igual, pero no por falta de diferencia: ${causaTurgencia(ent, presion)}`
+      : `El volumen se asienta en <b>${numero(v, 2)}×</b>: adentro y afuera hay casi lo mismo, el agua cruza en los dos sentidos al mismo ritmo y no hay cambio neto.`,
   achica: (ent, v) =>
-    `El volumen bajó a <b>${numero(v, 2)}×</b>: afuera hay más sal, el agua sale hasta emparejar${av(' las concentraciones')} y la sal se queda afuera. ${conPared(ent) ? 'La pared no se achica y la membrana se despega: plasmólisis.' : 'La membrana se arruga: crenación.'}`,
+    `El volumen se asienta en <b>${numero(v, 2)}×</b>: afuera hay más sal, el agua sale hasta emparejar${av(' las concentraciones')} y la sal se queda afuera. ${conPared(ent) ? 'La pared no se achica y la membrana se despega: plasmólisis.' : 'La membrana se arruga: crenación.'}`,
 }
 
 const preguntaDestino = (ent: Entorno): Pregunta => ({
@@ -87,7 +87,7 @@ const preguntaCruza = (ent: Entorno): Pregunta => ({
     const correcta: 'agua' | 'sal' | 'nada' = dv0 < -1e-6 ? 'agua' : ds0 > 1e-6 ? 'sal' : 'nada'
     const l = leer(final, e)
     const explicaciones: Record<'agua' | 'sal' | 'nada', string> = {
-      agua: `Salió agua: el volumen bajó a <b>${numero(l.v, 2)}×</b>. La membrana deja pasar el agua pero no la sal, y el agua va hacia donde hay más soluto${av(` (afuera ${numero(l.mOsmFuera, 0)} mOsm/L, adentro empezó en ${numero(mOsmInterior(e.celula), 0)})`)}. La sal no entró.`,
+      agua: `Salió agua: el volumen se asienta en <b>${numero(l.v, 2)}×</b>. La membrana deja pasar el agua pero no la sal, y el agua va hacia donde hay más soluto${av(` (afuera ${numero(l.mOsmFuera, 0)} mOsm/L, adentro empezó en ${numero(mOsmInterior(e.celula), 0)})`)}. La sal no entró.`,
       sal: 'Entró sal: la membrana la deja pasar.',
       nada: 'No cruzó nada neto: no hay diferencia de concentración.',
     }

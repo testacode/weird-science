@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
 import { crearPildoras } from '../../escena/pildoras'
 import { crearLuna, crearSol, crearTierra } from './cuerpos'
@@ -49,6 +50,11 @@ export function crearEscena(contenedor: HTMLElement, tamInset: number) {
   controles.minDistance = 8
   controles.maxDistance = 22
   controles.maxPolarAngle = Math.PI * 0.52
+  // La línea de tiempo va entre los dos HUD: ancho real de cada columna, no un número fijo.
+  encuadrarEntreHuds(camera, contenedor, ({ izq, der }) => {
+    contenedor.style.setProperty('--hud-izq', `${izq}px`)
+    contenedor.style.setProperty('--hud-der', `${der}px`)
+  })
 
   // Luces: el Sol es la única fuente fuerte (en el plano de la órbita) y el ambiente es apenas la "luz de la Tierra".
   const sol = new THREE.DirectionalLight(0xfff3dc, INTENSIDAD_SOL)

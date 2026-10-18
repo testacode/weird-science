@@ -26,6 +26,7 @@
 .pildora.p-idea { color: var(--magenta); border-color: var(--magenta); }
 
 /* Línea de tiempo: la base sale del kit; acá lo propio (más aire para los íconos de fase). */
+.hud-linea { left: calc(var(--hud-izq, 400px) + 10px); right: calc(var(--hud-der, 350px) + 10px); }
 .hud-linea .linea { gap: 6px; }
 .hud-linea .linea-valor b { font-size: 15px; }
 .hud-linea .linea input[type='range'] { margin-top: 6px; }
