@@ -152,8 +152,9 @@ function revisarPrediccion(desdeElJuego: boolean) {
 /** La pregunta se armó para otra inclinación: se retira (la respuesta no coincidiría con lo que se vio). */
 function descartarPregunta() {
   if (!pred.datos) return
+  const esperaba = pred.pendiente
   pred.ocultar()
-  seguir(corriendo)
+  if (esperaba) seguir(true)
 }
 function alternar() {
   if (pred.pendiente) return pred.saltar()
