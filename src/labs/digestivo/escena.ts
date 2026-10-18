@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { encuadrarEntreHuds } from '../../escena/encuadre'
 import { crearEscenario } from '../../escena/escenario'
 import { MAX_BOCADOS } from './bocados'
 import { DESP_HIGADO, DESP_PANCREAS, DESP_TRAMO, despEnTubo } from './explosion'
@@ -34,6 +35,8 @@ export function crearEscena(contenedor: HTMLElement, nombres: string[]) {
   controles.minDistance = DISTANCIA.min
   controles.maxDistance = DISTANCIA.max
   controles.maxPolarAngle = Math.PI * 0.62
+  // La burbuja de zoom queda a la izquierda de la consola: ancho real de la columna, no un número fijo.
+  encuadrarEntreHuds(camera, contenedor, ({ der }) => contenedor.style.setProperty('--hud-der', `${der}px`))
 
   const vidrio = new THREE.MeshPhysicalMaterial({
     color: VIDRIO, transmission: 1, roughness: 0.1, thickness: 0.35, ior: 1.4, emissive: VIDRIO, emissiveIntensity: 0.15,
