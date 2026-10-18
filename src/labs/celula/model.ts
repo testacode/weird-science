@@ -193,16 +193,16 @@ const BORDE_ROTURA = 0.03
 
 /**
  * Si la pregunta de `ent` quedaría al borde de la rotura (la célula sin pared se asienta a menos de ~3 % de V_ROTURA, de un lado
- * o del otro), devuelve el % de sal más cercano que queda afuera de esa franja; si no, el mismo. Va en pasos de 0,01 como el deslizador.
+ * o del otro), devuelve el % de sal de uno de los dos bordes de esa franja (`haciaArriba`: el de más sal, donde aguanta;
+ * si no, el de menos, donde estalla); si no, el mismo. Va en pasos de 0,01 como el deslizador.
+ * Quien llama sortea el lado: si siempre fuera el más cercano, el salto del deslizador delataría la respuesta.
  */
-export function pctLejosDeRotura(ent: Entorno): number {
+export function pctLejosDeRotura(ent: Entorno, haciaArriba: boolean): number {
   if (!ent.selectiva || conPared(ent)) return ent.pct
   const { b, pctIso } = CELULAS[ent.celula]
   const pctPara = (v: number) => (pctIso * (1 - b)) / (v - b)
-  const critico = pctDeRotura(ent.celula)
-  const sube = ent.pct >= critico
-  const borde = pctPara(V_ROTURA * (sube ? 1 - BORDE_ROTURA : 1 + BORDE_ROTURA))
-  const cerca = sube ? ent.pct < borde : ent.pct > borde
-  if (!cerca) return ent.pct
-  return (sube ? Math.ceil(borde * 100 - 1e-9) : Math.floor(borde * 100 + 1e-9)) / 100
+  const bajo = pctPara(V_ROTURA * (1 + BORDE_ROTURA))
+  const alto = pctPara(V_ROTURA * (1 - BORDE_ROTURA))
+  if (ent.pct <= bajo || ent.pct >= alto) return ent.pct
+  return (haciaArriba ? Math.ceil(alto * 100 - 1e-9) : Math.floor(bajo * 100 + 1e-9)) / 100
 }

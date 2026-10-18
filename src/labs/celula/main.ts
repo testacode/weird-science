@@ -2,7 +2,7 @@ import '../../ui/kit.css'
 import './celula.css'
 import { numero } from '../../ui/formato'
 import { hud as columnaHud } from '../../ui/hud'
-import { prediccion } from '../../ui/prediccion'
+import { prediccion, preguntasActivas } from '../../ui/prediccion'
 import { PCT_MAX, VELOCIDADES, crearControles, pctDe, solucionDe } from './controles'
 import { CELULAS, estadoInicial, leer, paso, pctLejosDeRotura, type Celula, type Entorno } from './model'
 import { crearEscena } from './escena'
@@ -58,8 +58,9 @@ function alternar() {
 }
 /** Célula nueva en reposo, en la solución y con la membrana de `ent`. */
 function nueva() {
-  // Un % al borde de la rotura haría una pregunta de respuesta dudosa y un reveal eterno: se corre un pelito (≤ 0,03 %).
-  const pct = pctLejosDeRotura(ent)
+  // Con pregunta, un % al borde de la rotura tendría una respuesta dudosa y un reveal eterno: se corre un pelito (≤ 0,03 %) a un
+  // lado o al otro, al azar. Sin preguntas no se toca lo que puso el usuario.
+  const pct = preguntasActivas() ? pctLejosDeRotura(ent, Math.random() < 0.5) : ent.pct
   if (pct !== ent.pct) {
     ent = { ...ent, pct }
     controles.set.pct(ent.celula, pct)
