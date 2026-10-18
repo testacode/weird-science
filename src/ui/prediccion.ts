@@ -1,4 +1,4 @@
-import { anunciar } from './anunciar'
+import { anunciar, silenciar } from './anunciar'
 import { h } from './dom'
 import { interruptor, type Opcion } from './componentes'
 import { CAPTURA } from './captura'
@@ -102,6 +102,7 @@ export function prediccion<T extends string, D = undefined>(alElegir?: (v: T) =>
     respondida = false
     datos = null
     el.hidden = true
+    silenciar()
   }
   /** Saltea la pregunta abierta: se oculta primero (el lab puede abrir otra) y el lab sigue con los datos que tenía. */
   function saltarAhora() {

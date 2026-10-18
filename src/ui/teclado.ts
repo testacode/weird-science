@@ -28,9 +28,10 @@ function escribiendo(): boolean {
   return el.isContentEditable || ['TEXTAREA', 'SELECT'].includes(el.tagName)
 }
 
-/** Con un botón o link enfocado, la barra espaciadora es suya (lo activa). */
+/** Con un botón, link o input activable (checkbox, radio…) enfocado, la barra espaciadora es suya (lo activa). El deslizador no la usa. */
 function controlEnfocado(): boolean {
   const el = document.activeElement
+  if (el instanceof HTMLInputElement) return el.type !== 'range' && SIN_TEXTO.includes(el.type)
   return el instanceof HTMLElement && ['BUTTON', 'A', 'SUMMARY'].includes(el.tagName)
 }
 
