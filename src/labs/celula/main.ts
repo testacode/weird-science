@@ -4,7 +4,7 @@ import { numero } from '../../ui/formato'
 import { hud as columnaHud } from '../../ui/hud'
 import { prediccion } from '../../ui/prediccion'
 import { PCT_MAX, VELOCIDADES, crearControles, pctDe, solucionDe } from './controles'
-import { CELULAS, estadoInicial, leer, paso, type Celula, type Entorno } from './model'
+import { CELULAS, estadoInicial, leer, paso, pctLejosDeRotura, type Celula, type Entorno } from './model'
 import { crearEscena } from './escena'
 import { MUESTREO_PANTALLA_S, crearHud } from './hud'
 import { preguntaPara, type Pregunta, type Respuesta } from './prediccion'
@@ -58,6 +58,12 @@ function alternar() {
 }
 /** Célula nueva en reposo, en la solución y con la membrana de `ent`. */
 function nueva() {
+  // Un % al borde de la rotura haría una pregunta de respuesta dudosa y un reveal eterno: se corre un pelito (≤ 0,03 %).
+  const pct = pctLejosDeRotura(ent)
+  if (pct !== ent.pct) {
+    ent = { ...ent, pct }
+    controles.set.pct(ent.celula, pct)
+  }
   est = estadoInicial()
   escena.reiniciar(ent)
   hud.reiniciarCurva(ent)

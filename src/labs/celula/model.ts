@@ -51,6 +51,8 @@ export const CELULAS: Record<Celula, ParamsCelula> = {
 export const TOLERANCIA_VOLUMEN = 0.03
 /** Distancia al volumen de equilibrio por debajo de la cual se considera que la célula llegó. */
 const UMBRAL_EQUILIBRIO = 0.004
+/** Cerca del volumen de rotura la célula tarda muchísimo en asentarse: alcanza con que falte menos de esta fracción del recorrido (del volumen normal al de equilibrio). */
+const FALTANTE_EQUILIBRIO = 0.05
 /** Presión osmótica (MPa) de la célula vegetal en la plasmólisis incipiente: π = osmolaridad · R · T, con T = 20 °C. */
 export const PI0_VEGETAL_MPA = (osmolaridad(PCT_PLASMOLISIS_VEGETAL) * 8.314 * 293.15) / 1e6
 const PASO_S = 0.005
@@ -142,7 +144,7 @@ export interface Lectura {
 /** Llegó cuando está cerca del volumen de equilibrio y lo que se muestra ya coincide con el veredicto (misma forma). */
 function llegoAlEquilibrio(v: number, ent: Entorno): boolean {
   const eq = equilibrio(ent)
-  return !eq.rota && Math.abs(v - eq.v) < UMBRAL_EQUILIBRIO && forma(v, false) === forma(eq.v, false)
+  return !eq.rota && Math.abs(v - eq.v) < Math.max(UMBRAL_EQUILIBRIO, FALTANTE_EQUILIBRIO * Math.abs(eq.v - 1)) && forma(v, false) === forma(eq.v, false)
 }
 
 export function leer(est: Estado, ent: Entorno): Lectura {
@@ -180,8 +182,27 @@ export function simular(ent: Entorno): Resultado {
   return { final: equilibrio(ent), dv0: dv, ds0: ds }
 }
 
-/** Con qué % de NaCl llega el glóbulo justo al volumen de rotura (Boyle–van't Hoff). */
-export function pctDeRotura(): number {
-  const { b, pctIso } = CELULAS.globulo
+/** Con qué % de NaCl la célula (sin pared) llega justo al volumen de rotura (Boyle–van't Hoff). Por defecto, el glóbulo. */
+export function pctDeRotura(celula: Celula = 'globulo'): number {
+  const { b, pctIso } = CELULAS[celula]
   return (pctIso * (1 - b)) / (V_ROTURA - b)
+}
+
+/** Alrededor del % de rotura (en fracción de V_ROTURA) la respuesta queda al borde y el reveal tarda demasiado: ahí no se pregunta. */
+const BORDE_ROTURA = 0.03
+
+/**
+ * Si la pregunta de `ent` quedaría al borde de la rotura (la célula sin pared se asienta a menos de ~3 % de V_ROTURA, de un lado
+ * o del otro), devuelve el % de sal más cercano que queda afuera de esa franja; si no, el mismo. Va en pasos de 0,01 como el deslizador.
+ */
+export function pctLejosDeRotura(ent: Entorno): number {
+  if (!ent.selectiva || conPared(ent)) return ent.pct
+  const { b, pctIso } = CELULAS[ent.celula]
+  const pctPara = (v: number) => (pctIso * (1 - b)) / (v - b)
+  const critico = pctDeRotura(ent.celula)
+  const sube = ent.pct >= critico
+  const borde = pctPara(V_ROTURA * (sube ? 1 - BORDE_ROTURA : 1 + BORDE_ROTURA))
+  const cerca = sube ? ent.pct < borde : ent.pct > borde
+  if (!cerca) return ent.pct
+  return (sube ? Math.ceil(borde * 100 - 1e-9) : Math.floor(borde * 100 + 1e-9)) / 100
 }
