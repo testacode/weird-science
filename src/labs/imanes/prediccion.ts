@@ -1,6 +1,7 @@
 // Preguntas de "Predecí antes de correr". Se hacen ANTES de aplicar el cambio y la respuesta sale del modelo.
 
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { fuerzaTexto, n, num, s, veces } from './contenido'
 import { LARGO, MATERIALES, TIPOS, fuerzaSobreMuestra, magnetizacion, resolver, rozamientoMuestra, type Config } from './model'
@@ -29,15 +30,16 @@ const MITAD = { valor: 1 / 2, nombre: 'la mitad' }
 const TERCIO = { valor: 1 / 3, nombre: 'un tercio' }
 const CUARTO = { valor: 1 / 4, nombre: 'un cuarto' }
 const QUINTO = { valor: 1 / 5, nombre: 'un quinto' }
+const SEXTO = { valor: 1 / 6, nombre: 'un sexto' }
 /**
- * Pares de cortes (alto, bajo) para las tres opciones. Se usa el primero que deja el resultado lejos de ambos cortes:
- * así el porcentaje que se muestra nunca contradice el veredicto y la pregunta se hace siempre (no hay banda muerta).
- * Con un margen de 10 % del corte, los dos pares juntos cubren todo el rango.
+ * Pares de cortes (alto, bajo) para las tres opciones. Se sortea uno entre los que dejan el resultado a más del 10 % de ambos cortes:
+ * así el porcentaje que se muestra nunca contradice el veredicto, la pregunta se hace siempre (no hay banda muerta) y el par no delata
+ * la respuesta. El primero es el clásico (la mitad y 1/d²); los otros cubren lo que cae más lejos (a 6 cm queda ~14 %).
  */
-const CORTES: [Corte, Corte][] = [[MITAD, CUARTO], [TERCIO, QUINTO]]
+const CORTES: [Corte, Corte][] = [[MITAD, CUARTO], [TERCIO, QUINTO], [CUARTO, SEXTO], [TERCIO, SEXTO]]
 const MARGEN = 0.1
 const lejos = (queda: number, c: Corte) => Math.abs(queda - c.valor) >= MARGEN * c.valor
-const cortesPara = (queda: number) => CORTES.find((par) => par.every((c) => lejos(queda, c))) ?? CORTES[1]
+const cortesPara = (queda: number) => mezclar(CORTES.filter((par) => par.every((c) => lejos(queda, c))))[0] ?? CORTES[0]
 const clasificar = (queda: number, [alto, bajo]: [Corte, Corte]): 'mitad' | 'entre' | 'cuarto' => (queda > alto.valor ? 'mitad' : queda >= bajo.valor ? 'entre' : 'cuarto')
 
 function preguntaDuplicar(actual: Config, nueva: Config): Pregunta {
