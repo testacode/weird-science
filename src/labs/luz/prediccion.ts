@@ -18,8 +18,13 @@ export interface Pregunta {
 
 /** Con más de esta fracción de luz reflejada (y sin llegar al 100 %), "una parte sale y otra se refleja". */
 const REFLEJO_NOTABLE = 0.25
-/** Fracción de la profundidad real por debajo de la cual el lápiz se ve "bastante más cerca". */
-const MUY_CERCA = 2 / 3
+/**
+ * Cortes de la profundidad aparente (fracción de la real) entre "un poco" y "bastante" más cerca. Se usa el primero que deja
+ * el resultado a más de 10 % del corte: así el porcentaje que se muestra nunca contradice el veredicto (el aceite a 20° da 66 %).
+ * Los dos juntos cubren todo el rango (con 2/3 no sirven los factores de 60 % a 73 %, y para esos la mitad queda lejos).
+ */
+const CORTES_LAPIZ = [{ valor: 2 / 3, de: '2/3 de' }, { valor: 1 / 2, de: 'la mitad de' }]
+const cortePara = (factor: number) => CORTES_LAPIZ.find((c) => Math.abs(factor - c.valor) >= 0.1 * c.valor) ?? CORTES_LAPIZ[1]
 
 const g = (n: number) => `${num(n, Math.abs(n - Math.round(n)) < 0.05 ? 0 : 1)}°`
 
@@ -95,17 +100,18 @@ function preguntaAdentro(nueva: Config): Pregunta {
 
 function preguntaLapiz(nueva: Config): Pregunta {
   const medio = nombreMedio(nueva).toLowerCase()
-  const real = trazarLapiz(nueva).profundidad
+  const { profundidad: real, factor } = trazarLapiz(nueva)
+  const corte = cortePara(factor)
   return {
     texto: `Hay un lápiz clavado en el ${medio} (n = ${num(indice(nueva), 3)}) y lo mirás con ${g(nueva.ojo)} desde la vertical. La punta está a ${cm(real)} de la superficie. ¿A qué profundidad la ves?`,
     opciones: [
       { valor: 'real', texto: `Donde está: a ${cm(real)}` },
-      { valor: 'poco', texto: 'Un poco más cerca de la superficie (más de 2/3 de la profundidad real)' },
-      { valor: 'mucho', texto: 'Bastante más cerca (menos de 2/3 de la profundidad real)' },
+      { valor: 'poco', texto: `Un poco más cerca de la superficie (más de ${corte.de} la profundidad real)` },
+      { valor: 'mucho', texto: `Bastante más cerca (menos de ${corte.de} la profundidad real)` },
     ],
     resolver: () => {
       const d = trazarLapiz(nueva)
-      const correcta: Respuesta = sinEngano(d) ? 'real' : d.factor > MUY_CERCA ? 'poco' : 'mucho'
+      const correcta: Respuesta = sinEngano(d) ? 'real' : d.factor > corte.valor ? 'poco' : 'mucho'
       const causa = correcta === 'real'
         ? ' La luz no se desvía al salir de un medio con el índice del aire, así que no hay engaño.'
         : ' La luz que sale de la punta se dobla al pasar al aire y el ojo, que supone que la luz viajó derecho, la ve más cerca de la superficie. Cuanto más se mira de costado, más cerca parece; por eso una pileta parece menos profunda de lo que es.'
