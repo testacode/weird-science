@@ -30,6 +30,7 @@
 
 ## Hecho reciente
 
+- 2026-10-17 — Dominio propio: https://weird-science.xmontc.xyz (CNAME DNS-only en Cloudflare → Vercel; `.vercel.app` sigue andando). README, "About" del repo y el CV (`resume`) apuntan ahí.
 - 2026-10-02 — Portada: selector "Por eje (NAP) / Por tema" (vista en el hash `#temas` y en localStorage) y un poster por lab en cada tarjeta (tarjetas de 400 px mínimo). Los posters salen de `scripts/posters.sh` (modo `?captura`: solo la escena 3D, sin preguntas) y viven en `src/posters/`; la portada importa solo los que existen.
 - 2026-10-02 — Kit K4: opciones `resolver` y `pred.revisar()` en la predicción; 11 labs sin su `revelar` propio (célula, ciclo del agua, eco, electrostática, partículas, sonido, volcanes, flotación, fotosíntesis, digestivo, mezclas). Mezclas: "Separar" con la pregunta abierta la deja de lado.
 - 2026-10-02 — Kit K3: `grafico.cargar(puntos)` dibuja una curva calculada de una vez (estaciones pasó de ~95 redibujos por cambio a 1); migrados 7 labs.
