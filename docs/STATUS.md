@@ -15,21 +15,24 @@
    - Sin uso hoy (se agregan cuando un lab los necesite): `segmentado` deshabilitado (volcanes usa `hidden`), deslizador logarítmico (sonido tiene el suyo, que se clava en las notas), `origen` y quitar en `crearPildoras` (volcanes reutiliza pastillas).
    - `cambiar()` + `cargar()` del gráfico dibujan dos veces al cambiar de series (barato; se evitaría con puntos opcionales en `cambiar`).
 3. **Portada:** loop de video por lab (descartado por ahora: los posters alcanzan). Posters más lindos en eco, electrostática y luna (objetos chicos, mucho fondo): encuadre propio para `?captura` o una acción antes de la foto (en eco, gritar). "Energía" está en 12 de 18 labs: el recorrido por tema se diluye; revisar los tags.
-4. **Revisión de accesibilidad:** contraste, teclado y `prefers-reduced-motion`.
+4. **Accesibilidad, lo que queda (por lab):**
+   - cámara 3D solo con mouse en todos los labs (canvas no enfocable, sin `listenToKeyEvents`); circuito: confirmar que cada acción con click en 3D tenga botón en el HUD;
+   - animación 3D sin `prefers-reduced-motion` (propuesta: `sinMovimiento()` en `src/ui/movimiento.ts`) y `enableDamping` en imanes, circulatorio, luna, sonido y célula;
+   - luna: canvas `.disco` e `icono-fase` sin nombre; líneas de tiempo de luna y estaciones sin `aria-valuetext` (opción `valorTexto` en `src/ui/linea.ts`);
+   - circulatorio: etiqueta "Gravedad" con `opacity:0.4` (1,94:1);
+   - segmentados envueltos en `div.grupo` sin nombre: imanes `main.ts:74`, electrostática `main.ts:232`, circulatorio `controles.ts:50,52`;
+   - `.etiqueta` del kit de 10px; borde de `.boton` y riel del slider con poco contraste no-texto (cambiaría el diseño).
 5. **Detalles:**
-   - etiquetas superpuestas arriba de la Tierra en el solsticio de diciembre (estaciones);
-   - sonido: franja negra arriba de la escena;
-   - célula: con la vegetal sin pared al borde de la rotura, el reveal puede tardar ~71 s a 1× (espera el equilibrio real);
-   - preguntas al borde de su umbral (imanes "alejar al doble" con banda muerta; luz, lápiz en aceite a 20° da 66 % contra la vara de 2/3);
-   - fotosíntesis: con la pregunta del verde abierta el reloj del experimento sigue (marca 2:00 al responder) y el reveal sale al instante (pasa igual en `main` antes del kit K4);
-   - estaciones: mover la inclinación con la pregunta sin responder la descarta pero deja el año en pausa (ciclo del agua, en el mismo caso, sigue corriendo);
+   - fotosíntesis: reloj con la pregunta del verde abierta: no se reproduce (fuzzer de ~460 acciones); retomar solo con pasos exactos;
+   - estaciones: con 633 px de alto la tarjeta "Desde tu ciudad" tapa la Tierra en diciembre; `encuadrarEntreHuds` no sabe de tarjetas flotantes, y `.hud-inset`/`.hud-linea` siguen con 410/360 fijos (falta `--hud-izq`/`--hud-der` en el kit);
+   - luz e imanes: con el corte sorteado, cada corte sigue inclinado a un lado (luz: 70 % → 95 % "menos"; imanes: mitad/cuarto → 88 % "menos"), por el rango físico del modelo;
    - `metrica()` no reajusta el tamaño al cambiar el ancho de la ventana;
-   - offsets fijos de `.hud-linea` (luna) y `.zoom` (digestivo) en lugar de usar el encuadre;
-   - volcanes: la barra "¿Fluye o explota?" escribe "10^8" y la métrica "10⁸";
    - archivos de más de 200 líneas: `electrostatica/escena.ts` y `main.ts`, `fotosintesis/main.ts`, `luna/main.ts`, `circuito/escena.ts`, `particulas/main.ts`, `flotacion/model.ts`, `ciclo-agua/main.ts`.
 
 ## Hecho reciente
 
+- 2026-10-17 — Accesibilidad del kit (`feat/a11y`): atajos que siguen con un slider enfocado (y Espacio no pisa checkbox/radio), ARIA en grupos, deslizador (`aria-valuetext`), modal, predicción (región `aria-live` vía `anunciar()`/`silenciar()` en `src/ui/anunciar.ts`) y maqueta 3D (`role=img`), `:focus-visible` en links y `summary`, `prefers-reduced-motion` global en `kit.css`, pastillas a ~4,7:1. Contraste del kit ya cumplía AA. Con code review.
+- 2026-10-17 — Detalles (`feat/bugs`): etiqueta de la Tierra (estaciones), inclinación con pregunta abierta deja correr el año, franja negra (sonido), luna y digestivo usan `encuadrarEntreHuds`, superíndice en volcanes, cortes sorteados lejos del resultado (luz e imanes), célula esquiva la franja de ±3 % de la rotura (lado al azar, solo con preguntas activas) y revela al 5 % del recorrido ("se asienta en"); reveal máximo 38 s. Con code review (el primer arreglo de luz delataba la respuesta).
 - 2026-10-17 — Dominio propio: https://weird-science.xmontc.xyz (CNAME DNS-only en Cloudflare → Vercel; `.vercel.app` sigue andando). README, "About" del repo y el CV (`resume`) apuntan ahí.
 - 2026-10-02 — Portada: selector "Por eje (NAP) / Por tema" (vista en el hash `#temas` y en localStorage) y un poster por lab en cada tarjeta (tarjetas de 400 px mínimo). Los posters salen de `scripts/posters.sh` (modo `?captura`: solo la escena 3D, sin preguntas) y viven en `src/posters/`; la portada importa solo los que existen.
 - 2026-10-02 — Kit K4: opciones `resolver` y `pred.revisar()` en la predicción; 11 labs sin su `revelar` propio (célula, ciclo del agua, eco, electrostática, partículas, sonido, volcanes, flotación, fotosíntesis, digestivo, mezclas). Mezclas: "Separar" con la pregunta abierta la deja de lado.
