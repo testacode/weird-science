@@ -23,33 +23,48 @@ export const SEP_CORTE = 1.4
 
 /** Fracción de la fuerza que queda al duplicar la distancia. */
 const quedaAlDuplicar = (actual: Config, nueva: Config) => Math.abs(resolver(nueva).fuerza) / Math.abs(resolver(actual).fuerza)
-/** Los cortes de la pregunta (½ y ¼) y la banda muerta alrededor: ahí no se pregunta, así el porcentaje redondeado nunca contradice el veredicto. */
-const CORTES = [0.5, 0.25]
-const BANDA = 0.01
-const clasificar = (queda: number): 'mitad' | 'entre' | 'cuarto' => (queda > 0.5 ? 'mitad' : queda >= 0.25 ? 'entre' : 'cuarto')
+/** Un corte de las opciones: fracción de la fuerza que queda y cómo se dice. */
+interface Corte { valor: number; nombre: string }
+const MITAD = { valor: 1 / 2, nombre: 'la mitad' }
+const TERCIO = { valor: 1 / 3, nombre: 'un tercio' }
+const CUARTO = { valor: 1 / 4, nombre: 'un cuarto' }
+const QUINTO = { valor: 1 / 5, nombre: 'un quinto' }
+/**
+ * Pares de cortes (alto, bajo) para las tres opciones. Se usa el primero que deja el resultado lejos de ambos cortes:
+ * así el porcentaje que se muestra nunca contradice el veredicto y la pregunta se hace siempre (no hay banda muerta).
+ * Con un margen de 10 % del corte, los dos pares juntos cubren todo el rango.
+ */
+const CORTES: [Corte, Corte][] = [[MITAD, CUARTO], [TERCIO, QUINTO]]
+const MARGEN = 0.1
+const lejos = (queda: number, c: Corte) => Math.abs(queda - c.valor) >= MARGEN * c.valor
+const cortesPara = (queda: number) => CORTES.find((par) => par.every((c) => lejos(queda, c))) ?? CORTES[1]
+const clasificar = (queda: number, [alto, bajo]: [Corte, Corte]): 'mitad' | 'entre' | 'cuarto' => (queda > alto.valor ? 'mitad' : queda >= bajo.valor ? 'entre' : 'cuarto')
 
-function preguntaDuplicar(actual: Config): Pregunta {
+function preguntaDuplicar(actual: Config, nueva: Config): Pregunta {
   const r = resolver(actual)
   const doble = actual.gap * 2
+  const cortes = cortesPara(quedaAlDuplicar(actual, nueva))
+  const [alto, bajo] = cortes
   return {
     texto: `Los imanes están a ${num(actual.gap, 1)} cm y ${r.fuerza >= 0 ? 'se atraen' : 'se repelen'} con ${fuerzaTexto(r.fuerza)}. Si los alejás al doble (${num(doble, 1)} cm), ¿cuánta fuerza queda?`,
     opciones: [
-      { valor: 'mitad', texto: 'Más de la mitad' },
-      { valor: 'entre', texto: 'Entre la mitad y un cuarto' },
-      { valor: 'cuarto', texto: 'Menos de un cuarto' },
+      { valor: 'mitad', texto: `Más de ${alto.nombre}` },
+      { valor: 'entre', texto: `Entre ${alto.nombre} y ${bajo.nombre}` },
+      { valor: 'cuarto', texto: `Menos de ${bajo.nombre}` },
     ],
     ajuste: {},
     resolver: (despues) => {
       const antes = Math.abs(r.fuerza)
       const ahora = Math.abs(resolver(despues).fuerza)
       const queda = ahora / antes
-      const correcta = clasificar(queda)
+      const correcta = clasificar(queda, cortes)
       const hecho = `La fuerza pasó de <b>${fuerzaTexto(antes)}</b> a <b>${fuerzaTexto(ahora)}</b>: quedó el <b>${num(queda * 100, 0)} %</b> (${num(antes / ahora, 1)} veces menos). Si bajara como 1/d² (como la gravedad) quedaría el 25 %.`
+      // La explicación depende de cómo cae contra 1/d² (el 25 %), no de los cortes de las opciones.
       const causa = {
         mitad: ' Acá cae más despacio: a esta distancia el polo todavía se ve como una cara ancha (1,6 cm), no como un punto, y casi toda la cara sigue igual de cerca.',
         entre: ' Acá cae más despacio que 1/d²: el polo no es un punto sino una cara de 1,6 cm, y a esta distancia todavía se nota su tamaño.',
         cuarto: ' Acá cae más rápido que 1/d²: de cada imán, un polo atrae y el otro repele, y a esta distancia se cancelan en parte.',
-      }[correcta]
+      }[clasificar(queda, CORTES[0])]
       return { correcta, explicacion: `${hecho}${causa}${av(' Lejos del imán (mucho más que su largo) la fuerza entre dos dipolos decae como 1/d⁴: al doble de distancia queda 1/16.')}` }
     },
   }
@@ -112,8 +127,7 @@ function preguntaPartir(nueva: Config): Pregunta {
 export function preguntaPara(actual: Config, nueva: Config, intencion?: Intencion): Pregunta | null {
   if (magnetizacion(actual) === 0) return null
   if (intencion === 'duplicar' && actual.modo === 'dos') {
-    const queda = quedaAlDuplicar(actual, nueva)
-    return CORTES.some((c) => Math.abs(queda - c) < BANDA) ? null : preguntaDuplicar(actual)
+    return preguntaDuplicar(actual, nueva)
   }
   if (nueva.piezas > actual.piezas) return preguntaPartir(nueva)
   if (actual.modo === 'material' && nueva.modo === 'material' && nueva.material !== actual.material) return preguntaMaterial(actual, nueva)
