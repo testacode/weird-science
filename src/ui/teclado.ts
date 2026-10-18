@@ -18,9 +18,14 @@ export function listaAtajos(atajos: Atajo[]): string {
   return `<ul class="atajos">${atajos.map((a) => `<li><kbd>${a.etiqueta}</kbd> ${a.texto}</li>`).join('')}</ul>`
 }
 
+/** Inputs que no reciben texto: con uno enfocado (un deslizador tras tocarlo) los atajos siguen andando. */
+const SIN_TEXTO = ['range', 'checkbox', 'radio', 'button', 'submit', 'reset', 'color', 'file']
+
 function escribiendo(): boolean {
   const el = document.activeElement
-  return el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
+  if (!(el instanceof HTMLElement)) return false
+  if (el instanceof HTMLInputElement) return !SIN_TEXTO.includes(el.type)
+  return el.isContentEditable || ['TEXTAREA', 'SELECT'].includes(el.tagName)
 }
 
 /** Con un botón o link enfocado, la barra espaciadora es suya (lo activa). */
