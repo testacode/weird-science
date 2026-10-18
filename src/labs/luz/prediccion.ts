@@ -1,6 +1,7 @@
 // Preguntas de "Predecí antes de correr". Se hacen ANTES de aplicar el cambio y la respuesta sale del modelo.
 
 import { av } from '../../ui/avanzado'
+import { mezclar } from '../../ui/azar'
 import type { Opcion } from '../../ui/componentes'
 import { cm, kms, num } from './contenido'
 import {
@@ -19,12 +20,13 @@ export interface Pregunta {
 /** Con más de esta fracción de luz reflejada (y sin llegar al 100 %), "una parte sale y otra se refleja". */
 const REFLEJO_NOTABLE = 0.25
 /**
- * Cortes de la profundidad aparente (fracción de la real) entre "un poco" y "bastante" más cerca. Se usa el primero que deja
- * el resultado a más de 10 % del corte: así el porcentaje que se muestra nunca contradice el veredicto (el aceite a 20° da 66 %).
- * Los dos juntos cubren todo el rango (con 2/3 no sirven los factores de 60 % a 73 %, y para esos la mitad queda lejos).
+ * Cortes de la profundidad aparente (% de la real) entre "un poco" y "bastante" más cerca. Se sortea uno entre los que dejan
+ * el resultado a más de 4 puntos: así el porcentaje que se muestra nunca contradice el veredicto (el aceite a 20° da 66 %)
+ * y el corte no delata la respuesta. Con estos cortes siempre hay alguno que sirve.
  */
-const CORTES_LAPIZ = [{ valor: 2 / 3, de: '2/3 de' }, { valor: 1 / 2, de: 'la mitad de' }]
-const cortePara = (factor: number) => CORTES_LAPIZ.find((c) => Math.abs(factor - c.valor) >= 0.1 * c.valor) ?? CORTES_LAPIZ[1]
+const CORTES_LAPIZ = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+const MARGEN_LAPIZ = 0.04
+const cortePara = (factor: number) => mezclar(CORTES_LAPIZ.filter((c) => Math.abs(factor - c) >= MARGEN_LAPIZ))[0] ?? CORTES_LAPIZ[0]
 
 const g = (n: number) => `${num(n, Math.abs(n - Math.round(n)) < 0.05 ? 0 : 1)}°`
 
@@ -106,12 +108,12 @@ function preguntaLapiz(nueva: Config): Pregunta {
     texto: `Hay un lápiz clavado en el ${medio} (n = ${num(indice(nueva), 3)}) y lo mirás con ${g(nueva.ojo)} desde la vertical. La punta está a ${cm(real)} de la superficie. ¿A qué profundidad la ves?`,
     opciones: [
       { valor: 'real', texto: `Donde está: a ${cm(real)}` },
-      { valor: 'poco', texto: `Un poco más cerca de la superficie (más de ${corte.de} la profundidad real)` },
-      { valor: 'mucho', texto: `Bastante más cerca (menos de ${corte.de} la profundidad real)` },
+      { valor: 'poco', texto: `Más cerca de la superficie, pero a más del ${num(corte * 100, 0)} % de la profundidad real` },
+      { valor: 'mucho', texto: `Más cerca de la superficie, a menos del ${num(corte * 100, 0)} % de la profundidad real` },
     ],
     resolver: () => {
       const d = trazarLapiz(nueva)
-      const correcta: Respuesta = sinEngano(d) ? 'real' : d.factor > corte.valor ? 'poco' : 'mucho'
+      const correcta: Respuesta = sinEngano(d) ? 'real' : d.factor > corte ? 'poco' : 'mucho'
       const causa = correcta === 'real'
         ? ' La luz no se desvía al salir de un medio con el índice del aire, así que no hay engaño.'
         : ' La luz que sale de la punta se dobla al pasar al aire y el ojo, que supone que la luz viajó derecho, la ve más cerca de la superficie. Cuanto más se mira de costado, más cerca parece; por eso una pileta parece menos profunda de lo que es.'
