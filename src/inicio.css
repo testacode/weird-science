@@ -23,5 +23,6 @@ body { background: radial-gradient(circle at 25% 0%, rgba(198, 243, 94, 0.08), t
 .tarjeta h3 { margin: 4px 0 0; font-size: 20px; }
 .tarjeta p { margin: 0; color: var(--apagado); }
 a.tarjeta:hover { transform: translateY(-2px); border-color: var(--marca); }
-.apagada { opacity: 0.55; }
+.apagada { border-style: dashed; }
+.apagada h3 { color: var(--apagado); }
 .pronto { font: 600 11px/1 var(--mono); color: var(--ambar); }

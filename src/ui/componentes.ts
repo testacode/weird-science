@@ -37,8 +37,14 @@ export function segmentado<T extends string>(
   return { el: h('div', { class: conMuestras ? 'segmentado con-muestras' : 'segmentado', role: 'group' }, ...botones), set, texto }
 }
 
+/** Un `segmentado` (role group) sin nombre propio toma el del texto que lo acompaña, para los lectores de pantalla. */
+function nombrar(control: HTMLElement, nombre: string) {
+  if (control.getAttribute('role') === 'group' && !control.hasAttribute('aria-label')) control.setAttribute('aria-label', nombre)
+}
+
 /** Fila de la consola: texto a la izquierda y un control a la derecha. */
 export function fila(texto: string, control: HTMLElement, clases = ''): HTMLElement {
+  nombrar(control, texto)
   return h('div', { class: `interruptor ${clases}`.trim() }, h('span', {}, texto), control)
 }
 
@@ -49,6 +55,7 @@ export function interruptor(texto: string, activo: boolean, alElegir: (si: boole
 }
 
 export function grupo(titulo: string, contenido: HTMLElement): HTMLElement {
+  nombrar(contenido, titulo)
   return h('div', { class: 'grupo' }, h('span', { class: 'etiqueta' }, titulo), contenido)
 }
 
@@ -87,15 +94,24 @@ export function metrica(nombre: string): { el: HTMLElement; set: (valor: string,
   }
 }
 
+let modales = 0
+
 /** Modal nativo (<dialog>) con contenido HTML reemplazable. */
 export function modal() {
   const cuerpo = h('div', { class: 'panel' })
+  const idTitulo = `modal-titulo-${++modales}`
   const el = h('dialog', { class: 'modal', onclick: (e: Event) => e.target === el && el.close() }, cuerpo)
   return {
     el,
     abrir(html: string) {
       cuerpo.innerHTML = `${html}<p><button class="boton" type="button">Cerrar</button></p>`
       cuerpo.querySelector('button:last-of-type')?.addEventListener('click', () => el.close())
+      // El modal se nombra con su primer título.
+      const titulo = cuerpo.querySelector('h2')
+      if (titulo) {
+        titulo.id = idTitulo
+        el.setAttribute('aria-labelledby', titulo.id)
+      } else el.removeAttribute('aria-labelledby')
       el.showModal()
     },
     cerrar: () => el.close(),

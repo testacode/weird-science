@@ -19,6 +19,9 @@ export function crearEscenario(contenedor: HTMLElement, { bloom: fuerzaBloom = 0
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.toneMapping = THREE.ACESFilmicToneMapping
+  // La maqueta es dibujo puro: se anuncia como imagen con el nombre del lab (el título de la página sin el sitio).
+  renderer.domElement.setAttribute('role', 'img')
+  renderer.domElement.setAttribute('aria-label', `Maqueta 3D: ${document.title.split(' · ')[0]}`)
   contenedor.prepend(renderer.domElement)
 
   const scene = new THREE.Scene()
